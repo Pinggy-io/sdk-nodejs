@@ -6,14 +6,31 @@
 // Binding for pinggy_set_log_path
 napi_value SetLogPath(napi_env env, napi_callback_info info)
 {
-    size_t argc = 1;
+    // napi_env: the Node-API environment, it provides context in which the Node-Api call is invoked, it is used in almost all node-api function calls to maintain consistency and provide access to the JavaScript runtime.
+    // napi_callback_info: This is an opaque pointer that contains information about the current function call. It allows the native fucntion to retrieve details about the javascript call, such as:
+    // - the number and valus of arguments passed to the function
+    // - the value of 'this' in the function
+    // - any additional data associated with the callback
+    // note: Opaque pointer is a pointer which points to a data structure whose contents are not exposed at the time of its definition.
+    size_t argc = 1; // number of expected arguments
     napi_value args[1];
     napi_status status;
     napi_value result;
 
     // Parse the arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-
+    // napi_status napi_get_cb_info(napi_env env,
+    //                          napi_callback_info cbinfo,
+    //                          size_t* argc,
+    //                          napi_value* argv,
+    //                          napi_value* this_arg,
+    //                          void** data)
+    // - env: the Node-API environment
+    // - cbinfo: the callback passed into the callback function
+    // - [in-out] argc: Specifies the length of the provided 'argv' array and receives the actual count of arguments. argc can optionally be ignored by passing NULL
+    // - [out] argv: C array of napi_values to which the arguments will be copied. If there are more arguments then the provided count, only the requested no of arguments are copied. If there are fewer arguments provided than claimed, the rest of argv is filled with napi_value vales that represnt 'undefined'. 'argv' can also be optionally ignored.
+    // - [out] this_arg: Receives the JavaScript 'this' argument for the call. Ignored in this case by passing NULL
+    // - [out] data: Receives the data pointer for the callback. In this case ignore by passing NULL
     // Validating the arguments
     if (status != napi_ok || argc < 1)
     {
@@ -23,15 +40,33 @@ napi_value SetLogPath(napi_env env, napi_callback_info info)
 
     // Convert JavaScript string to C string
     size_t str_len;
+
+    // napi_status napi_get_value_string_utf8(napi_env env,
+    //                                    napi_value value,
+    //                                    char* buf,
+    //                                    size_t bufsize,
+    //                                    size_t* result)
+    // - [in] env: the Node-API environment
+    // - [in] value: the JavaScript string to convert
+    // - [in] buf: the buffer to store the converted string
+    // - [in] bufsize: the size of the destination buffer. When this value is insufficient, the returned string is truncated and null-terminated.
+    // - [out] result: Pointer to store the number of bytes copied
     status = napi_get_value_string_utf8(env, args[0], NULL, 0, &str_len);
+    // if 'buf' is NULL, and 'bufsize' is 0, the function returns only the length of the string excluding the null terminator in `result`
+    // if 'buf' is provided, it copies the string into the buffer
     if (status != napi_ok)
     {
         napi_throw_error(env, NULL, "Failed to get string length");
         return NULL;
+        // returns NULL if there is an error in getting the length
     }
 
-    char *log_path = (char *)malloc(str_len + 1);
+    char *log_path = (char *)malloc(str_len + 1); // allocates memorey for the C string, including space for the null terminator.
     status = napi_get_value_string_utf8(env, args[0], log_path, str_len + 1, NULL);
+    // args: the JavaScript string to convert
+    // log_path: the pre-allocated buffer to store the converted string
+    // str_len + 1: the size of the destination buffer (log_path)
+    // NULL: the pointer to store the number of bytes copied, which we are not interested in here.
     if (status != napi_ok)
     {
         free(log_path);
@@ -49,14 +84,22 @@ napi_value SetLogPath(napi_env env, napi_callback_info info)
 }
 
 // Wrapper for pinggy_create_config
+// creates a new configuration object and returns a reference to it as a JavaScript number
 napi_value CreateConfig(napi_env env, napi_callback_info info)
 {
-    napi_value result;
+    // env: the Node-API environment
+    // info: Structure containing information, including arguments. In this case it is not used as the function doesn't expect any arguments.
 
+    napi_value result;
+    // napi_value: a JavaScript value that will be returned to the calling JS code.
     pinggy_ref_t config_ref = pinggy_create_config();
 
     napi_create_uint32(env, config_ref, &result);
-
+    // napi_status napi_create_uint32(napi_env env, uint32_t value, napi_value* result)
+    // - [in] env: the Node-API environment
+    // - [in] value: unsigned integer value to be represented in JS. 'config_ref' in this case
+    // - [out] result: A napi_value representing a JS number
+    // This API is used to convert from the C uint32_t type to the JS number type.
     return result;
 }
 
@@ -273,7 +316,6 @@ napi_value ConfigGetAdvancedParsing(napi_env env, napi_callback_info info)
     napi_get_boolean(env, advanced_parsing, &result);
     return result;
 }
-
 
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
