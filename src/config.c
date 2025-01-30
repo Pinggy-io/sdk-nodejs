@@ -173,9 +173,9 @@ napi_value ConfigGetServerAddress(napi_env env, napi_callback_info info)
     // env: the Node-API environment pointer
     // info: contains information about the function call including arguments
 
-    size_t argc = 1;   // Number of expected arguments
+    size_t argc = 1;    // Number of expected arguments
     napi_value args[1]; // Array to store the JS arguments (passed to cb_info function)
-    napi_value result; // return value for JS
+    napi_value result;  // return value for JS
 
     // Parse arguments
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
@@ -212,7 +212,7 @@ napi_value ConfigGetServerAddress(napi_env env, napi_callback_info info)
 
     // Call the pinggy_config_get_server_address function
     int copied_len = pinggy_config_get_server_address(config, buffer_len, buffer);
-    // get the length from the JS function preferabbly as a parameter 
+    // get the length from the JS function preferabbly as a parameter
 
     // Handle errors (if the copied length is negative, assuming it indicates an error)
     if (copied_len < 0)
@@ -240,9 +240,9 @@ napi_value ConfigGetSniServerName(napi_env env, napi_callback_info info)
     // env: the Node-API environment pointer
     // info: contains information about the function call including arguments
 
-    size_t argc = 1; // Number of expected arguments
+    size_t argc = 1;    // Number of expected arguments
     napi_value args[1]; // Array to store the JS arguments (passed to cb_info function)
-    napi_value result; // return value for JS
+    napi_value result;  // return value for JS
 
     // Parse arguments
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
@@ -319,17 +319,27 @@ napi_value ConfigSetSniServerName(napi_env env, napi_callback_info info)
     return result;
 }
 
-// ------------------ resume from here ------------------
-
 // Wrapper for pinggy_config_set_advanced_parsing
 napi_value ConfigSetAdvancedParsing(napi_env env, napi_callback_info info)
 {
-    size_t argc = 2;
-    napi_value args[2];
-    napi_value result;
+    size_t argc = 2;    // two arguments expected
+    napi_value args[2]; // array to store the arguments
+    napi_value result;  // return value to JS
 
     // Parse arguments
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    // napi_status napi_get_cb_info(napi_env env,
+    //                          napi_callback_info cbinfo,
+    //                          size_t* argc,
+    //                          napi_value* argv,
+    //                          napi_value* this_arg,
+    //                          void** data)
+    // [in] env: the Node-API environment
+    // [in] cbinfo: the callback info passed into the callback function
+    // [in-out] argc: specifies number of expected parameters and recieves the actual count of arguments. argc can optionally be ignored by passing NULL
+    // [out] argv: C array of napi_values to which the arguments will be copied. If there are more arguments than the provided count, only the requested no of arguments are copied. If ther are fewer arguments provided than claimed, the rest of argv is filled with napi_value values that represent 'undefined'. 'argv' can also be optionally ignored.
+    // [out] NULL: thisArg, the JavaScript 'this' argument for the call. Ignored in this case by passing NULL
+    // [out] NULL: the pointer to store the number of bytes copied, which we are not interested in here.
 
     // Validate the number of arguments
     if (argc < 2)
@@ -341,10 +351,12 @@ napi_value ConfigSetAdvancedParsing(napi_env env, napi_callback_info info)
     // Get the first argument: config (uint32_t)
     uint32_t config;
     napi_get_value_uint32(env, args[0], &config);
+    // convert the JS number(which of double type) to C uint32_t
 
     // Get the second argument: advanced_parsing (boolean)
     bool advanced_parsing;
     napi_get_value_bool(env, args[1], &advanced_parsing);
+    // convert the JS boolean to C bool
 
     // Call the pinggy_config_set_advanced_parsing function
     pinggy_config_set_advanced_parsing(config, advanced_parsing);
@@ -389,7 +401,28 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_value set_log_path_fn, create_config_fn, set_server_address_fn, get_server_address_fn, get_sni_server_name_fn, set_sni_server_name_fn, set_advanced_parsing_fn, get_advanced_parsing_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
+    // napi_create_function(napi_env env,
+    //                              const char* utf8name,
+    //                              size_t length,
+    //                              napi_callback cb,
+    //                              void* data,
+    //                              napi_value* result); 
+    // - [in] env: the Node-API environment
+    // - [in] utf8name: Optional name of the function encoded as UTF8. This is visible within JavaScript as the new function object's name property.
+    // - [in] length: Length of the utf8name string. Pass 0 if utf8name is NULL.
+    // - [in] cb: The C function to be called when this function is invoked in JavaScript.
+    // - [in] data: User-provided data context. This will be passed back into the function when invoked later.
+    // - [out] result: The new function object.
+
     napi_set_named_property(env, exports, "setLogPath", set_log_path_fn);
+    // napi_status napi_set_named_property(napi_env env,
+    //                                  napi_value object,
+    //                                  const char* utf8name,
+    //                                  napi_value value)
+    // - [in] env: the Node-API environment
+    // - [in] object: the object to which the property is to be added
+    // - [in] utf8name: the name of the property to add
+    // - [in] value: the value of the property to add
 
     napi_create_function(env, NULL, 0, CreateConfig, NULL, &create_config_fn);
     napi_set_named_property(env, exports, "createConfig", create_config_fn);
