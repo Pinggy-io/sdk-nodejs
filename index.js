@@ -99,10 +99,18 @@ try {
 let tunnelRef;
 try {
     tunnelRef = addon.tunnelInitiate(configRef);
+
+    addon.tunnelSetAuthenticatedCallback(tunnelRef, (tunnel) => {
+        console.log(`Authentication completed for tunnel: ${tunnel}`);
+    });
     
-    addon.tunnelSetReverseForwardingDoneCallback(tunnelRef, (address) => {
-            console.log(`Reverse forwarding done to ${address}`);
-    })
+    
+    addon.tunnelSetReverseForwardingDoneCallback(tunnelRef, (addresses) => {
+        console.log("Reverse forwarding done. Addresses:");
+        addresses.forEach((address, index) => {
+            console.log(`  ${index + 1}: ${address}`);
+        });
+    });    
     
     console.log(`Tunnel initiated with reference: ${tunnelRef}`);
 } catch (e) {
@@ -110,87 +118,88 @@ try {
 }
 if (!tunnelRef) process.exit(1);
 
-// // Start tunnel
-// try {
-//     const success = addon.tunnelStart(tunnelRef);
-//     console.log(`Tunnel started successfully: ${success}`);
-// } catch (e) {
-//     console.error("Error starting tunnel:", e);
-// }
+// Start tunnel
+try {
+    const success = addon.tunnelStart(tunnelRef);
+    console.log(`Tunnel started successfully: ${success}`);
+} catch (e) {
+    console.error("Error starting tunnel:", e);
+}
+
+// to do: try to use async function
 
 // startTunnel(tunnelRef);
 
-// // Request remote forwarding
-// try {
-//     addon.tunnelRequestRemoteForwarding(tunnelRef);
-//     console.log("Remote forwarding requested successfully.");
-// } catch (e) {
-//     console.error(`Error requesting remote forwarding for tunnel ${tunnelRef}:`, e);
-// }
-
-if (!isMainThread) {
-    try {
-        parentPort.postMessage({ log: "Worker: Connecting tunnel..." });
-
-        const connected = addon.tunnelConnect(workerData.tunnelRef);
-        if (!connected) {
-            parentPort.postMessage({ error: "Worker: Failed to connect tunnel." });
-            process.exit(1);
-        }
-
-        parentPort.postMessage({ log: "Worker: Tunnel connected successfully." });
-
-        // REMOVE THIS FOR NOW
-        // parentPort.postMessage({ log: "Worker: Requesting remote forwarding..." });
-        // addon.tunnelRequestRemoteForwarding(workerData.tunnelRef);
-        // parentPort.postMessage({ log: "Worker: Remote forwarding requested." });
-
-        // Start tunnel manually (without blocking)
-        parentPort.postMessage({ log: "Worker: Starting tunnel resume loop..." });
-
-        let iteration = 0;
-        while (true) {
-            try {
-                parentPort.postMessage({ log: `Worker: Iteration ${iteration}` });
-                const status = addon.tunnelResume(workerData.tunnelRef);
-                parentPort.postMessage({ log: `Worker: Tunnel resume status = ${status}` });
-
-                if (status < 0) {
-                    parentPort.postMessage({ error: "Worker: Tunnel resume failed. Stopping..." });
-                    addon.tunnelStop(workerData.tunnelRef);
-                    break;
-                }
-
-                iteration++;
-                Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500); // Sleep 500ms
-            } catch (resumeError) {
-                parentPort.postMessage({ error: `Worker: Exception in resume loop: ${resumeError.message}` });
-                break;
-            }
-        }
-
-        parentPort.postMessage({ log: "Worker: Tunnel stopped." });
-
-    } catch (e) {
-        parentPort.postMessage({ error: `Worker crashed: ${e.message}` });
-    }
-} else {
-    // MAIN THREAD
-    console.log("Starting tunnel in worker thread...");
-
-    const worker = new Worker(__filename, { workerData: { tunnelRef } });
-
-    // Listen for messages from worker
-    worker.on("message", (message) => {
-        if (message.log) console.log(message.log);
-        if (message.error) console.error(message.error);
-        if (message.success) console.log("Tunnel started successfully!");
-    });
-
-    // Listen for worker exit
-    worker.on("exit", (code) => {
-        if (code !== 0) console.error(`Worker exited with code ${code}`);
-    });
-
-    console.log("This message appears immediately because tunnelStart runs in a worker.");
+// Request remote forwarding
+try {
+    addon.tunnelRequestRemoteForwarding(tunnelRef);
+    console.log("Remote forwarding requested successfully.");
+} catch (e) {
+    console.error(`Error requesting remote forwarding for tunnel ${tunnelRef}:`, e);
 }
+
+// if (!isMainThread) {
+//     try {
+//         parentPort.postMessage({ log: "Worker: Connecting tunnel..." });
+
+//         const connected = addon.tunnelConnect(workerData.tunnelRef);
+//         if (!connected) {
+//             parentPort.postMessage({ error: "Worker: Failed to connect tunnel." });
+//             process.exit(1);
+//         }
+
+//         parentPort.postMessage({ log: "Worker: Tunnel connected successfully." });
+
+//         // REMOVE THIS FOR NOW
+//         // parentPort.postMessage({ log: "Worker: Requesting remote forwarding..." });
+//         // addon.tunnelRequestRemoteForwarding(workerData.tunnelRef);
+//         // parentPort.postMessage({ log: "Worker: Remote forwarding requested." });
+
+//         // Start tunnel manually (without blocking)
+//         parentPort.postMessage({ log: "Worker: Starting tunnel resume loop..." });
+
+//         let iteration = 0;
+//         while (true) {
+//             try {
+//                 parentPort.postMessage({ log: `Worker: Iteration ${iteration}` });
+//                 const status = addon.tunnelResume(workerData.tunnelRef);
+//                 parentPort.postMessage({ log: `Worker: Tunnel resume status = ${status}` });
+
+//                 if (status < 0) {
+//                     parentPort.postMessage({ error: "Worker: Tunnel resume failed. Stopping..." });
+//                     addon.tunnelStop(workerData.tunnelRef);
+//                     break;
+//                 }
+
+//                 iteration++;
+//             } catch (resumeError) {
+//                 parentPort.postMessage({ error: `Worker: Exception in resume loop: ${resumeError.message}` });
+//                 break;
+//             }
+//         }
+
+//         parentPort.postMessage({ log: "Worker: Tunnel stopped." });
+
+//     } catch (e) {
+//         parentPort.postMessage({ error: `Worker crashed: ${e.message}` });
+//     }
+// } else {
+//     // MAIN THREAD
+//     console.log("Starting tunnel in worker thread...");
+
+//     const worker = new Worker(__filename, { workerData: { tunnelRef } });
+
+//     // Listen for messages from worker
+//     worker.on("message", (message) => {
+//         if (message.log) console.log(message.log);
+//         if (message.error) console.error(message.error);
+//         if (message.success) console.log("Tunnel started successfully!");
+//     });
+
+//     // Listen for worker exit
+//     worker.on("exit", (code) => {
+//         if (code !== 0) console.error(`Worker exited with code ${code}`);
+//     });
+
+//     console.log("This message appears immediately because tunnelStart runs in a worker.");
+// }
