@@ -395,10 +395,144 @@ napi_value ConfigGetAdvancedParsing(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value ConfigSetToken(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, token)");
+        return NULL;
+    }
+
+    // Get the first argument: config (uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: token (string)
+    size_t token_length;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &token_length);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid token argument");
+        return NULL;
+    }
+
+    pinggy_char_p_t token = malloc(token_length + 1);
+    if (token == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    status = napi_get_value_string_utf8(env, args[1], token, token_length + 1, &token_length);
+    if (status != napi_ok)
+    {
+        free(token);
+        napi_throw_type_error(env, NULL, "Failed to get token string");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_token function
+    pinggy_config_set_token(config, token);
+
+    free(token);
+
+    // Return undefined
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value ConfigSetType(napi_env env, napi_callback_info info)
+{
+    // Declare variables to hold our function arguments
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Step 1: Retrieve the function arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Step 2: Check if we received the correct number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments. Expected 2 (config, type)");
+        return NULL;
+    }
+
+    // Step 3: Extract the first argument (config) as a uint32
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Step 4: Extract the second argument (type) as a string
+    size_t type_length;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &type_length);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid type argument");
+        return NULL;
+    }
+
+    // Step 5: Allocate memory for the type string
+    pinggy_char_p_t type = malloc(type_length + 1);
+    if (type == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    // Step 6: Copy the type string from the JavaScript value
+    status = napi_get_value_string_utf8(env, args[1], type, type_length + 1, &type_length);
+    if (status != napi_ok)
+    {
+        free(type);
+        napi_throw_type_error(env, NULL, "Failed to get type string");
+        return NULL;
+    }
+
+    // Step 7: Call the Pinggy SDK function
+    pinggy_config_set_type(config, type);
+
+    // Step 8: Free the allocated memory
+    free(type);
+
+    // Step 9: Return undefined (as the C function returns void)
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
-    napi_value set_log_path_fn, create_config_fn, set_server_address_fn, get_server_address_fn, get_sni_server_name_fn, set_sni_server_name_fn, set_advanced_parsing_fn, get_advanced_parsing_fn;
+    napi_value set_log_path_fn, create_config_fn, set_server_address_fn, get_server_address_fn, get_sni_server_name_fn, set_sni_server_name_fn, set_advanced_parsing_fn, get_advanced_parsing_fn, set_token_fn, set_type_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
     // napi_create_function(napi_env env,
@@ -406,7 +540,7 @@ napi_value Init1(napi_env env, napi_value exports)
     //                              size_t length,
     //                              napi_callback cb,
     //                              void* data,
-    //                              napi_value* result); 
+    //                              napi_value* result);
     // - [in] env: the Node-API environment
     // - [in] utf8name: Optional name of the function encoded as UTF8. This is visible within JavaScript as the new function object's name property.
     // - [in] length: Length of the utf8name string. Pass 0 if utf8name is NULL.
@@ -444,6 +578,12 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetAdvancedParsing, NULL, &get_advanced_parsing_fn);
     napi_set_named_property(env, exports, "configGetAdvancedParsing", get_advanced_parsing_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetToken, NULL, &set_token_fn);
+    napi_set_named_property(env, exports, "configSetToken", set_token_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetType, NULL, &set_type_fn);
+    napi_set_named_property(env, exports, "configSetType", set_type_fn);
 
     return exports;
 }
