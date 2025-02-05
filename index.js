@@ -55,7 +55,7 @@ try {
   console.log(`Created config with reference: ${configRef}`);
 
   // Set the token
-  addon.setToken(configRef, process.env.TUNNEL_TOKEN);
+  addon.configSetToken(configRef, process.env.TUNNEL_TOKEN);
 
   console.log("Token set successfully");
 } catch (e) {
@@ -117,7 +117,7 @@ try {
     console.log(`Authentication completed for tunnel: ${tunnel}`);
   });
 
-  addon.tunnelSetReverseForwardingDoneCallback(tunnelRef, (addresses) => {
+  addon.tunnelSetPrimaryForwardingSucceededCallback(tunnelRef, (addresses) => {
     console.log("Reverse forwarding done. Addresses:");
     addresses.forEach((address, index) => {
       console.log(`  ${index + 1}: ${address}`);
@@ -144,7 +144,7 @@ try {
 
 // Request remote forwarding
 try {
-  addon.tunnelRequestRemoteForwarding(tunnelRef);
+  addon.tunnelRequestPrimaryForwarding(tunnelRef);
   console.log("Remote forwarding requested successfully.");
 } catch (e) {
   console.error(
@@ -218,3 +218,13 @@ try {
 
 //     console.log("This message appears immediately because tunnelStart runs in a worker.");
 // }
+
+// To do:
+
+// - pinggy_tunnel_connect returns true or false
+// - if returns true, pinggy_tunnel_resume in a infinite loop, check error no
+// - authenticated callback
+// - pinggy_tunnel_request_primary_forwarding
+// - primary_forwarding_success continue polling
+// - sandip chakraborty sir, nptel, iit kharagpur
+// - network layers, transport layers

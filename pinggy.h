@@ -108,12 +108,18 @@ typedef int32_t       pinggy_raw_len_t;
 PINGGY_EXPORT pinggy_void_t
 pinggy_set_log_path(pinggy_char_p_t);
 
+PINGGY_EXPORT pinggy_void_t
+pinggy_set_log_enable(pinggy_bool_t);
+
 //================
 typedef pinggy_void_t (*pinggy_authenticated_cb_t)(pinggy_void_p_t, pinggy_ref_t);
 typedef pinggy_void_t (*pinggy_authentication_failed_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_len_t, pinggy_char_p_p_t);
-typedef pinggy_void_t (*pinggy_reverse_forwrding_done_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_len_t, pinggy_char_p_p_t);
-typedef pinggy_void_t (*pinggy_reverse_forwrding_failed_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_const_char_p_t);
+typedef pinggy_void_t (*pinggy_primary_forwarding_succeeded_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_len_t, pinggy_char_p_p_t);
+typedef pinggy_void_t (*pinggy_primary_forwarding_failed_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_const_char_p_t);
+typedef pinggy_void_t (*pinggy_additional_forwarding_succeeded_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_const_char_p_t, pinggy_const_char_p_t);
+typedef pinggy_void_t (*pinggy_additional_forwarding_failed_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_const_char_p_t, pinggy_const_char_p_t, pinggy_const_char_p_t);
 typedef pinggy_void_t (*pinggy_disconnected_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_const_char_p_t, pinggy_len_t, pinggy_char_p_p_t);
+typedef pinggy_void_t (*pinggy_tunnel_error_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_uint32_t, pinggy_const_char_p_t, pinggy_bool_t);
 typedef pinggy_bool_t (*pinggy_new_channel_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_ref_t);
 typedef pinggy_void_t (*pinggy_raise_exception_cb_t)(pinggy_const_char_p_t, pinggy_const_char_p_t);
 //================
@@ -428,7 +434,17 @@ pinggy_tunnel_start_web_debugging(pinggy_ref_t tunnel, pinggy_uint16_t listening
  * @return
  */
 PINGGY_EXPORT pinggy_void_t
-pinggy_tunnel_request_remote_forwarding(pinggy_ref_t tunnel);
+pinggy_tunnel_request_primary_forwarding(pinggy_ref_t tunnel);
+
+/**
+ * @brief
+ * @param tunnel
+ * @param remote_binding_addr
+ * @param forward_to
+ * @return
+ */
+PINGGY_EXPORT pinggy_void_t
+pinggy_tunnel_request_additional_forwarding(pinggy_ref_t, pinggy_const_char_p_t, pinggy_const_char_p_t);
 
 
 //=====================================
@@ -454,24 +470,44 @@ PINGGY_EXPORT pinggy_bool_t
 pinggy_tunnel_set_authentication_failed_callback(pinggy_ref_t tunnel, pinggy_authentication_failed_cb_t authentication_failed, pinggy_void_p_t user_data);
 
 /**
- * @brief Set reverse_forwarding_done callback
+ * @brief Set primary_forwarding_succeeded callback
  * @param tunnel
- * @param reverse_forwrding_done
- * @param user_data user data that will pass when library call this call back
+ * @param primary_forwarding_succeeded callback
+ * @param user_data
  * @return
  */
 PINGGY_EXPORT pinggy_bool_t
-pinggy_tunnel_set_reverse_forwrding_done_callback(pinggy_ref_t tunnel, pinggy_reverse_forwrding_done_cb_t reverse_forwrding_done, pinggy_void_p_t user_data);
+pinggy_tunnel_set_primary_forwarding_succeeded_callback(pinggy_ref_t tunnel, pinggy_primary_forwarding_succeeded_cb_t, pinggy_void_p_t user_data);
 
 /**
- * @brief Set reverse forwarding failed callback
+ * @brief Set primary_forwarding_failed callback
  * @param tunnel
- * @param reverse_forwrding_failed
+ * @param primary_forwarding_failed callback
+ * @param user_data
+ * @return
+ */
+PINGGY_EXPORT pinggy_bool_t
+pinggy_tunnel_set_primary_forwarding_failed_callback(pinggy_ref_t tunnel, pinggy_primary_forwarding_failed_cb_t, pinggy_void_p_t user_data);
+
+/**
+ * @brief Set additional_forwarding_succeeded callback
+ * @param tunnel
+ * @param additional_forwarding_succeeded
  * @param user_data user data that will pass when library call this call back
  * @return
  */
 PINGGY_EXPORT pinggy_bool_t
-pinggy_tunnel_set_reverse_forwrding_failed_callback(pinggy_ref_t tunnel, pinggy_reverse_forwrding_failed_cb_t reverse_forwrding_failed, pinggy_void_p_t user_data);
+pinggy_tunnel_set_additional_forwarding_succeeded_callback(pinggy_ref_t tunnel, pinggy_additional_forwarding_succeeded_cb_t additional_forwarding_succeeded, pinggy_void_p_t user_data);
+
+/**
+ * @brief Set additional_forwarding_failed callback
+ * @param tunnel
+ * @param additional_forwarding_failed
+ * @param user_data user data that will pass when library call this call back
+ * @return
+ */
+PINGGY_EXPORT pinggy_bool_t
+pinggy_tunnel_set_additional_forwarding_failed_callback(pinggy_ref_t tunnel, pinggy_additional_forwarding_failed_cb_t additional_forwarding_failed, pinggy_void_p_t user_data);
 
 /**
  * @brief tunnel disconnected callback
@@ -482,6 +518,16 @@ pinggy_tunnel_set_reverse_forwrding_failed_callback(pinggy_ref_t tunnel, pinggy_
  */
 PINGGY_EXPORT pinggy_bool_t
 pinggy_tunnel_set_disconnected_callback(pinggy_ref_t tunnel, pinggy_disconnected_cb_t disconnected, pinggy_void_p_t user_data);
+
+/**
+ * @brief set error handler
+ * @param tunnel
+ * @param tunnel_error
+ * @param user_data
+ * @return
+ */
+PINGGY_EXPORT pinggy_bool_t
+pinggy_tunnel_set_tunnel_error_callback(pinggy_ref_t, pinggy_tunnel_error_cb_t, pinggy_void_p_t);
 
 /**
  * @brief Set new channel callback
