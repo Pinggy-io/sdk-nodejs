@@ -675,7 +675,7 @@ pinggy_tunnel_channel_get_type(pinggy_ref_t channel);
  * @return
  */
 PINGGY_EXPORT pinggy_uint16_t
-pinggy_tunnel_channel_get_connect_to_port(pinggy_ref_t channel);
+pinggy_tunnel_channel_get_dest_port(pinggy_ref_t channel);
 
 /**
  * @brief Get connect to host i.e. local server hostname
@@ -685,7 +685,7 @@ pinggy_tunnel_channel_get_connect_to_port(pinggy_ref_t channel);
  * @return
  */
 PINGGY_EXPORT pinggy_const_int_t
-pinggy_tunnel_channel_get_connect_to_host(pinggy_ref_t channel, pinggy_capa_t buffer_len, pinggy_char_p_t buffer);
+pinggy_tunnel_channel_get_dest_host(pinggy_ref_t channel, pinggy_capa_t buffer_len, pinggy_char_p_t buffer);
 
 /**
  * @brief Get the source port.
