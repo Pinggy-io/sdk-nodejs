@@ -5,7 +5,7 @@
 #include "../pinggy.h"
 
 // Wrapper for pinggy_tunnel_request_remote_forwarding
-napi_value TunnelRequestRemoteForwarding(napi_env env, napi_callback_info info)
+napi_value TunnelRequestPrimaryForwarding(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1];
@@ -37,8 +37,8 @@ napi_value TunnelRequestRemoteForwarding(napi_env env, napi_callback_info info)
         return result;
     }
 
-    // Call the pinggy_tunnel_request_remote_forwarding function
-    pinggy_tunnel_request_remote_forwarding(tunnel);
+    // Call the pinggy_tunnel_request_primary_forwarding function
+    pinggy_tunnel_request_primary_forwarding(tunnel);
 
     // Return undefined (void return type in C)
     napi_get_undefined(env, &result);
@@ -318,8 +318,8 @@ typedef struct
     napi_env env;
 } CallbackData;
 
-// typedef pinggy_void_t (*pinggy_authentication_failed_cb_t)(pinggy_void_p_t, pinggy_ref_t, pinggy_len_t, pinggy_char_p_p_t);
-void reverse_forwarding_done_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_len_t address_len, pinggy_char_p_p_t addresses)
+// primary forwarding succeeded callback in newer version in place of reverse forwarding done callback
+void primary_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_len_t address_len, pinggy_char_p_p_t addresses)
 {
     if (user_data == NULL)
     {
@@ -342,8 +342,6 @@ void reverse_forwarding_done_callback(pinggy_void_p_t user_data, pinggy_ref_t tu
         napi_value js_address;
         napi_create_string_utf8(env, addresses[i], NAPI_AUTO_LENGTH, &js_address);
         napi_set_element(env, js_addresses_array, i, js_address);
-
-        // printf("[C] Address %d: %s\n", i, addresses[i]);
     }
 
     // Call the JavaScript callback with the array of addresses
@@ -351,7 +349,7 @@ void reverse_forwarding_done_callback(pinggy_void_p_t user_data, pinggy_ref_t tu
     napi_call_function(env, undefined, js_callback, 1, &js_addresses_array, &result);
 }
 
-napi_value SetReverseForwardingCallback(napi_env env, napi_callback_info info)
+napi_value SetPrimaryForwardingCallback(napi_env env, napi_callback_info info)
 {
     napi_status status;
     size_t argc = 2;
@@ -377,7 +375,7 @@ napi_value SetReverseForwardingCallback(napi_env env, napi_callback_info info)
     napi_create_reference(env, js_callback, 1, &cb_data->callback_ref);
 
     // Register callback with Pinggy
-    pinggy_tunnel_set_reverse_forwrding_done_callback(tunnel, reverse_forwarding_done_callback, cb_data);
+    pinggy_tunnel_set_primary_forwarding_succeeded_callback(tunnel, primary_forwarding_succeeded_callback, cb_data);
 
     return NULL;
 }
@@ -521,10 +519,10 @@ napi_value TunnelConnect(napi_env env, napi_callback_info info)
 // Initialize the module and export the function
 napi_value Init2(napi_env env, napi_value exports)
 {
-    napi_value request_remote_forwarding_fn, tunnel_initiate_fn, tunnel_start_fn, tunnel_resume_fn, tunnel_stop_fn, tcp_forward_to_fn, tunnel_set_reverse_forwarding_done_callback_fn, tunnel_connect_fn, tunnel_set_authenticated_callback_fn;
+    napi_value request_primary_forwarding_fn, tunnel_initiate_fn, tunnel_start_fn, tunnel_resume_fn, tunnel_stop_fn, tcp_forward_to_fn, tunnel_set_reverse_forwarding_done_callback_fn, tunnel_connect_fn, tunnel_set_authenticated_callback_fn;
 
-    napi_create_function(env, NULL, 0, TunnelRequestRemoteForwarding, NULL, &request_remote_forwarding_fn);
-    napi_set_named_property(env, exports, "tunnelRequestRemoteForwarding", request_remote_forwarding_fn);
+    napi_create_function(env, NULL, 0, TunnelRequestPrimaryForwarding, NULL, &request_primary_forwarding_fn);
+    napi_set_named_property(env, exports, "tunnelRequestPrimaryForwarding", request_primary_forwarding_fn);
 
     napi_create_function(env, NULL, 0, tunnelInitiate, NULL, &tunnel_initiate_fn);
     napi_set_named_property(env, exports, "tunnelInitiate", tunnel_initiate_fn);
@@ -541,8 +539,12 @@ napi_value Init2(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, TCPForwardTo, NULL, &tcp_forward_to_fn);
     napi_set_named_property(env, exports, "tcpForwardTo", tcp_forward_to_fn);
 
-    napi_create_function(env, NULL, 0, SetReverseForwardingCallback, NULL, &tunnel_set_reverse_forwarding_done_callback_fn);
-    napi_set_named_property(env, exports, "tunnelSetReverseForwardingDoneCallback", tunnel_set_reverse_forwarding_done_callback_fn);
+    // napi_create_function(env, NULL, 0, SetReverseForwardingCallback, NULL, &tunnel_set_reverse_forwarding_done_callback_fn);
+    // napi_set_named_property(env, exports, "tunnelSetReverseForwardingDoneCallback", tunnel_set_reverse_forwarding_done_callback_fn);
+
+    // add the updated callback
+    napi_create_function(env, NULL, 0, SetPrimaryForwardingCallback, NULL, &tunnel_set_reverse_forwarding_done_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetPrimaryForwardingSucceededCallback", tunnel_set_reverse_forwarding_done_callback_fn);
 
     napi_create_function(env, NULL, 0, TunnelConnect, NULL, &tunnel_connect_fn);
     napi_set_named_property(env, exports, "tunnelConnect", tunnel_connect_fn);
