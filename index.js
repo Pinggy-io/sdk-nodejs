@@ -168,3 +168,9 @@ startTunnel(tunnelRef);
 // - primary_forwarding_success continue polling
 // - sandip chakraborty sir, nptel, iit kharagpur
 // - network layers, transport layers
+
+// To do: 06.02.2025
+// - EINTR error handling
+// - Understand and debug => Error: ���
+// at Immediate.poll (/home/sky09/projects/pinggy-learnings/pinggy/index.js:42:25)
+// at processImmediate (node:internal/timers:466:21)
