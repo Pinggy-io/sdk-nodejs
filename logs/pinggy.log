@@ -60,3 +60,23 @@
 [2025-02-08 13:08:21] [INFO]   2: https://rndrt-103-242-189-102.a.free.t.pinggy.io
 [2025-02-08 13:08:21] [INFO]   3: http://rndrt-103-242-189-102.a.free.t.pinggy.io
 [2025-02-08 13:08:21] [INFO]   4: https://rndrt-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 16:48:11] [INFO] Created config with reference: 3
+[2025-02-08 16:48:11] [INFO] Default configurations set successfully.
+[2025-02-08 16:48:11] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 16:48:11] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 16:48:12] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 16:48:12] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 16:48:12] [INFO]   1: http://rnbbz-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 16:48:12] [INFO]   2: https://rnbbz-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 16:48:12] [INFO]   3: http://rnbbz-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 16:48:12] [INFO]   4: https://rnbbz-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 16:48:20] [INFO] Created config with reference: 3
+[2025-02-08 16:48:20] [INFO] Default configurations set successfully.
+[2025-02-08 16:48:20] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 16:48:20] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 16:48:20] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 16:48:20] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 16:48:20] [INFO]   1: http://rnhym-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 16:48:20] [INFO]   2: https://rnhym-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 16:48:20] [INFO]   3: http://rnhym-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 16:48:20] [INFO]   4: https://rnhym-103-242-189-102.a.free.t.pinggy.io
