@@ -4,6 +4,10 @@ build
 node_modules
 /node_modules
 
+logs
+logs/pinggy.log
+/logs
+/logs/*
 logs.log
 
 libpinggy.so
