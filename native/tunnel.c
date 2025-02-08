@@ -323,7 +323,7 @@ void primary_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_ref
 {
     if (user_data == NULL)
     {
-        printf("[ERROR] Callback data is NULL!\n");
+        napi_throw_error(((CallbackData *)user_data)->env, NULL, "Callback data is NULL");
         return;
     }
 
@@ -351,6 +351,7 @@ void primary_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_ref
 
 napi_value SetPrimaryForwardingCallback(napi_env env, napi_callback_info info)
 {
+
     napi_status status;
     size_t argc = 2;
     napi_value args[2];
@@ -360,22 +361,57 @@ napi_value SetPrimaryForwardingCallback(napi_env env, napi_callback_info info)
     // Extract arguments (tunnel reference & callback function)
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
     if (status != napi_ok || argc < 2)
+    {
+        napi_throw_error(env, NULL, "Wrong number of arguments");
         return NULL;
+    }
 
-    js_tunnel = args[0];   // Tunnel reference (integer or object)
-    js_callback = args[1]; // JavaScript callback function
+    js_tunnel = args[0];
+    js_callback = args[1];
 
     // Convert tunnel reference to C type
     pinggy_ref_t tunnel;
-    napi_get_value_int64(env, js_tunnel, (int64_t *)&tunnel);
+    status = napi_get_value_int64(env, js_tunnel, (int64_t *)&tunnel);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Invalid tunnel reference");
+        return NULL;
+    }
+
+    // Verify callback is a function
+    napi_valuetype valuetype;
+    status = napi_typeof(env, js_callback, &valuetype);
+    if (status != napi_ok || valuetype != napi_function)
+    {
+        napi_throw_error(env, NULL, "Second argument must be a function");
+        return NULL;
+    }
 
     // Store callback in a reference
     CallbackData *cb_data = (CallbackData *)malloc(sizeof(CallbackData));
+    if (cb_data == NULL)
+    {
+        napi_throw_error(env, NULL, "Failed to allocate memory for CallbackData");
+        return NULL;
+    }
     cb_data->env = env;
-    napi_create_reference(env, js_callback, 1, &cb_data->callback_ref);
+    status = napi_create_reference(env, js_callback, 1, &cb_data->callback_ref);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create reference for callback");
+        free(cb_data);
+        return NULL;
+    }
 
     // Register callback with Pinggy
-    pinggy_tunnel_set_primary_forwarding_succeeded_callback(tunnel, primary_forwarding_succeeded_callback, cb_data);
+    pinggy_bool_t result = pinggy_tunnel_set_primary_forwarding_succeeded_callback(tunnel, primary_forwarding_succeeded_callback, cb_data);
+    if (result != pinggy_true)
+    {
+        napi_throw_error(env, NULL, "Failed to set primary forwarding succeeded callback");
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        return NULL;
+    }
 
     return NULL;
 }
