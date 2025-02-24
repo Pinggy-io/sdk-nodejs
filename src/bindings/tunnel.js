@@ -4,6 +4,41 @@ class Tunnel {
   constructor(addon, configRef) {
     this.addon = addon;
     this.tunnelRef = this.initialize(configRef);
+    this.authenticated = false;
+    this.primaryForwardingDone = false;
+    this.authQueue = []; // Queue for functions that need authentication
+    this.forwardingQueue = []; // Queue for additional forwarding requests
+
+    // Initialize exception handling at the start
+    this.initExceptionHandling();
+  }
+
+  // 🔹 Initialize Pinggy Exception Handling
+  initExceptionHandling() {
+    try {
+      this.addon.initExceptionHandling();
+      Logger.info("Pinggy exception handling initialized.");
+    } catch (e) {
+      Logger.error("Failed to initialize exception handling:", e);
+    }
+  }
+
+  // Fetch last exception from native addon
+  updateLastException() {
+    try {
+      const exception = this.addon.getLastException();
+      if (exception) {
+        this.lastException = exception;
+        Logger.error("Pinggy Exception:", exception);
+      }
+    } catch (e) {
+      Logger.error("Error retrieving last exception:", e);
+    }
+  }
+
+  // Public method to retrieve the last exception
+  getLastException() {
+    return this.lastException;
   }
 
   initialize(configRef) {
@@ -13,6 +48,8 @@ class Tunnel {
       return tunnelRef;
     } catch (e) {
       Logger.error("Error initiating tunnel:", e);
+      this.updateLastException();
+      this.getLastException();
       return null;
     }
   }
@@ -29,17 +66,32 @@ class Tunnel {
 
       this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
         Logger.info("Tunnel authenticated, requesting primary forwarding...");
+        this.authenticated = true;
+        this.authQueue.forEach((fn) => fn()); // Execute queued functions
+        this.authQueue = []; // Clear queue
         this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
       });
 
-      this.addon.tunnelSetPrimaryForwardingSucceededCallback(this.tunnelRef, (addresses) => {
-        Logger.info("Primary forwarding done. Addresses:");
-        addresses.forEach((address, index) => Logger.info(`  ${index + 1}: ${address}`));
-      });
+      this.addon.tunnelSetPrimaryForwardingSucceededCallback(
+        this.tunnelRef,
+        (addresses) => {
+          Logger.info("Primary forwarding done. Addresses:");
+          addresses.forEach((address, index) =>
+            Logger.info(`  ${index + 1}: ${address}`)
+          );
+          this.primaryForwardingDone = true;
+
+          // Process any additional forwarding requests after primary forwarding
+          this.forwardingQueue.forEach((fn) => fn());
+          this.forwardingQueue = []; // Clear the queue
+        }
+      );
 
       this.poll();
     } catch (error) {
       Logger.error("Error in startTunnel:", error);
+      this.updateLastException();
+      this.getLastException();
     }
   }
 
@@ -57,6 +109,62 @@ class Tunnel {
       }
     };
     poll();
+  }
+
+  startWebDebugging(listeningPort) {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return;
+    }
+
+    const startDebugging = () => {
+      try {
+        this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort);
+        Logger.info(
+          `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
+        );
+      } catch (e) {
+        Logger.error("Error starting web debugging:", e);
+      }
+    };
+
+    if (this.authenticated) {
+      startDebugging(); // Run immediately if authenticated
+    } else {
+      Logger.info("Tunnel not yet authenticated. Queuing startWebDebugging...");
+      this.authQueue.push(startDebugging); // Queue execution
+    }
+  }
+
+  tunnelRequestAdditionalForwarding(remoteAddress, localAddress) {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return;
+    }
+
+    const requestForwarding = () => {
+      try {
+        this.addon.tunnelRequestAdditionalForwarding(
+          this.tunnelRef,
+          remoteAddress,
+          localAddress
+        );
+        Logger.info(
+          `Requested additional forwarding from ${remoteAddress} to ${localAddress}`
+        );
+      } catch (e) {
+        Logger.error("Error requesting additional forwarding:", e);
+      }
+    };
+
+    if (this.primaryForwardingDone) {
+      requestForwarding(); // Run immediately if primary forwarding succeeded
+    } else {
+      Logger.info(
+        "Primary forwarding not yet completed. Queuing additional forwarding..."
+      );
+      this.forwardingQueue.push(requestForwarding); // Queue execution
+    }
   }
 }
 

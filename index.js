@@ -4,7 +4,7 @@ const addon = require("./build/Release/addon");
 function startTunnel(tunnel) {
   try {
     const connected = addon.tunnelConnect(tunnel);
-    
+
     // Check if connected
     if (!connected) {
       console.error("Tunnel connection failed.");
@@ -29,6 +29,15 @@ function startTunnel(tunnel) {
         });
       }
     );
+
+    // set additional forwarding
+    setTimeout(() => {
+      addon.tunnelRequestAdditionalForwarding(
+        tunnel,
+        "pompom.abhijitmondal.in",
+        "localhost:4000"
+      );
+    }, 1000);
 
     // Start polling loop
     pollTunnel(tunnel);
@@ -65,7 +74,7 @@ try {
   console.log(`Created config with reference: ${configRef}`);
 
   // Set the token
-  addon.configSetToken(configRef, process.env.TUNNEL_TOKEN);
+  addon.configSetToken(configRef, process.env.TUNNEL_TOKEN_SUB);
 
   console.log("Token set successfully");
 } catch (e) {
@@ -103,7 +112,7 @@ try {
 
 // Set TCP Fowarding
 try {
-  addon.tcpForwardTo(configRef, "localhost:4000");
+  addon.configSetTcpForwardTo(configRef, "localhost:3000");
   console.log("TCP forwarding set successfully.");
 } catch (e) {
   console.error("Error setting TCP forwarding:", e);
@@ -122,7 +131,7 @@ try {
 let tunnelRef;
 try {
   tunnelRef = addon.tunnelInitiate(configRef);
-  
+
   console.log(`Tunnel initiated with reference: ${tunnelRef}`);
 } catch (e) {
   console.error("Error initiating tunnel:", e);

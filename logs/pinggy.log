@@ -80,3 +80,639 @@
 [2025-02-08 16:48:20] [INFO]   2: https://rnhym-103-242-189-102.a.free.t.pinggy.io
 [2025-02-08 16:48:20] [INFO]   3: http://rnhym-103-242-189-102.a.free.t.pinggy.io
 [2025-02-08 16:48:20] [INFO]   4: https://rnhym-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:13:36] [INFO] Created config with reference: 3
+[2025-02-08 17:13:36] [INFO] Default configurations set successfully.
+[2025-02-08 17:13:36] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 17:13:36] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 17:13:36] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 17:13:36] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 17:13:36] [INFO]   2: https://rnowv-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:13:36] [INFO]   1: http://rnowv-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:13:36] [INFO]   3: http://rnowv-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:13:36] [INFO]   4: https://rnowv-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:14:08] [INFO] Created config with reference: 3
+[2025-02-08 17:14:08] [INFO] Default configurations set successfully.
+[2025-02-08 17:14:08] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 17:14:08] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 17:14:08] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 17:14:09] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 17:14:09] [INFO]   1: http://rnykp-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:14:09] [INFO]   2: https://rnykp-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:14:09] [INFO]   3: http://rnykp-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:14:09] [INFO]   4: https://rnykp-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:36:55] [INFO] Created config with reference: 3
+[2025-02-08 17:36:55] [INFO] Configurations applied successfully.
+[2025-02-08 17:36:55] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 17:36:55] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 17:36:56] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 17:36:56] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 17:36:56] [INFO]   1: http://rnune-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:36:56] [INFO]   2: https://rnune-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:36:56] [INFO]   3: http://rnune-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 17:36:56] [INFO]   4: https://rnune-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:08:10] [INFO] Created config with reference: 3
+[2025-02-08 20:08:10] [INFO] Configurations applied successfully.
+[2025-02-08 20:08:10] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:08:10] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:08:11] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 20:08:11] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 20:08:11] [INFO]   1: http://rnexf-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:08:11] [INFO]   2: https://rnexf-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:08:11] [INFO]   3: http://rnexf-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:08:11] [INFO]   4: https://rnexf-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:09:56] [INFO] Created config with reference: 3
+[2025-02-08 20:09:56] [INFO] Configurations applied successfully.
+[2025-02-08 20:09:56] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:09:56] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:09:56] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 20:09:56] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 20:09:56] [INFO]   1: http://rncbc-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:09:56] [INFO]   2: https://rncbc-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:09:56] [INFO]   3: http://rncbc-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:09:56] [INFO]   4: https://rncbc-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:28:11] [INFO] Created config with reference: 3
+[2025-02-08 20:28:11] [INFO] Configurations applied successfully.
+[2025-02-08 20:28:11] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:28:12] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:28:12] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 20:28:12] [INFO]   1: http://rnduq-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:28:12] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 20:28:12] [INFO]   2: https://rnduq-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:28:12] [INFO]   3: http://rnduq-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:28:12] [INFO]   4: https://rnduq-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:32:50] [INFO] Created config with reference: 3
+[2025-02-08 20:32:50] [INFO] Configurations applied successfully.
+[2025-02-08 20:32:50] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:32:50] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:32:50] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 20:32:50] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 20:32:50] [INFO]   1: http://rnukr-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:32:50] [INFO]   3: http://rnukr-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:32:50] [INFO]   2: https://rnukr-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:32:50] [INFO]   4: https://rnukr-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:33:52] [INFO] Created config with reference: 3
+[2025-02-08 20:33:52] [INFO] Configurations applied successfully.
+[2025-02-08 20:33:52] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:33:52] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:33:52] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 20:33:53] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 20:33:53] [INFO]   1: http://rnoco-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:33:53] [INFO]   2: https://rnoco-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:33:53] [INFO]   3: http://rnoco-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:33:53] [INFO]   4: https://rnoco-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:34:01] [INFO] Web debugging started on port 8080
+[2025-02-08 20:34:01] [INFO] Web debugging started on port:
+[2025-02-08 20:40:20] [INFO] Created config with reference: 3
+[2025-02-08 20:40:20] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:40:20] [INFO] Configurations applied successfully.
+[2025-02-08 20:40:20] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:44:18] [INFO] Created config with reference: 3
+[2025-02-08 20:44:18] [INFO] Configurations applied successfully.
+[2025-02-08 20:44:18] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:44:18] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:44:18] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 20:44:18] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 20:44:18] [INFO]   1: http://rnxwv-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:44:18] [INFO]   3: http://rnxwv-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:44:18] [INFO]   4: https://rnxwv-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:44:18] [INFO]   2: https://rnxwv-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:44:27] [INFO] Web debugging started on port 3001
+[2025-02-08 20:51:46] [INFO] Created config with reference: 3
+[2025-02-08 20:51:46] [INFO] Configurations applied successfully.
+[2025-02-08 20:51:46] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:51:46] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:51:46] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 20:51:46] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 20:51:46] [INFO] Web debugging started on port 8081
+[2025-02-08 20:51:46] [INFO]   1: http://rnkgb-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:51:46] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 20:51:46] [INFO]   2: https://rnkgb-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:51:46] [INFO]   3: http://rnkgb-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:51:46] [INFO]   4: https://rnkgb-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:52:26] [INFO] Created config with reference: 3
+[2025-02-08 20:52:26] [INFO] Configurations applied successfully.
+[2025-02-08 20:52:26] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 20:52:27] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 20:52:27] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 20:52:27] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 20:52:27] [INFO] Web debugging started on port 8081
+[2025-02-08 20:52:27] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 20:52:27] [INFO]   1: http://rniqe-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:52:27] [INFO]   2: https://rniqe-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:52:27] [INFO]   3: http://rniqe-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 20:52:27] [INFO]   4: https://rniqe-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 21:10:46] [INFO] Created config with reference: 3
+[2025-02-08 21:10:46] [INFO] Configurations applied successfully.
+[2025-02-08 21:10:46] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 21:10:47] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 21:10:47] [INFO] Queued web debugging start request on port 8081
+[2025-02-08 21:10:47] [INFO] Tunnel authenticated.
+[2025-02-08 21:14:18] [INFO] Created config with reference: 3
+[2025-02-08 21:14:18] [INFO] Configurations applied successfully.
+[2025-02-08 21:14:18] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 21:14:18] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 21:14:18] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 21:14:18] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 21:14:18] [INFO] Web debugging started on port 8081
+[2025-02-08 21:14:18] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 21:14:18] [INFO]   1: http://rnxmf-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 21:14:18] [INFO]   2: https://rnxmf-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 21:14:18] [INFO]   3: http://rnxmf-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 21:14:18] [INFO]   4: https://rnxmf-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 22:43:50] [INFO] Created config with reference: 3
+[2025-02-08 22:43:50] [INFO] Configurations applied successfully.
+[2025-02-08 22:43:50] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 22:43:50] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 22:43:51] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 22:43:51] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 22:43:51] [INFO] Web debugging started on port 8081
+[2025-02-08 22:43:51] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 22:43:51] [INFO]   1: http://rnhah-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 22:43:51] [INFO]   2: https://rnhah-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 22:43:51] [INFO]   3: http://rnhah-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 22:43:51] [INFO]   4: https://rnhah-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 22:44:51] [INFO] Created config with reference: 3
+[2025-02-08 22:44:51] [INFO] Configurations applied successfully.
+[2025-02-08 22:44:51] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 22:44:51] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 22:44:52] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 22:44:52] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 22:44:52] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-08 22:44:52] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 22:44:52] [INFO]   1: http://rnyxl-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 22:44:52] [INFO]   2: https://rnyxl-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 22:44:52] [INFO]   3: http://rnyxl-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 22:44:52] [INFO]   4: https://rnyxl-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:22:38] [INFO] Created config with reference: 3
+[2025-02-08 23:22:38] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 23:22:38] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 23:22:38] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 23:22:38] [INFO] Configurations applied successfully.
+[2025-02-08 23:22:38] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 23:22:38] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-08 23:22:39] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 23:22:39] [INFO]   1: http://rnqkm-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:22:39] [INFO]   2: https://rnqkm-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:22:39] [INFO]   4: https://rnqkm-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:22:39] [INFO]   3: http://rnqkm-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:47:04] [INFO] Created config with reference: 3
+[2025-02-08 23:47:04] [INFO] Configurations applied successfully.
+[2025-02-08 23:47:05] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 23:47:04] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 23:47:05] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 23:47:05] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 23:47:05] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-08 23:47:05] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 23:47:05] [INFO]   1: http://rnedt-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:47:05] [INFO]   2: https://rnedt-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:47:05] [INFO]   3: http://rnedt-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:47:05] [INFO]   4: https://rnedt-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:47:35] [INFO] Created config with reference: 3
+[2025-02-08 23:47:35] [INFO] Configurations applied successfully.
+[2025-02-08 23:47:35] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 23:47:35] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 23:47:35] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 23:47:36] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 23:47:36] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-08 23:47:36] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 23:47:36] [INFO]   2: https://rnmle-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:47:36] [INFO]   1: http://rnmle-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:47:36] [INFO]   3: http://rnmle-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:47:36] [INFO]   4: https://rnmle-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:50:32] [INFO] Created config with reference: 3
+[2025-02-08 23:50:32] [INFO] Configurations applied successfully.
+[2025-02-08 23:50:32] [INFO] Tunnel initiated with reference: 4
+[2025-02-08 23:50:32] [ERROR] Error getting token:
+Error: TypeError: Expected two arguments (config, buffer_len)
+    at Config.getToken (/home/sky09/projects/pinggy-learnings/pinggy/src/bindings/config.js:79:42)
+    at PinggySDK.getToken (/home/sky09/projects/pinggy-learnings/pinggy/src/core/pinggy.js:38:24)
+    at Object.<anonymous> (/home/sky09/projects/pinggy-learnings/pinggy/src/index.js:11:30)
+    at Module._compile (node:internal/modules/cjs/loader:1198:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1252:10)
+    at Module.load (node:internal/modules/cjs/loader:1076:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:911:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)
+    at node:internal/main/run_main_module:22:47
+[2025-02-08 23:50:32] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-08 23:50:32] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-08 23:50:32] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-08 23:50:32] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-08 23:50:32] [INFO] Primary forwarding done. Addresses:
+[2025-02-08 23:50:32] [INFO]   1: http://rnyjy-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:50:32] [INFO]   2: https://rnyjy-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:50:32] [INFO]   3: http://rnyjy-103-242-189-102.a.free.t.pinggy.io
+[2025-02-08 23:50:32] [INFO]   4: https://rnyjy-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:31:06] [INFO] Created config with reference: 3
+[2025-02-10 21:31:06] [INFO] Configurations applied successfully.
+[2025-02-10 21:31:06] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:31:06] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:31:06] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:31:07] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:31:07] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:31:07] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:31:07] [INFO]   1: http://rnecc-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:31:07] [INFO]   2: https://rnecc-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:31:07] [INFO]   3: http://rnecc-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:31:07] [INFO]   4: https://rnecc-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:33:23] [INFO] Created config with reference: 3
+[2025-02-10 21:33:23] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:33:23] [INFO] Configurations applied successfully.
+[2025-02-10 21:33:23] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:33:24] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:33:24] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:33:24] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:33:24] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:33:24] [INFO]   1: http://rnkxo-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:33:24] [INFO]   2: https://rnkxo-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:33:24] [INFO]   3: http://rnkxo-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:33:24] [INFO]   4: https://rnkxo-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:33:42] [INFO] Created config with reference: 3
+[2025-02-10 21:33:42] [INFO] Configurations applied successfully.
+[2025-02-10 21:33:42] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:33:42] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:33:42] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:33:43] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:33:43] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:33:43] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:33:43] [INFO]   1: http://rnexq-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:33:43] [INFO]   2: https://rnexq-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:33:43] [INFO]   3: http://rnexq-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:33:43] [INFO]   4: https://rnexq-103-242-189-102.a.free.t.pinggy.io
+[2025-02-10 21:35:39] [INFO] Created config with reference: 3
+[2025-02-10 21:35:39] [INFO] Configurations applied successfully.
+[2025-02-10 21:35:39] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:35:39] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:35:39] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:35:40] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:35:40] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:35:40] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:35:40] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:35:40] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:35:40] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:35:40] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:35:40] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:35:40] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:37:15] [INFO] Created config with reference: 3
+[2025-02-10 21:37:15] [INFO] Token set successfully
+[2025-02-10 21:37:15] [INFO] Configurations applied successfully.
+[2025-02-10 21:37:15] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:37:15] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:37:15] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:37:15] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:37:15] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:37:15] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:37:15] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:37:15] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:37:15] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:37:15] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:37:15] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:37:15] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:39:25] [INFO] Token set successfully
+[2025-02-10 21:39:25] [INFO] Created config with reference: 3
+[2025-02-10 21:39:25] [INFO] Configurations applied successfully.
+[2025-02-10 21:39:25] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:39:25] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:39:25] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:39:26] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:39:26] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:39:26] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:39:26] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:39:26] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:39:26] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:39:26] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:39:26] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:39:26] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:42:13] [INFO] Created config with reference: 3
+[2025-02-10 21:42:13] [INFO] Token set successfully
+[2025-02-10 21:42:13] [INFO] Configurations applied successfully.
+[2025-02-10 21:42:13] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:42:13] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:42:14] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:42:14] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:42:14] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:42:14] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:42:14] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:42:14] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:42:14] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:42:14] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:42:14] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:42:14] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:43:55] [INFO] Created config with reference: 3
+[2025-02-10 21:43:55] [INFO] Token set successfully
+[2025-02-10 21:43:55] [INFO] Configurations applied successfully.
+[2025-02-10 21:43:55] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:43:55] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:43:56] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:43:56] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:43:56] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:43:56] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:43:56] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:43:56] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:43:56] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:43:56] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:43:56] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:43:56] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:44:04] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-10 21:45:17] [INFO] Created config with reference: 3
+[2025-02-10 21:45:17] [INFO] Token set successfully
+[2025-02-10 21:45:17] [INFO] Configurations applied successfully.
+[2025-02-10 21:45:17] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:45:17] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:45:18] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:45:18] [INFO] Tunnel not yet authenticated. Queuing tunnelRequestAdditionalForwarding...
+[2025-02-10 21:45:18] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:45:18] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:45:18] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-10 21:45:18] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:45:18] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:45:18] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:45:18] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:45:18] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:45:18] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:45:18] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:57:51] [INFO] Created config with reference: 3
+[2025-02-10 21:57:51] [INFO] Token set successfully
+[2025-02-10 21:57:51] [INFO] Configurations applied successfully.
+[2025-02-10 21:57:51] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:57:51] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:57:51] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:57:51] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-10 21:57:52] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:57:52] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:57:52] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:57:52] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:57:52] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:57:52] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:57:52] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:57:52] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:57:52] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:57:52] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-10 21:59:11] [INFO] Created config with reference: 3
+[2025-02-10 21:59:11] [INFO] Token set successfully
+[2025-02-10 21:59:11] [INFO] Configurations applied successfully.
+[2025-02-10 21:59:11] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:59:11] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:59:12] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:59:12] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-10 21:59:12] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:59:12] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:59:12] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:59:12] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:59:12] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:59:12] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:59:12] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:59:12] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:59:12] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:59:12] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-10 21:59:48] [INFO] Created config with reference: 3
+[2025-02-10 21:59:48] [INFO] Token set successfully
+[2025-02-10 21:59:48] [INFO] Configurations applied successfully.
+[2025-02-10 21:59:48] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-10 21:59:48] [INFO] Tunnel initiated with reference: 4
+[2025-02-10 21:59:49] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-10 21:59:49] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-10 21:59:49] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-10 21:59:49] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-10 21:59:49] [INFO] Primary forwarding done. Addresses:
+[2025-02-10 21:59:49] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-10 21:59:49] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-10 21:59:49] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:59:49] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:59:49] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:59:49] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-10 21:59:49] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-11 22:51:47] [INFO] Created config with reference: 3
+[2025-02-11 22:51:47] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-11 22:51:47] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-11 22:51:47] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-11 22:51:47] [INFO] Token set successfully
+[2025-02-11 22:51:47] [INFO] Tunnel initiated with reference: 4
+[2025-02-11 22:51:47] [INFO] Configurations applied successfully.
+[2025-02-11 22:51:49] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-11 22:51:49] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-11 22:51:50] [INFO] Primary forwarding done. Addresses:
+[2025-02-11 22:51:50] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-11 22:51:50] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-11 22:51:50] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-11 22:51:50] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-11 22:51:50] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-11 22:51:50] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-11 22:51:50] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-11 22:52:11] [INFO] Created config with reference: 3
+[2025-02-11 22:52:11] [INFO] Token set successfully
+[2025-02-11 22:52:11] [INFO] Configurations applied successfully.
+[2025-02-11 22:52:11] [INFO] Tunnel initiated with reference: 4
+[2025-02-11 22:52:12] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-11 22:52:12] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-11 22:52:12] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-11 22:52:12] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-11 22:52:12] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-11 22:52:12] [INFO] Primary forwarding done. Addresses:
+[2025-02-11 22:52:12] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-11 22:52:12] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-11 22:52:12] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-11 22:52:12] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-11 22:52:12] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-11 22:52:12] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-11 22:52:12] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-13 22:51:53] [INFO] Pinggy exception handling initialized.
+[2025-02-13 22:51:53] [INFO] Tunnel initiated with reference: 4
+[2025-02-13 22:51:53] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-13 22:51:53] [INFO] Created config with reference: 3
+[2025-02-13 22:51:53] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-13 22:51:53] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-13 22:51:53] [INFO] Token set successfully
+[2025-02-13 22:51:53] [INFO] Configurations applied successfully.
+[2025-02-13 22:51:54] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-13 22:51:54] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-13 22:51:55] [INFO] Primary forwarding done. Addresses:
+[2025-02-13 22:51:55] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-13 22:51:55] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-13 22:51:55] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-13 22:51:55] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-13 22:51:55] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-13 22:51:55] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-13 22:51:55] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-13 22:53:16] [INFO] Pinggy exception handling initialized.
+[2025-02-13 22:53:16] [INFO] Token set successfully
+[2025-02-13 22:53:16] [INFO] Created config with reference: 3
+[2025-02-13 22:53:16] [INFO] Configurations applied successfully.
+[2025-02-13 22:53:16] [INFO] Tunnel initiated with reference: 4
+[2025-02-13 22:53:16] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-13 22:53:17] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-13 22:53:17] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-13 22:53:17] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-13 22:53:17] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-13 22:53:17] [INFO] Primary forwarding done. Addresses:
+[2025-02-13 22:53:17] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-13 22:53:17] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-13 22:53:17] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-13 22:53:17] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-13 22:53:17] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-13 22:53:17] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-13 22:53:17] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-15 18:15:38] [INFO] Pinggy exception handling initialized.
+[2025-02-15 18:15:38] [INFO] Tunnel initiated with reference: 4
+[2025-02-15 18:15:39] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-15 18:15:39] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-15 18:15:39] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-15 18:15:38] [INFO] Created config with reference: 3
+[2025-02-15 18:15:38] [INFO] Token set successfully
+[2025-02-15 18:15:38] [INFO] Configurations applied successfully.
+[2025-02-15 18:15:41] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-15 18:15:41] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-15 18:15:42] [INFO] Primary forwarding done. Addresses:
+[2025-02-15 18:15:42] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-15 18:15:42] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-15 18:15:42] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-15 18:15:42] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-15 18:15:42] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-15 18:15:42] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-15 18:15:42] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000
+[2025-02-18 22:53:33] [INFO] Pinggy exception handling initialized.
+[2025-02-18 22:53:33] [INFO] Tunnel initiated with reference: 4
+[2025-02-18 22:53:33] [ERROR] Tunnel connection failed.
+[2025-02-18 22:53:33] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-18 22:53:33] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-18 22:53:33] [INFO] Created config with reference: 3
+[2025-02-18 22:53:33] [INFO] Token set successfully
+[2025-02-18 22:53:33] [INFO] Configurations applied successfully.
+[2025-02-18 23:01:29] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:01:29] [INFO] Created config with reference: 3
+[2025-02-18 23:01:29] [INFO] Token set successfully
+[2025-02-18 23:01:29] [INFO] Configurations applied successfully.
+[2025-02-18 23:01:29] [INFO] Tunnel initiated with reference: 4
+[2025-02-18 23:01:30] [ERROR] Tunnel connection failed.
+[2025-02-18 23:01:29] [ERROR] Failed to initialize exception handling:
+Error: ReferenceError: addon is not defined
+    at Tunnel.initExceptionHandling (/home/sky09/projects/pinggy-learnings/pinggy/src/bindings/tunnel.js:19:7)
+    at new Tunnel (/home/sky09/projects/pinggy-learnings/pinggy/src/bindings/tunnel.js:13:10)
+    at PinggySDK.initialize (/home/sky09/projects/pinggy-learnings/pinggy/src/core/pinggy.js:115:21)
+    at new PinggySDK (/home/sky09/projects/pinggy-learnings/pinggy/src/core/pinggy.js:78:10)
+    at Object.<anonymous> (/home/sky09/projects/pinggy-learnings/pinggy/src/index.js:4:16)
+    at Module._compile (node:internal/modules/cjs/loader:1198:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1252:10)
+    at Module.load (node:internal/modules/cjs/loader:1076:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:911:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)
+[2025-02-18 23:01:30] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-18 23:01:30] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-18 23:02:34] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:02:34] [INFO] Created config with reference: 3
+[2025-02-18 23:02:34] [INFO] Configurations applied successfully.
+[2025-02-18 23:02:34] [INFO] Token set successfully
+[2025-02-18 23:02:34] [INFO] Tunnel initiated with reference: 4
+[2025-02-18 23:02:34] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:02:34] [ERROR] Tunnel connection failed.
+[2025-02-18 23:02:34] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-18 23:02:34] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-18 23:02:56] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:02:56] [INFO] Created config with reference: 3
+[2025-02-18 23:02:56] [INFO] Token set successfully
+[2025-02-18 23:02:56] [INFO] Configurations applied successfully.
+[2025-02-18 23:02:56] [INFO] Tunnel initiated with reference: 4
+[2025-02-18 23:02:56] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:02:56] [ERROR] Tunnel connection failed.
+[2025-02-18 23:02:56] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-18 23:02:56] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-18 23:04:41] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:04:41] [INFO] Created config with reference: 3
+[2025-02-18 23:04:41] [INFO] Token set successfully
+[2025-02-18 23:04:41] [INFO] Configurations applied successfully.
+[2025-02-18 23:04:41] [INFO] Tunnel initiated with reference: 4
+[2025-02-18 23:04:41] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:04:41] [ERROR] Tunnel connection failed.
+[2025-02-18 23:04:41] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-18 23:04:41] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-18 23:05:27] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:05:27] [INFO] Created config with reference: 3
+[2025-02-18 23:05:27] [INFO] Token set successfully
+[2025-02-18 23:05:27] [INFO] Configurations applied successfully.
+[2025-02-18 23:05:27] [INFO] Tunnel initiated with reference: 4
+[2025-02-18 23:05:27] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:05:27] [ERROR] Tunnel connection failed.
+[2025-02-18 23:05:27] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-18 23:05:27] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-18 23:07:53] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:07:53] [INFO] Created config with reference: 3
+[2025-02-18 23:07:53] [INFO] Token set successfully
+[2025-02-18 23:07:53] [INFO] Configurations applied successfully.
+[2025-02-18 23:07:53] [INFO] Tunnel initiated with reference: 4
+[2025-02-18 23:07:53] [INFO] Pinggy exception handling initialized.
+[2025-02-18 23:07:54] [ERROR] Tunnel connection failed.
+[2025-02-18 23:07:54] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-18 23:07:54] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:07:19] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:07:19] [INFO] Created config with reference: 3
+[2025-02-23 21:07:19] [INFO] Tunnel initiated with reference: 4
+[2025-02-23 21:07:19] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:07:19] [INFO] Token set successfully
+[2025-02-23 21:07:19] [ERROR] Tunnel connection failed.
+[2025-02-23 21:07:19] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:07:19] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:07:19] [INFO] Configurations applied successfully.
+[2025-02-23 21:15:18] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:15:18] [INFO] Created config with reference: 3
+[2025-02-23 21:15:18] [INFO] Token set successfully
+[2025-02-23 21:15:18] [INFO] Configurations applied successfully.
+[2025-02-23 21:15:18] [INFO] Tunnel initiated with reference: 4
+[2025-02-23 21:15:18] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:15:18] [ERROR] Tunnel connection failed.
+[2025-02-23 21:15:18] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:15:18] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:23:45] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:23:45] [INFO] Configurations applied successfully.
+[2025-02-23 21:23:46] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:23:46] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:24:20] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:24:20] [INFO] Configurations applied successfully.
+[2025-02-23 21:24:21] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:24:21] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:26:26] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:26:26] [INFO] Configurations applied successfully.
+[2025-02-23 21:26:26] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:26:26] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:27:28] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:27:28] [INFO] Configurations applied successfully.
+[2025-02-23 21:27:28] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:27:28] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:28:51] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:28:51] [INFO] Configurations applied successfully.
+[2025-02-23 21:28:51] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:28:51] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:29:50] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:29:50] [INFO] Configurations applied successfully.
+[2025-02-23 21:29:50] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:29:50] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:32:51] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:32:51] [INFO] Configurations applied successfully.
+[2025-02-23 21:32:51] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-23 21:32:51] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:32:51] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:32:55] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-23 21:32:56] [INFO] Primary forwarding done. Addresses:
+[2025-02-23 21:32:56] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-23 21:32:56] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-23 21:32:56] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-23 21:32:56] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-23 21:32:56] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-23 21:32:56] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-23 21:35:01] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:35:01] [INFO] Created config with reference: 3
+[2025-02-23 21:35:01] [INFO] Token set successfully
+[2025-02-23 21:35:01] [INFO] Configurations applied successfully.
+[2025-02-23 21:35:01] [INFO] Tunnel initiated with reference: 4
+[2025-02-23 21:35:01] [INFO] Pinggy exception handling initialized.
+[2025-02-23 21:35:01] [INFO] Tunnel connected, starting authentication monitoring...
+[2025-02-23 21:35:01] [INFO] Tunnel not yet authenticated. Queuing startWebDebugging...
+[2025-02-23 21:35:01] [INFO] Primary forwarding not yet completed. Queuing additional forwarding...
+[2025-02-23 21:35:02] [INFO] Tunnel authenticated, requesting primary forwarding...
+[2025-02-23 21:35:02] [INFO] Web debugging started on port 8081 visit http://localhost:8081
+[2025-02-23 21:35:02] [INFO] Primary forwarding done. Addresses:
+[2025-02-23 21:35:02] [INFO]   1: http://pompom.abhijitmondal.in
+[2025-02-23 21:35:02] [INFO]   2: https://pompom.abhijitmondal.in
+[2025-02-23 21:35:02] [INFO]   3: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-23 21:35:02] [INFO]   4: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-23 21:35:02] [INFO]   5: http://srqawjwkgj.a.t.pinggy.io
+[2025-02-23 21:35:02] [INFO]   6: https://srqawjwkgj.a.t.pinggy.io
+[2025-02-23 21:35:02] [INFO] Requested additional forwarding from pompom.abhijitmondal.in to localhost:4000

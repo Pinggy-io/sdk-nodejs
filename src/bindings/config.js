@@ -1,24 +1,39 @@
 const Logger = require("../utils/logger");
 
 class Config {
-  constructor(addon) {
+  constructor(addon, options = {}) {
     this.addon = addon;
-    this.configRef = this.initialize();
+    this.configRef = this.initialize(options);
   }
 
-  initialize() {
+  initialize(options) {
     try {
       const configRef = this.addon.createConfig();
       Logger.info(`Created config with reference: ${configRef}`);
 
-      // Set default values
-      this.addon.configSetServerAddress(configRef, "t.pinggy.io:443");
-      this.addon.configSetSniServerName(configRef, "t.pinggy.io");
-      this.addon.tcpForwardTo(configRef, "localhost:4000");
-    //   set log path to the logs.log in the root of the project
+      // do the above but in a try catch block, and log the error if it fails
+      if (options.token) {
+        try {
+          this.addon.configSetToken(configRef, options.token);
+          Logger.info("Token set successfully");
+        } catch (e) {
+          Logger.error("Error setting token:", e);
+        }
+      }
+
+      // Apply user-defined values or set defaults
+      const serverAddress = options.serverAddress || "t.pinggy.io:443";
+      const sniServerName = options.sniServerName || "t.pinggy.com";
+      const forwardTo = options.forwardTo || "localhost:4000";
+
+      this.addon.configSetServerAddress(configRef, serverAddress);
+      this.addon.configSetSniServerName(configRef, sniServerName);
+      this.addon.configSetTcpForwardTo(configRef, forwardTo);
+
+      // Set log path
       this.addon.setLogPath("./logs.log");
-      
-      Logger.info("Default configurations set successfully.");
+
+      Logger.info("Configurations applied successfully.");
       return configRef;
     } catch (e) {
       Logger.error("Error creating configuration:", e);
@@ -36,7 +51,8 @@ class Config {
 
   setServerAddress(address = "t.pinggy.io:443") {
     try {
-      if (this.configRef) this.addon.configSetServerAddress(this.configRef, address);
+      if (this.configRef)
+        this.addon.configSetServerAddress(this.configRef, address);
     } catch (e) {
       Logger.error("Error setting server address:", e);
     }
@@ -44,9 +60,31 @@ class Config {
 
   getServerAddress() {
     try {
-      return this.configRef ? this.addon.configGetServerAddress(this.configRef) : null;
+      return this.configRef
+        ? this.addon.configGetServerAddress(this.configRef)
+        : null;
     } catch (e) {
       Logger.error("Error getting server address:", e);
+      return null;
+    }
+  }
+
+  getSniServerName() {
+    try {
+      return this.configRef
+        ? this.addon.configGetSniServerName(this.configRef)
+        : null;
+    } catch (e) {
+      Logger.error("Error getting SNI server name:", e);
+      return null;
+    }
+  }
+
+  getToken() {
+    try {
+      return this.configRef ? this.addon.configGetToken(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting token:", e);
       return null;
     }
   }

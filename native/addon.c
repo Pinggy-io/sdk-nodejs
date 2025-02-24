@@ -1,13 +1,15 @@
 #include <node_api.h>
 
-// Function declarations from addon1.c and addon2.c
 napi_value Init1(napi_env env, napi_value exports);
 napi_value Init2(napi_env env, napi_value exports);
+napi_value Init3(napi_env env, napi_value exports);
 
-napi_value Init(napi_env env, napi_value exports) {
-    // Initialize functions from both addon1.c and addon2.c
+napi_value Init(napi_env env, napi_value exports)
+{
     Init1(env, exports);
     Init2(env, exports);
+    Init3(env, exports);
+
     return exports;
 }
 

@@ -83,6 +83,38 @@ napi_value SetLogPath(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value SetLogEnable(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    size_t argc = 1; // Expecting one argument
+    napi_value args[1];
+
+    // Retrieve arguments from JavaScript
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        napi_throw_error(env, NULL, "Expected one argument (boolean)");
+        return NULL;
+    }
+
+    // Convert JavaScript boolean to C boolean (pinggy_bool_t)
+    bool enable;
+    status = napi_get_value_bool(env, args[0], &enable);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to convert argument to boolean");
+        return NULL;
+    }
+
+    // Call the native function
+    pinggy_set_log_enable(enable);
+
+    // Return undefined (as the function has no return value)
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
 // Wrapper for pinggy_create_config
 // creates a new configuration object and returns a reference to it as a JavaScript number
 napi_value CreateConfig(napi_env env, napi_callback_info info)
@@ -1438,7 +1470,35 @@ napi_value ConfigGetInsecure(napi_env env, napi_callback_info info)
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
-    napi_value set_log_path_fn, create_config_fn, set_server_address_fn, get_server_address_fn, get_sni_server_name_fn, set_sni_server_name_fn, set_advanced_parsing_fn, get_advanced_parsing_fn, set_token_fn, set_type_fn;
+    napi_value create_config_fn;
+
+    napi_value set_log_path_fn,
+        set_log_enable_fn,
+        set_server_address_fn,
+        set_sni_server_name_fn,
+        set_advanced_parsing_fn,
+        set_token_fn,
+        set_type_fn,
+        set_force_fn,
+        set_argument_fn,
+        set_ssl_fn,
+        set_udp_type_fn,
+        set_tcp_forward_to_fn,
+        set_udp_forward_to_fn,
+        set_insecure_fn;
+
+    napi_value get_server_address_fn,
+        get_sni_server_name_fn,
+        get_advanced_parsing_fn,
+        get_token_fn,
+        get_type_fn,
+        get_udp_type_fn,
+        get_tcp_forward_to_fn,
+        get_udp_forward_to_fn,
+        get_force_fn,
+        get_argument_fn,
+        get_ssl_fn,
+        get_insecure_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
     // napi_create_function(napi_env env,
@@ -1463,6 +1523,9 @@ napi_value Init1(napi_env env, napi_value exports)
     // - [in] object: the object to which the property is to be added
     // - [in] utf8name: the name of the property to add
     // - [in] value: the value of the property to add
+
+    napi_create_function(env, NULL, 0, SetLogEnable, NULL, &set_log_enable_fn);
+    napi_set_named_property(env, exports, "setLogEnable", set_log_enable_fn);
 
     napi_create_function(env, NULL, 0, CreateConfig, NULL, &create_config_fn);
     napi_set_named_property(env, exports, "createConfig", create_config_fn);
@@ -1490,6 +1553,54 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigSetType, NULL, &set_type_fn);
     napi_set_named_property(env, exports, "configSetType", set_type_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetUdpType, NULL, &get_udp_type_fn);
+    napi_set_named_property(env, exports, "configGetUdpType", get_udp_type_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetTcpForwardTo, NULL, &get_tcp_forward_to_fn);
+    napi_set_named_property(env, exports, "configGetTcpForwardTo", get_tcp_forward_to_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetUdpForwardTo, NULL, &get_udp_forward_to_fn);
+    napi_set_named_property(env, exports, "configGetUdpForwardTo", get_udp_forward_to_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetForce, NULL, &set_force_fn);
+    napi_set_named_property(env, exports, "configSetForce", set_force_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetForce, NULL, &get_force_fn);
+    napi_set_named_property(env, exports, "configGetForce", get_force_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetArgument, NULL, &set_argument_fn);
+    napi_set_named_property(env, exports, "configSetArgument", set_argument_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetArgument, NULL, &get_argument_fn);
+    napi_set_named_property(env, exports, "configGetArgument", get_argument_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetSSL, NULL, &set_ssl_fn);
+    napi_set_named_property(env, exports, "configSetSSL", set_ssl_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetUdpType, NULL, &set_udp_type_fn);
+    napi_set_named_property(env, exports, "configSetUdpType", set_udp_type_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetTcpForwardTo, NULL, &set_tcp_forward_to_fn);
+    napi_set_named_property(env, exports, "configSetTcpForwardTo", set_tcp_forward_to_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetUdpForwardTo, NULL, &set_udp_forward_to_fn);
+    napi_set_named_property(env, exports, "configSetUdpForwardTo", set_udp_forward_to_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetInsecure, NULL, &set_insecure_fn);
+    napi_set_named_property(env, exports, "configSetInsecure", set_insecure_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetToken, NULL, &get_token_fn);
+    napi_set_named_property(env, exports, "configGetToken", get_token_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetType, NULL, &get_type_fn);
+    napi_set_named_property(env, exports, "configGetType", get_type_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetSsl, NULL, &get_ssl_fn);
+    napi_set_named_property(env, exports, "configGetSsl", get_ssl_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetInsecure, NULL, &get_insecure_fn);
+    napi_set_named_property(env, exports, "configGetInsecure", get_insecure_fn);
 
     return exports;
 }
