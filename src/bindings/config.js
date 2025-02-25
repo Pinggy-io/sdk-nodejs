@@ -7,6 +7,8 @@ class Config {
   }
 
   initialize(options) {
+    // initialize expection handler
+    this.addon.initExceptionHandling();
     try {
       const configRef = this.addon.createConfig();
       Logger.info(`Created config with reference: ${configRef}`);
@@ -23,11 +25,19 @@ class Config {
 
       // Apply user-defined values or set defaults
       const serverAddress = options.serverAddress || "t.pinggy.io:443";
-      const sniServerName = options.sniServerName || "t.pinggy.com";
+      const sniServerName = options.sniServerName || "t.pinggy.io";
       const forwardTo = options.forwardTo || "localhost:4000";
 
       this.addon.configSetServerAddress(configRef, serverAddress);
-      this.addon.configSetSniServerName(configRef, sniServerName);
+
+      // this.addon.configSetSniServerName(configRef, sniServerName);
+      try {
+        this.addon.configSetSniServerName(configRef, sniServerName);
+      } catch (e) {
+        Logger.error("Error setting SNI server name:", e);
+        Logger.error("Last Exception:", this.addon.getLastException());
+      }
+      
       this.addon.configSetTcpForwardTo(configRef, forwardTo);
 
       // Set log path

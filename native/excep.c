@@ -11,21 +11,24 @@ static __thread char last_exception[512] = {0};
 void PinggyExceptionHandler(const char *etype, const char *ewhat)
 {
     snprintf(last_exception, sizeof(last_exception), "%s: %s", etype, ewhat);
-    printf("%s: %s", etype, ewhat);
+    printf("Exception Caught: %s\n", last_exception); // Debug print
 }
 
 // N-API function to get the last exception
 napi_value GetLastException(napi_env env, napi_callback_info info)
 {
     napi_value result;
-    napi_create_string_utf8(env, last_exception, NAPI_AUTO_LENGTH, &result);
 
-    // Extract the string from `napi_value` for C-side printing
-    char buffer[512];  // Buffer to store the extracted string
-    size_t copied;
-    napi_get_value_string_utf8(env, result, buffer, sizeof(buffer), &copied);
+    // Copy the thread-local `last_exception` to a local C string buffer
+    char exception_copy[512];
+    strncpy(exception_copy, last_exception, sizeof(exception_copy));
+    exception_copy[sizeof(exception_copy) - 1] = '\0';  // Ensure null termination
 
-    printf("GetLastException: %s\n", buffer); // Print extracted string
+    // Convert the C string to a UTF-8 N-API string
+    napi_create_string_utf8(env, exception_copy, NAPI_AUTO_LENGTH, &result);
+
+    // Debug print
+    printf("GetLastException (Copied): %s\n", exception_copy);
 
     // Clear the stored exception after retrieval
     last_exception[0] = '\0';

@@ -3,8 +3,8 @@ require("dotenv").config();
 
 const tunnel = new PinggySDK({
   forwardTo: "localhost:3000",
-  token: process.env.TUNNEL_TOKEN_SUB,
-  sniServerName: "t.pinggy.io",
+  sniServerName: "t.pinggy.com",
+  // token: process.env.TUNNEL_TOKEN_SUB,
 });
 
 console.log("Server Address:", tunnel.getServerAddress());

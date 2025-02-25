@@ -8,37 +8,6 @@ class Tunnel {
     this.primaryForwardingDone = false;
     this.authQueue = []; // Queue for functions that need authentication
     this.forwardingQueue = []; // Queue for additional forwarding requests
-
-    // Initialize exception handling at the start
-    this.initExceptionHandling();
-  }
-
-  // 🔹 Initialize Pinggy Exception Handling
-  initExceptionHandling() {
-    try {
-      this.addon.initExceptionHandling();
-      Logger.info("Pinggy exception handling initialized.");
-    } catch (e) {
-      Logger.error("Failed to initialize exception handling:", e);
-    }
-  }
-
-  // Fetch last exception from native addon
-  updateLastException() {
-    try {
-      const exception = this.addon.getLastException();
-      if (exception) {
-        this.lastException = exception;
-        Logger.error("Pinggy Exception:", exception);
-      }
-    } catch (e) {
-      Logger.error("Error retrieving last exception:", e);
-    }
-  }
-
-  // Public method to retrieve the last exception
-  getLastException() {
-    return this.lastException;
   }
 
   initialize(configRef) {
@@ -48,18 +17,18 @@ class Tunnel {
       return tunnelRef;
     } catch (e) {
       Logger.error("Error initiating tunnel:", e);
-      this.updateLastException();
-      this.getLastException();
       return null;
     }
   }
 
   start() {
+    this.addon.initExceptionHandling();
     if (!this.tunnelRef) return;
     try {
       const connected = this.addon.tunnelConnect(this.tunnelRef);
       if (!connected) {
         Logger.error("Tunnel connection failed.");
+        console.log("last exception" + this.addon.getLastException());
         return;
       }
       Logger.info("Tunnel connected, starting authentication monitoring...");
@@ -90,8 +59,6 @@ class Tunnel {
       this.poll();
     } catch (error) {
       Logger.error("Error in startTunnel:", error);
-      this.updateLastException();
-      this.getLastException();
     }
   }
 
