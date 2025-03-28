@@ -12,6 +12,7 @@
   "gypfile": true,
   "dependencies": {
     "dotenv": "^16.4.7",
+    "node-api-headers": "^1.5.0",
     "node-gyp": "^11.0.0"
   }
 }

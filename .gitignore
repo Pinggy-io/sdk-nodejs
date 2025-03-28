@@ -6,15 +6,8 @@ npm-debug.log
 yarn-error.log
 
 # Logs
-logs
 logs/
-/logs
-/logs/*
-logs/*
 logs/pinggy.log
-/logs/pinggy.log
-*.log
-logs.log
 
 # Build artifacts
 dist/

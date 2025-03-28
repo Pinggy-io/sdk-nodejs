@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const tunnel = new PinggySDK({
   forwardTo: "localhost:3000",
-  sniServerName: "t.pinggy.com",
+  sniServerName: "t.pinggy.io",
   // token: process.env.TUNNEL_TOKEN_SUB,
 });
 
@@ -13,18 +13,13 @@ console.log("SNI Server Name:", tunnel.getSniServerName());
 
 tunnel.startTunnel();
 
-// Start web debugging after 2 seconds
-// setTimeout(() => {
-//   tunnel.startWebDebugging(3001);
-// }, 1000);
-
 tunnel.startWebDebugging(8081);
 
 // Request additional forwarding after 2 seconds
-tunnel.tunnelRequestAdditionalForwarding(
-  "pompom.abhijitmondal.in",
-  "localhost:4000"
-);
+// tunnel.tunnelRequestAdditionalForwarding(
+//   "pompom.abhijitmondal.in",
+//   "localhost:4000"
+// );
 
 // console.log(tunnel.getLastException());
 
