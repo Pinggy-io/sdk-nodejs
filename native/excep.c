@@ -4,8 +4,11 @@
 #include <string.h>
 #include "../pinggy.h"
 
-// Thread-local storage for last exception
-static __declspec(thread) char last_exception[512] = {0};
+#ifdef _WIN32
+    static __declspec(thread) char last_exception[512] = {0};
+#else
+    static __thread char last_exception[512] = {0};
+#endif
 
 // Exception handler function
 void PinggyExceptionHandler(const char *etype, const char *ewhat)
