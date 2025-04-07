@@ -59,7 +59,7 @@
                     }
                 }],
                 ["OS==\"linux\"", {
-                    "libraries": ["-L$(PWD)/", "-lpinggy"],
+                    "libraries": ["<(module_root_dir)/libpinggy.so"],
                     "cflags": ["-ggdb", "-Wno-ignored-qualifiers"]
                 }]
             ]

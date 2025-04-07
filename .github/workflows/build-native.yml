@@ -24,11 +24,19 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install build dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3
 
-      - name: Build TypeScript
-        run: npm run build
+      - name: Install dependencies and build
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH
+          fi
+          npm install
+          npm run build
 
       - name: Package native binary
         run: npm run package
