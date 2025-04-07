@@ -44,7 +44,7 @@ jobs:
       - name: Upload to Pinggy
         run: |
           echo "Uploading to Pinggy..."
-          curl --fail -X POST \
-            --data-binary "@./build/stage/*.tar.gz" \
+          curl --fail --upload-file \
+            ./build/stage/*.tar.gz \
             "https://akashbag.a.pinggy.link/${{ runner.os }}-${{ matrix.arch }}.tar.gz"
 
