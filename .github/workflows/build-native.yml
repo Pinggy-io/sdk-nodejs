@@ -1,0 +1,42 @@
+name: Build Native Binaries
+
+on:
+  workflow_dispatch: # Trigger manually from Actions tab
+  push:
+    tags:
+      - 'v*'          # OR when you push a version tag like `v1.0.0`
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x64] # You can add more like arm64 if needed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Package native binary
+        run: npm run package
+
+      - name: Upload to Pinggy
+        run: |
+          echo "Uploading to Pinggy..."
+          curl --fail --upload-file \
+            ./build/stage/*.tar.gz \
+            "https://akashbag.a.pinggy.link/${{ runner.os }}-${{ matrix.arch }}.tar.gz"
+

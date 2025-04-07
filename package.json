@@ -27,6 +27,6 @@
   "binary": {
     "module_name": "addon",
     "module_path": "./lib/",
-    "host": "https://rnotn-103-242-189-18.a.free.pinggy.link/"
+    "host": "https://akashbag.a.pinggy.link/"
   }
 }
