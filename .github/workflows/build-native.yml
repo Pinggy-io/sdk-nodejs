@@ -46,5 +46,5 @@ jobs:
           echo "Uploading to Pinggy..."
           curl --fail --upload-file \
             ./build/stage/*.tar.gz \
-            "https://akashbag.a.pinggy.link/${{ runner.os }}-${{ matrix.arch }}.tar.gz"
+            "https://rnlqa-103-242-189-18.a.free.pinggy.link/upload/${{ runner.os }}-${{ matrix.arch }}.tar.gz"
 
