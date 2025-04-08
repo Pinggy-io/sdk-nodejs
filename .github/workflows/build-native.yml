@@ -41,10 +41,19 @@ jobs:
       - name: Package native binary
         run: npm run package
 
-      - name: Upload to Pinggy
+      - name: Upload all tarballs to Pinggy
         run: |
-          echo "Uploading to Pinggy..."
-          curl --fail --upload-file \
-            ./build/stage/*.tar.gz \
-            "https://rnlqa-103-242-189-18.a.free.pinggy.link/upload/${{ runner.os }}-${{ matrix.arch }}.tar.gz"
+          echo "Uploading files to Pinggy..."
+
+          for f in ./build/stage/*.tar.gz; do
+            if [ -f "$f" ]; then
+              FILE=$(basename "$f")
+              echo "Uploading $FILE..."
+              curl --fail --upload-file "$f" \
+                "https://rnlqa-103-242-189-18.a.free.pinggy.link/upload/$FILE"
+            else
+              echo "No .tar.gz files found to upload."
+            fi
+          done
+
 
