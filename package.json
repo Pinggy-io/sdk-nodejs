@@ -13,6 +13,10 @@
     "start": "node dist/index.js",
     "postinstall": "node ./copy.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pinggy-io/sdk-nodejs.git"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "^20.11.24",
@@ -28,6 +32,7 @@
   "binary": {
     "module_name": "addon",
     "module_path": "./lib/",
-    "host": "https://github.com/Pinggy-io/sdk-nodejs/releases/download/"
+    "host": "https://github.com/Pinggy-io/sdk-nodejs/releases/download/",
+    "remote_path": "{version}"
   }
 }
