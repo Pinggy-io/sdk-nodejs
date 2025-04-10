@@ -38,7 +38,7 @@ if (!mappedOS || !mappedArch) {
 const libNameMap = {
   windows: "pinggy.lib",
   linux: "libpinggy.so",
-  mac: "libpinggy.dylib",
+  macos: "libpinggy.dylib",
 };
 
 const fileName = libNameMap[mappedOS];
