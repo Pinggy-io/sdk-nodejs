@@ -1,3 +1,5 @@
+// node-gyp calls this script since it is specified in binding.gyp in the prebuild_step action
+
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
@@ -81,3 +83,7 @@ download(url, destPath, (err) => {
   console.log(`[Pinggy Prebuild] Successfully downloaded ${fileName}`);
   fs.writeFileSync(path.join(__dirname, "..", ".prebuild-step-done"), "done");
 });
+
+// To do: `${baseURL}/${mappedOS}/${mappedArch}/${fileName}`; will contain version of libpinggy as well
+// check if the version is correct and if not, download the new version, md5 hash check
+// postaction: remove .prebuild-step-done file
