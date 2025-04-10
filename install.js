@@ -21,8 +21,8 @@ const archMap = {
   arm: "armv7",
 };
 
-const mappedOS = osMap[platform];
-const mappedArch = archMap[arch];
+let mappedOS = osMap[platform];
+let mappedArch = archMap[arch];
 
 // currently we have an universal binary for mac
 if (mappedOS === "macos") {
