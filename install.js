@@ -8,11 +8,10 @@ const https = require("https");
 const platform = os.platform(); // 'linux', 'win32', 'darwin'
 const arch = os.arch(); // 'x64', 'arm64', etc.
 
-// Map to your custom directory names
 const osMap = {
   win32: "windows",
   linux: "linux",
-  darwin: "mac",
+  darwin: "macos",
 };
 
 const archMap = {
@@ -22,16 +21,20 @@ const archMap = {
   arm: "armv7",
 };
 
-// Resolve custom mapped names
 const mappedOS = osMap[platform];
 const mappedArch = archMap[arch];
+
+// currently we have an universal binary for mac
+if (mappedOS === "macos") {
+  mappedArch = "universal";
+}
 
 if (!mappedOS || !mappedArch) {
   console.error(`Unsupported platform/arch: ${platform} / ${arch}`);
   process.exit(1);
 }
 
-// Map to correct library file per OS
+// correct library file per OS
 const libNameMap = {
   windows: "pinggy.lib",
   linux: "libpinggy.so",
@@ -44,7 +47,7 @@ if (!fileName) {
   process.exit(1);
 }
 
-// Construct URL
+// Construct URL from which file will be downloaded
 const baseURL = "https://akashbag.a.pinggy.link";
 const url = `${baseURL}/${mappedOS}/${mappedArch}/${fileName}`;
 const destPath = path.join(__dirname, fileName);
