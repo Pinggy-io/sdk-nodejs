@@ -8,16 +8,6 @@ const addon = require(binding_path);
 
 function startTunnel(tunnel) {
   try {
-    const connected = addon.tunnelConnect(tunnel);
-
-    // Check if connected
-    if (!connected) {
-      console.error("Tunnel connection failed.");
-      return;
-    }
-
-    console.log("Tunnel connected, starting authentication monitoring...");
-
     // Set authenticated callback
     addon.tunnelSetAuthenticatedCallback(tunnel, () => {
       console.log("Tunnel authenticated, requesting primary forwarding...");
@@ -35,6 +25,16 @@ function startTunnel(tunnel) {
       }
     );
 
+    const connected = addon.tunnelConnect(tunnel);
+
+    // Check if connected
+    if (!connected) {
+      console.error("Tunnel connection failed.");
+      return;
+    }
+
+    console.log("Tunnel connected, starting authentication monitoring...");
+
     // set additional forwarding
     // setTimeout(() => {
     //   addon.tunnelRequestAdditionalForwarding(
@@ -45,7 +45,7 @@ function startTunnel(tunnel) {
     // }, 1000);
 
     // Start polling loop
-    pollTunnel(tunnel);
+    pollTunnel2(tunnel);
   } catch (error) {
     console.error("Error in startTunnel:", error);
   }
@@ -53,12 +53,32 @@ function startTunnel(tunnel) {
 
 function pollTunnel(tunnel) {
   const poll = () => {
+    console.log("Tunnel resumed, polling again...");
     const error = addon.tunnelResume(tunnel);
     if (error) {
       console.error("Tunnel error detected, stopping polling.");
       return;
     }
     setImmediate(poll); // Non-blocking loop
+  };
+
+  poll();
+}
+
+function pollTunnel2(tunnel) {
+  const resume = async () => {
+    console.log("Tunnel resumed, polling again...");
+    return addon.tunnelResume(tunnel);
+  };
+
+  const poll = async () => {
+    resume().then((result) => {
+      if (result) {
+        console.error("Tunnel error detected, stopping polling.");
+        return;
+      }
+      poll();
+    });
   };
 
   poll();

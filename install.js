@@ -84,8 +84,30 @@ download(url, destPath, (err) => {
     process.exit(1);
   }
   console.log(`[Pinggy Prebuild] Successfully downloaded ${fileName}`);
-  fs.writeFileSync(path.join(__dirname, "..", ".prebuild-step-done"), "done");
+  fs.writeFileSync(path.join(__dirname, ".prebuild-step-done"), "done");
 });
+
+// workaround for not creating a new flag file
+// too be replaced once versioning is implemented
+// exports.getOutputPath = function () {
+//   const os = require("os");
+//   const path = require("path");
+
+//   const libNameMap = {
+//     win32: "pinggy.lib",
+//     linux: "libpinggy.so",
+//     darwin: "libpinggy.dylib",
+//   };
+
+//   const platform = os.platform();
+//   const fileName = libNameMap[platform];
+
+//   if (!fileName) {
+//     throw new Error(`Unsupported platform: ${platform}`);
+//   }
+
+//   return path.join(__dirname, fileName);
+// };
 
 // To do: `${baseURL}/${mappedOS}/${mappedArch}/${fileName}`; will contain version of libpinggy as well
 // check if the version is correct and if not, download the new version, md5 hash check

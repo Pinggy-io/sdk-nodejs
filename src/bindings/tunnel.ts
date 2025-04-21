@@ -6,16 +6,25 @@ export class Tunnel implements ITunnel {
   public authenticated: boolean;
   public primaryForwardingDone: boolean;
   private addon: PinggyNative;
-  private authQueue: (() => void)[];
-  private forwardingQueue: (() => void)[];
+  private authPromise: Promise<void>;
+  private forwardingPromise: Promise<string[]>;
+  private resolveAuth: (() => void) | null = null;
+  private resolveForwarding: ((addresses: string[]) => void) | null = null;
 
   constructor(addon: PinggyNative, configRef: number) {
     this.addon = addon;
     this.tunnelRef = this.initialize(configRef);
     this.authenticated = false;
     this.primaryForwardingDone = false;
-    this.authQueue = []; // Queue for functions that need authentication
-    this.forwardingQueue = []; // Queue for additional forwarding requests
+
+    // Create promises that will be resolved when authentication and forwarding complete
+    this.authPromise = new Promise((resolve) => {
+      this.resolveAuth = resolve;
+    });
+
+    this.forwardingPromise = new Promise((resolve) => {
+      this.resolveForwarding = resolve;
+    });
   }
 
   private initialize(configRef: number): number {
@@ -32,18 +41,12 @@ export class Tunnel implements ITunnel {
   public start(): void {
     if (!this.tunnelRef) return;
     try {
-      const connected = this.addon.tunnelConnect(this.tunnelRef);
-      if (!connected) {
-        Logger.error("Tunnel connection failed.");
-        return;
-      }
-      Logger.info("Tunnel connected, starting authentication monitoring...");
-
       this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
         Logger.info("Tunnel authenticated, requesting primary forwarding...");
         this.authenticated = true;
-        this.authQueue.forEach((fn) => fn()); // Execute queued functions
-        this.authQueue = []; // Clear queue
+        if (this.resolveAuth) {
+          this.resolveAuth();
+        }
         this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
       });
 
@@ -55,91 +58,91 @@ export class Tunnel implements ITunnel {
             Logger.info(`  ${index + 1}: ${address}`)
           );
           this.primaryForwardingDone = true;
-
-          // Process any additional forwarding requests after primary forwarding
-          this.forwardingQueue.forEach((fn) => fn());
-          this.forwardingQueue = []; // Clear the queue
+          if (this.resolveForwarding) {
+            this.resolveForwarding(addresses);
+          }
         }
       );
 
-      this.poll();
+      const connected = this.addon.tunnelConnect(this.tunnelRef);
+      if (!connected) {
+        Logger.error("Tunnel connection failed.");
+        return;
+      }
+      Logger.info("Tunnel connected, starting authentication monitoring...");
+
+      this.pollStart();
     } catch (error) {
       Logger.error("Error in startTunnel:", error as Error);
     }
   }
 
-  private poll(): void {
-    const poll = () => {
+  private pollStart(): void {
+    const resume = async (): Promise<boolean> => {
       try {
         const error = this.addon.tunnelResume(this.tunnelRef);
         if (error) {
           Logger.error("Tunnel error detected, stopping polling.");
-          return;
+          return false;
         }
-        setImmediate(poll);
+        return true;
       } catch (e) {
         Logger.error("Error during tunnel polling:", e as Error);
+        return false;
       }
     };
+
+    const poll = async () => {
+      // const shouldContinue = await resume();
+      // if (shouldContinue) {
+      //   poll();
+      // }
+      resume().then((success) => {
+        poll();
+      });
+    };
+
     poll();
   }
 
-  public startWebDebugging(listeningPort: number): void {
+  public async startWebDebugging(listeningPort: number): Promise<void> {
     if (!this.tunnelRef) {
       Logger.error("Tunnel not initialized.");
       return;
     }
 
-    const startDebugging = () => {
-      try {
-        this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort);
-        Logger.info(
-          `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
-        );
-      } catch (e) {
-        Logger.error("Error starting web debugging:", e as Error);
-      }
-    };
-
-    if (this.authenticated) {
-      startDebugging(); // Run immediately if authenticated
-    } else {
-      Logger.info("Tunnel not yet authenticated. Queuing startWebDebugging...");
-      this.authQueue.push(startDebugging); // Queue execution
+    try {
+      await this.authPromise; // Wait for authentication
+      this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort);
+      Logger.info(
+        `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
+      );
+    } catch (e) {
+      Logger.error("Error starting web debugging:", e as Error);
     }
   }
 
-  public tunnelRequestAdditionalForwarding(
+  public async tunnelRequestAdditionalForwarding(
     remoteAddress: string,
     localAddress: string
-  ): void {
+  ): Promise<void> {
     if (!this.tunnelRef) {
       Logger.error("Tunnel not initialized.");
       return;
     }
 
-    const requestForwarding = () => {
-      try {
-        this.addon.tunnelRequestAdditionalForwarding(
-          this.tunnelRef,
-          remoteAddress,
-          localAddress
-        );
-        Logger.info(
-          `Requested additional forwarding from ${remoteAddress} to ${localAddress}`
-        );
-      } catch (e) {
-        Logger.error("Error requesting additional forwarding:", e as Error);
-      }
-    };
-
-    if (this.primaryForwardingDone) {
-      requestForwarding(); // Run immediately if primary forwarding succeeded
-    } else {
-      Logger.info(
-        "Primary forwarding not yet completed. Queuing additional forwarding..."
+    try {
+      await this.forwardingPromise; // Wait for primary forwarding to complete
+      this.addon.tunnelRequestAdditionalForwarding(
+        this.tunnelRef,
+        remoteAddress,
+        localAddress
       );
-      this.forwardingQueue.push(requestForwarding); // Queue execution
+      Logger.info(
+        `Requested additional forwarding from ${remoteAddress} to ${localAddress}`
+      );
+    } catch (e) {
+      Logger.error("Error requesting additional forwarding:", e as Error);
     }
   }
 }
