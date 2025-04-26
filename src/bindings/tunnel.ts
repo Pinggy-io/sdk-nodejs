@@ -38,42 +38,48 @@ export class Tunnel implements ITunnel {
     }
   }
 
-  public start(): void {
-    if (!this.tunnelRef) return;
+  public async start(): Promise<string[]> {
+    if (!this.tunnelRef) {
+        throw new Error("Tunnel not initialized.");
+    }
+
     try {
-      this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
-        Logger.info("Tunnel authenticated, requesting primary forwarding...");
-        this.authenticated = true;
-        if (this.resolveAuth) {
-          this.resolveAuth();
+        this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
+            Logger.info("Tunnel authenticated, requesting primary forwarding...");
+            this.authenticated = true;
+            if (this.resolveAuth) {
+                this.resolveAuth();
+            }
+            this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
+        });
+
+        this.addon.tunnelSetPrimaryForwardingSucceededCallback(
+            this.tunnelRef,
+            (addresses) => {
+                Logger.info("Primary forwarding done. Addresses:");
+                addresses.forEach((address, index) =>
+                    Logger.info(`  ${index + 1}: ${address}`)
+                );
+                this.primaryForwardingDone = true;
+                if (this.resolveForwarding) {
+                    this.resolveForwarding(addresses);
+                }
+            }
+        );
+
+        const connected = this.addon.tunnelConnect(this.tunnelRef);
+        if (!connected) {
+            throw new Error("Tunnel connection failed.");
         }
-        this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
-      });
+        Logger.info("Tunnel connected, starting authentication monitoring...");
 
-      this.addon.tunnelSetPrimaryForwardingSucceededCallback(
-        this.tunnelRef,
-        (addresses) => {
-          Logger.info("Primary forwarding done. Addresses:");
-          addresses.forEach((address, index) =>
-            Logger.info(`  ${index + 1}: ${address}`)
-          );
-          this.primaryForwardingDone = true;
-          if (this.resolveForwarding) {
-            this.resolveForwarding(addresses);
-          }
-        }
-      );
+        this.pollStart();
 
-      const connected = this.addon.tunnelConnect(this.tunnelRef);
-      if (!connected) {
-        Logger.error("Tunnel connection failed.");
-        return;
-      }
-      Logger.info("Tunnel connected, starting authentication monitoring...");
-
-      this.pollStart();
+        // Wait for forwarding to complete and return the addresses
+        return await this.forwardingPromise;
     } catch (error) {
-      Logger.error("Error in startTunnel:", error as Error);
+        Logger.error("Error in startTunnel:", error as Error);
+        throw error;
     }
   }
 

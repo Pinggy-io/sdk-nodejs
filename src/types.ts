@@ -3,6 +3,8 @@ export interface PinggyOptions {
   serverAddress?: string;
   sniServerName?: string;
   forwardTo?: string;
+  debug?: boolean;
+  debuggerPort?: number;
 }
 
 export interface PinggyNative {
