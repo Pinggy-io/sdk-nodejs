@@ -46,12 +46,14 @@ export class Pinggy extends PinggySDK {
   }
 }
 
-export function startTunnel(options: PinggyOptions) {
+export async function startTunnel(options: PinggyOptions): Promise<{ tunnel: PinggySDK, addresses: string[] }> {
   const tunnel = new PinggySDK(options);
-  tunnel.startTunnel();
-  return tunnel;
+  const addresses = await tunnel.startTunnel();
+  return { tunnel, addresses };
 }
 
 export function startWebDebugging(tunnel: PinggySDK, port: number) {
   tunnel.startWebDebugging(port);
 }
+
+// add stop

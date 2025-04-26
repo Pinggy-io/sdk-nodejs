@@ -13,6 +13,13 @@ describe("PinggySDK", () => {
     sdk = new PinggySDK(options);
   });
 
+  afterAll(async () => {
+    // Cleanup any resources
+    if (sdk) {
+      // Add any necessary cleanup here
+    }
+  });
+
   test("should get server address", () => {
     const serverAddress = sdk.getServerAddress();
     expect(serverAddress).toBe("t.pinggy.io:443");
@@ -23,11 +30,19 @@ describe("PinggySDK", () => {
     expect(sniServerName).toBe("t.pinggy.io");
   });
 
-  test("should start the tunnel", () => {
-    sdk.startTunnel();
+  test("should start the tunnel", async () => {
+    await new Promise<void>((resolve) => {
+      sdk.startTunnel();
+      // Wait a bit for the tunnel to initialize
+      setTimeout(resolve, 1000);
+    });
   });
 
-  test("should start web debugging", () => {
-    sdk.startWebDebugging(8081);
+  test("should start web debugging", async () => {
+    await new Promise<void>((resolve) => {
+      sdk.startWebDebugging(8081);
+      // Wait a bit for web debugging to start
+      setTimeout(resolve, 1000);
+    });
   });
 });
