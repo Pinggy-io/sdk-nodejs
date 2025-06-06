@@ -628,6 +628,8 @@ napi_value SetAuthenticatedCallback(napi_env env, napi_callback_info info)
     // Store callback in a reference
     AuthCallbackData *cb_data = (AuthCallbackData *)malloc(sizeof(AuthCallbackData));
     cb_data->env = env;
+
+    // To do: Decrease reference count when no longer needed to prevent memory leak
     status = napi_create_reference(env, js_callback, 1, &cb_data->callback_ref);
     if (status != napi_ok)
     {
@@ -638,6 +640,15 @@ napi_value SetAuthenticatedCallback(napi_env env, napi_callback_info info)
 
     // Register callback with Pinggy
     pinggy_bool_t result = pinggy_tunnel_set_authenticated_callback(tunnel, authenticated_callback, cb_data);
+
+    // If registration failed, decrease reference count and free memory
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to set authenticated callback");
+        return NULL;
+    }
 
     napi_value js_result;
     napi_get_boolean(env, result, &js_result);

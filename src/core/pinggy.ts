@@ -34,12 +34,13 @@ export class PinggySDK {
     }
   }
 
-  public startTunnel(): void {
+  public async startTunnel(): Promise<string[]> {
     try {
       if (!this.tunnel) throw new Error("Tunnel not initialized.");
-      this.tunnel.start();
+      return await this.tunnel.start();
     } catch (e) {
       Logger.error("Error starting tunnel:", e as Error);
+      throw e;
     }
   }
 
