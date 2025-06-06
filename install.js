@@ -3,7 +3,11 @@
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
-const https = require("https");
+const https = require("follow-redirects").https;
+const zlib = require("zlib");
+const tar = require("tar");
+const { pipeline } = require("stream");
+const { exec } = require("child_process");
 
 const platform = os.platform(); // 'linux', 'win32', 'darwin'
 const arch = os.arch(); // 'x64', 'arm64', etc.
@@ -47,45 +51,105 @@ if (!fileName) {
   process.exit(1);
 }
 
-// Construct URL from which file will be downloaded
-const baseURL = "https://akashbag.a.pinggy.link";
-const url = `${baseURL}/${mappedOS}/${mappedArch}/${fileName}`;
-const destPath = path.join(__dirname, fileName);
+// Version to use
+const version = "0.0.14";
 
-// Download function
-function download(url, dest, cb) {
-  const file = fs.createWriteStream(dest);
-  https
-    .get(url, (response) => {
-      if (response.statusCode !== 200) {
-        return cb(new Error(`Failed to get '${url}' (${response.statusCode})`));
-      }
-
-      response.pipe(file);
-      file.on("finish", () => file.close(cb));
-    })
-    .on("error", (err) => {
-      fs.unlink(dest, () => cb(err));
-    });
+// Build artifact filename and URL
+function getArtifactInfo(os, arch) {
+  let artifactName, innerLibName;
+  if (os === "linux") {
+    artifactName = `libpinggy-${version}-linux-${arch}.tgz`;
+    innerLibName = "libpinggy.so";
+  } else if (os === "windows") {
+    // Default to MT, skip SSL, prefer x86_64
+    artifactName = `libpinggy-${version}-windows-${arch}-MT.zip`;
+    innerLibName = "pinggy.lib";
+  } else if (os === "macos") {
+    artifactName = `libpinggy-${version}-macos-universal.tgz`;
+    innerLibName = "libpinggy.dylib";
+  } else {
+    return null;
+  }
+  return { artifactName, innerLibName };
 }
 
-// Skip if already exists
-if (fs.existsSync(destPath)) {
-  console.log(
-    `[Pinggy Prebuild] ${fileName} already exists, skipping download.`
-  );
-  process.exit(0);
+const { artifactName, innerLibName } = getArtifactInfo(mappedOS, mappedArch);
+if (!artifactName) {
+  console.error(`Unsupported mapped platform: ${mappedOS}`);
+  process.exit(1);
 }
 
-console.log(`[Pinggy Prebuild] Downloading ${fileName} from ${url}...`);
-download(url, destPath, (err) => {
-  if (err) {
-    console.error(`Download failed: ${err.message}`);
+const githubBase = "https://github.com/Pinggy-io/libpinggy/releases/download";
+const artifactUrl = `${githubBase}/v${version}/${artifactName}`;
+const destArchivePath = path.join(__dirname, artifactName);
+const destLibPath = path.join(__dirname, innerLibName);
+
+// Download function (Promise-based)
+function download(url, dest) {
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(dest);
+    https
+      .get(url, (response) => {
+        if (response.statusCode !== 200) {
+          return reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
+        }
+        response.pipe(file);
+        file.on("finish", () => file.close(resolve));
+      })
+      .on("error", (err) => {
+        fs.unlink(dest, () => reject(err));
+      });
+  });
+}
+
+// Extraction logic (Promise-based, using terminal commands)
+function extractArchive(archivePath, outDir, innerLibName, destLibPath) {
+  return new Promise((resolve, reject) => {
+    if (archivePath.endsWith(".tgz")) {
+      // Use tar command
+      const cmd = `tar -xzf "${archivePath}" -C "${outDir}"`;
+      exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+          return reject(new Error(`tar extraction failed: ${stderr || error.message}`));
+        }
+        if (!fs.existsSync(destLibPath)) {
+          return reject(new Error("Library was not extracted correctly."));
+        }
+        resolve();
+      });
+    } else if (archivePath.endsWith(".zip")) {
+      // Use unzip command
+      const cmd = `unzip -o "${archivePath}" -d "${outDir}"`;
+      exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+          return reject(new Error(`unzip extraction failed: ${stderr || error.message}`));
+        }
+        if (!fs.existsSync(destLibPath)) {
+          return reject(new Error("Library was not extracted correctly."));
+        }
+        resolve();
+      });
+    } else {
+      reject(new Error("Unknown archive format: " + archivePath));
+    }
+  });
+}
+
+
+(async () => {
+  try {
+    console.log(`[Pinggy Prebuild] Downloading ${artifactName} from ${artifactUrl}...`);
+    await download(artifactUrl, destArchivePath);
+    console.log(`[Pinggy Prebuild] Extracting ${artifactName}...`);
+    await extractArchive(destArchivePath, __dirname, innerLibName, destLibPath);
+    fs.unlinkSync(destArchivePath);
+    console.log(`[Pinggy Prebuild] Successfully extracted ${innerLibName}`);
+    fs.writeFileSync(path.join(__dirname, "..", ".prebuild-step-done"), "done");
+  } catch (err) {
+    console.error(`Download or extraction failed: ${err.message}`);
     process.exit(1);
   }
-  console.log(`[Pinggy Prebuild] Successfully downloaded ${fileName}`);
-  fs.writeFileSync(path.join(__dirname, "..", ".prebuild-step-done"), "done");
-});
+})();
 
 // To do: `${baseURL}/${mappedOS}/${mappedArch}/${fileName}`; will contain version of libpinggy as well
 // check if the version is correct and if not, download the new version, md5 hash check

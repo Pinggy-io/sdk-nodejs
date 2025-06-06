@@ -2,6 +2,9 @@ libpinggy.so
 lib/
 lib/addon.node
 
+.prebuild*
+/build*
+
 # Node.js dependencies
 node_modules/
 npm-debug.log
