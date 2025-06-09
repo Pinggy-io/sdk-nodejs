@@ -60,7 +60,8 @@
                 }],
                 ["OS==\"linux\"", {
                     "libraries": ["<(module_root_dir)/libpinggy.so"],
-                    "cflags": ["-ggdb", "-Wno-ignored-qualifiers"]
+                    "cflags": ["-ggdb", "-Wno-ignored-qualifiers"],
+                    "ldflags": ["-Wl,-rpath='$$ORIGIN/..'"]
                 }]
             ]
         }

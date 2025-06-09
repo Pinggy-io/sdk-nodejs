@@ -4,8 +4,6 @@ const os = require("os");
 const path = require("path");
 const fs = require("fs");
 const https = require("follow-redirects").https;
-const zlib = require("zlib");
-const tar = require("tar");
 const { pipeline } = require("stream");
 const { exec } = require("child_process");
 

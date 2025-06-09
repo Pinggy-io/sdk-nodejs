@@ -28,9 +28,7 @@
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^2.0.0",
-    "follow-redirects": "^1.15.9",
-    "tar": "^7.4.3",
-    "unzipper": "^0.12.3"
+    "follow-redirects": "^1.15.9"
   },
   "binary": {
     "module_name": "addon",
