@@ -8,6 +8,7 @@ clean:
 	rm -f libpinggy.so
 	rm -f pinggy.h
 	rm -f pinggy.lib
+	rm -f pinggy.dll
 	rm -f pinggy.dylib
 	rm -f ../.prebuild-step-done
 	node-gyp clean
