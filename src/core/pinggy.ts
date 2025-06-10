@@ -76,4 +76,9 @@ export class PinggySDK {
   public getToken(): string | null {
     return this.config?.getToken() || null;
   }
+
+  public tunnelStop(): void {
+    if (!this.tunnel) throw new Error("Tunnel not initialized.");
+    this.tunnel.tunnelStop();
+  }
 }

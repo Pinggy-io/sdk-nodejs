@@ -56,10 +56,6 @@ export class Tunnel implements ITunnel {
         this.addon.tunnelSetPrimaryForwardingSucceededCallback(
             this.tunnelRef,
             (addresses) => {
-                Logger.info("Primary forwarding done. Addresses:");
-                addresses.forEach((address, index) =>
-                    Logger.info(`  ${index + 1}: ${address}`)
-                );
                 this.primaryForwardingDone = true;
                 if (this.resolveForwarding) {
                     this.resolveForwarding(addresses);
@@ -149,6 +145,25 @@ export class Tunnel implements ITunnel {
       );
     } catch (e) {
       Logger.error("Error requesting additional forwarding:", e as Error);
+    }
+  }
+
+  public tunnelStop(): boolean {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return false;
+    }
+    try {
+      const result = this.addon.tunnelStop(this.tunnelRef);
+      if (result) {
+        Logger.info("Tunnel stopped successfully.");
+      } else {
+        Logger.error("Failed to stop tunnel.");
+      }
+      return result;
+    } catch (e) {
+      Logger.error("Error stopping tunnel:", e as Error);
+      return false;
     }
   }
 }

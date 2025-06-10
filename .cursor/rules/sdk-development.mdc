@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+- This is a JS SDK for a library wriiten in C.
+- Currently the SDK works but it is unstructured. We want to follow a structure similar to the ngrok Javascript SDK.
+-  

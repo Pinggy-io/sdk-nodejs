@@ -56,6 +56,8 @@ export function startWebDebugging(tunnel: PinggySDK, port: number) {
   tunnel.startWebDebugging(port);
 }
 
-// add stop
+export function stopTunnel(tunnel: PinggySDK) {
+  tunnel.tunnelStop();
+}
 
 // on master
