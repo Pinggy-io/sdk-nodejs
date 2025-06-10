@@ -21,9 +21,9 @@ fs.rmSync(path.join(__dirname, "build"), { recursive: true, force: true });
 console.log(`Removed build/ directory`);
 
 // Remove pinggy.lib if it exists
-if (fs.existsSync(libPath)) {
-  fs.rmSync(libPath);
-  console.log(`Removed pinggy.lib`);
-} else {
-  console.warn(`pinggy.lib not found in root directory`);
-}
+// if (fs.existsSync(libPath)) {
+//   fs.rmSync(libPath);
+//   console.log(`Removed pinggy.lib`);
+// } else {
+//   console.warn(`pinggy.lib not found in root directory`);
+// }
