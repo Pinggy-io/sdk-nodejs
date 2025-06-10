@@ -7,7 +7,7 @@ describe("PinggySDK", () => {
   beforeAll(() => {
     const options: PinggyOptions = {
       forwardTo: "localhost:3000",
-      sniServerName: "t.pinggy.io",
+      sniServerName: "a.pinggy.io",
       // token: process.env.TUNNEL_TOKEN_SUB,
     };
     sdk = new PinggySDK(options);
@@ -22,12 +22,12 @@ describe("PinggySDK", () => {
 
   test("should get server address", () => {
     const serverAddress = sdk.getServerAddress();
-    expect(serverAddress).toBe("t.pinggy.io:443");
+    expect(serverAddress).toBe("a.pinggy.io:443");
   });
 
   test("should get SNI server name", () => {
     const sniServerName = sdk.getSniServerName();
-    expect(sniServerName).toBe("t.pinggy.io");
+    expect(sniServerName).toBe("a.pinggy.io");
   });
 
   test("should start the tunnel", async () => {

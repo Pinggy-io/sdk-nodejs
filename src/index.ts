@@ -4,7 +4,7 @@ import { PinggyOptions } from "./types";
 // // Example usage
 // const options: PinggyOptions = {
 //   forwardTo: "localhost:3000",
-//   sniServerName: "t.pinggy.io",
+//   sniServerName: "a.pinggy.io",
 //   // token: process.env.TUNNEL_TOKEN_SUB,
 // };
 

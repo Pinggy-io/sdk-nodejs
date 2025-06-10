@@ -99,7 +99,7 @@ if (!configRef) process.exit(1);
 
 // Set server address
 try {
-  addon.configSetServerAddress(configRef, "t.pinggy.io:443");
+  addon.configSetServerAddress(configRef, "a.pinggy.io:443");
   console.log("Server address set successfully.");
 } catch (e) {
   console.error("Error setting server address:", e);
@@ -115,7 +115,7 @@ try {
 
 // Set and get SNI server name
 try {
-  addon.configSetSniServerName(configRef, "t.pinggy.io");
+  addon.configSetSniServerName(configRef, "a.pinggy.io");
   console.log("SNI server name set successfully.");
   const sniServerName = addon.configGetSniServerName(configRef);
   console.log(`Current SNI server name: ${sniServerName}`);
