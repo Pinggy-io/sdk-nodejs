@@ -33,7 +33,19 @@ export class Logger {
     const errorMessage = error
       ? `\nError: ${error.stack || error.message}`
       : "";
-    const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}${errorMessage}\n`;
+    // Get file and line number from stack trace
+    const stack = new Error().stack?.split("\n");
+    let location = "";
+    if (stack && stack.length > 3) {
+      // stack[3] is the caller of Logger.info/error
+      const match = stack[3].match(/\(([^)]+)\)/);
+      if (match && match[1]) {
+        location = match[1];
+      } else {
+        location = stack[3].trim();
+      }
+    }
+    const logMessage = `[${timestamp}] [${level.toUpperCase()}] [${location}] ${message}${errorMessage}\n`;
 
     // Ensure log directory exists before writing
     Logger.ensureLogDirectory();
@@ -41,7 +53,7 @@ export class Logger {
     fs.appendFile(Logger.logFilePath, logMessage, (err) => {
       if (err) console.error("Failed to write to log file:", err);
     });
-    console[level](message, error || "");
+    console[level](`[${location}] ${message}`, error || "");
   }
 
   public static info(message: string): void {

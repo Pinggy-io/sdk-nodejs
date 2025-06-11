@@ -53,9 +53,17 @@ function startTunnel(tunnel) {
 
 function pollTunnel(tunnel) {
   const poll = () => {
-    const error = addon.tunnelResume(tunnel);
-    if (error) {
-      console.error("Tunnel error detected, stopping polling.");
+    // wrap in error in a try-catch to handle any unexpected errors
+    try {
+      // const error = addon.tunnelResume(tunnel);
+      const error = addon.tunnelResume(tunnel);
+      console.log("Tunnel resumed:", error);
+      if (error) {
+        console.error("Tunnel error detected, stopping polling.");
+        return;
+      }
+    } catch (error) {
+      console.error("Error resuming tunnel:", error);
       return;
     }
     setImmediate(poll); // Non-blocking loop
@@ -147,3 +155,24 @@ if (!tunnelRef) process.exit(1);
 
 // start tunnel in a non-blocking way using the startTunnel function
 startTunnel(tunnelRef);
+
+function stopTunnel(tunnel) {
+  try {
+    const result = addon.tunnelStop(tunnel);
+    if (result) {
+      console.log("Tunnel stopped successfully.");
+    } else {
+      console.error("Failed to stop tunnel.");
+    }
+    return result;
+  } catch (e) {
+    console.error("Error stopping tunnel:", e);
+    return false;
+  }
+}
+
+// Example: Stop the tunnel after 10 seconds
+setTimeout(() => {
+  const res = stopTunnel(tunnelRef);
+  console.log(typeof res);
+}, 5000);

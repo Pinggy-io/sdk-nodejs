@@ -1,0 +1,29 @@
+import pinggy, { PinggyOptions } from "./src/index";
+
+(async () => {
+  const options: PinggyOptions = {
+    forwardTo: "localhost:3000",
+
+  };
+  const addresses = await pinggy.startTunnel(options);
+
+  console.log("Tunnel addresses:", addresses);
+  console.log("Server address:", pinggy.getServerAddress());
+
+  pinggy.startWebDebugging(8080);
+  
+  console.log("about to stop tunnel")
+  // setTimeout(async () => {
+  //   try {
+  //     console.log("Stopping tunnel...")
+  //     await pinggy.close();
+  //     console.log("Tunnel cleanly closed.");
+  //   } catch (err) {
+  //     console.error("Failed to close tunnel:", err);
+  //   }
+  // }, 5000);
+
+  await new Promise(res => setTimeout(res, 5000));
+
+  await pinggy.close();
+})();

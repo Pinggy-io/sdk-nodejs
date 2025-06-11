@@ -56,10 +56,6 @@ export class Tunnel implements ITunnel {
         this.addon.tunnelSetPrimaryForwardingSucceededCallback(
             this.tunnelRef,
             (addresses) => {
-                Logger.info("Primary forwarding done. Addresses:");
-                addresses.forEach((address, index) =>
-                    Logger.info(`  ${index + 1}: ${address}`)
-                );
                 this.primaryForwardingDone = true;
                 if (this.resolveForwarding) {
                     this.resolveForwarding(addresses);
@@ -83,33 +79,61 @@ export class Tunnel implements ITunnel {
     }
   }
 
+  // private pollStart(): void {
+  //   const resume = async (): Promise<boolean> => {
+  //     try {
+  //       const error = this.addon.tunnelResume(this.tunnelRef);
+  //       if (error) {
+  //         Logger.error("Tunnel error detected, stopping polling.");
+  //         return false;
+  //       }
+  //       return true;
+  //     } catch (e) {
+  //       Logger.error("Error during tunnel polling:", e as Error);
+  //       return false;
+  //     }
+  //   };
+
+  //   const poll = async () => {
+  //     // const shouldContinue = await resume();
+  //     // if (shouldContinue) {
+  //     //   poll();
+  //     // }
+  //     resume().then((success) => {
+  //       poll();
+  //     });
+  //   };
+
+  //   poll();
+  // }
+
   private pollStart(): void {
-    const resume = async (): Promise<boolean> => {
+    // A simple sync-style poll that schedules itself only on success:
+    const poll = (): void => {
+      let shouldContinue: boolean;
       try {
-        const error = this.addon.tunnelResume(this.tunnelRef);
-        if (error) {
+        // tunnelResume throws on error (<0), otherwise returns >=0
+        const ret = this.addon.tunnelResume(this.tunnelRef);
+        if (ret != 0) {
           Logger.error("Tunnel error detected, stopping polling.");
-          return false;
+          return;        // STOP polling
         }
-        return true;
+        shouldContinue = true;
       } catch (e) {
         Logger.error("Error during tunnel polling:", e as Error);
-        return false;
+        return;          // STOP polling
+      }
+  
+      // only schedule next poll if no error
+      if (shouldContinue) {
+        // use setImmediate to avoid blowing the stack
+        setImmediate(poll);
       }
     };
-
-    const poll = async () => {
-      // const shouldContinue = await resume();
-      // if (shouldContinue) {
-      //   poll();
-      // }
-      resume().then((success) => {
-        poll();
-      });
-    };
-
+  
+    // kick it off
     poll();
-  }
+  }  
 
   public async startWebDebugging(listeningPort: number): Promise<void> {
     if (!this.tunnelRef) {
@@ -149,6 +173,40 @@ export class Tunnel implements ITunnel {
       );
     } catch (e) {
       Logger.error("Error requesting additional forwarding:", e as Error);
+    }
+  }
+
+  public tunnelStop(): boolean {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return false;
+    }
+    try {
+      const result = this.addon.tunnelStop(this.tunnelRef);
+      if (result) {
+        Logger.info("Tunnel stopped successfully.");
+      } else {
+        Logger.error("Failed to stop tunnel.");
+      }
+      return result;
+    } catch (e) {
+      Logger.error("Error stopping tunnel:", e as Error);
+      return false;
+    }
+  }
+
+  public tunnelIsActive(): boolean {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return false;
+    }
+    try {
+      const result = this.addon.tunnelIsActive(this.tunnelRef);
+      Logger.info(`Tunnel active status: ${result}`);
+      return result;
+    } catch (e) {
+      Logger.error("Error checking tunnel active status:", e as Error);
+      return false;
     }
   }
 }
