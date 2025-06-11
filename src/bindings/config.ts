@@ -25,8 +25,8 @@ export class Config implements IConfig {
       }
 
       // Apply user-defined values or set defaults
-      const serverAddress = options.serverAddress || "t.pinggy.io:443";
-      const sniServerName = options.sniServerName || "t.pinggy.io";
+      const serverAddress = options.serverAddress || "a.pinggy.io:443";
+      const sniServerName = options.sniServerName || "a.pinggy.io";
       const forwardTo = options.forwardTo || "localhost:4000";
 
       this.addon.configSetServerAddress(configRef, serverAddress);
@@ -58,7 +58,7 @@ export class Config implements IConfig {
     }
   }
 
-  public setServerAddress(address: string = "t.pinggy.io:443"): void {
+  public setServerAddress(address: string = "a.pinggy.io:443"): void {
     try {
       if (this.configRef)
         this.addon.configSetServerAddress(this.configRef, address);

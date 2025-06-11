@@ -165,25 +165,16 @@ napi_value TunnelResume(napi_env env, napi_callback_info info)
     }
 
     // Call the pinggy_tunnel_resume function
-    pinggy_int_t ret = pinggy_tunnel_resume((pinggy_ref_t)tunnel_ref);
+    pinggy_bool_t ret = pinggy_tunnel_resume((pinggy_ref_t)tunnel_ref);
     printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, ret);
 
-    // Check for errors
-    if (ret < 0)
-    {
-        char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Error in pinggy_tunnel_resume: %d", __FILE__, __LINE__, ret);
-        napi_throw_error(env, NULL, error_message);
-        return NULL;
-    }
-
-    // Return the result as a JavaScript number
+    // Return the result as a JavaScript boolean
     napi_value result;
-    status = napi_create_int32(env, ret, &result);
+    status = napi_get_boolean(env, ret, &result);
     if (status != napi_ok)
     {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create JavaScript number", __FILE__, __LINE__);
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create JavaScript boolean", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
         return NULL;
     }

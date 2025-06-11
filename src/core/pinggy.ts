@@ -3,10 +3,22 @@ import { PinggyNative, PinggyOptions } from "../types";
 import { Config } from "../bindings/config";
 import { Tunnel } from "../bindings/tunnel";
 import { Logger } from "../utils/logger";
+import { getLastException, PinggyError, initExceptionHandling } from "../bindings/exception";
 
 export class Pinggy {
   private config: Config | null = null;
   private tunnel: Tunnel | null = null;
+  public addon: PinggyNative;
+
+  constructor() {
+    const binary = require("@mapbox/node-pre-gyp");
+    const path = require("path");
+    const binding_path = binary.find(
+      path.resolve(path.join(__dirname, "../../package.json"))
+    );
+    this.addon = require(binding_path) as PinggyNative;
+    initExceptionHandling(this.addon);
+  }
 
   /** 
    * Initialize the native bindings & Tunnel if not already done.
@@ -16,21 +28,25 @@ export class Pinggy {
     if (this.tunnel) return; // already initialized
 
     try {
-      const binary = require("@mapbox/node-pre-gyp");
-      const path = require("path");
-      const binding_path = binary.find(
-        path.resolve(path.join(__dirname, "../../package.json"))
-      );
-      const addon = require(binding_path) as PinggyNative;
-
-      this.config = new Config(addon, options);
+      this.config = new Config(this.addon, options);
       if (!this.config.configRef) {
         throw new Error("Failed to initialize config.");
       }
-      this.tunnel = new Tunnel(addon, this.config.configRef);
+      this.tunnel = new Tunnel(this.addon, this.config.configRef);
     } catch (e) {
-      Logger.error("Error initializing Pinggy:", e as Error);
-      throw e;
+      const lastEx = getLastException(this.addon);
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error initializing Pinggy:", pinggyError);
+        throw pinggyError;
+      } else {
+        if (e instanceof Error) {
+          Logger.error("Error initializing Pinggy:", e);
+        } else {
+          Logger.error("Error initializing Pinggy:", new Error(String(e)));
+        }
+        throw e;
+      }
     }
   }
 
@@ -44,8 +60,19 @@ export class Pinggy {
     try {
       return await this.tunnel.start();
     } catch (e) {
-      Logger.error("Error starting tunnel:", e as Error);
-      throw e;
+      const lastEx = getLastException(this.addon);
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error starting tunnel:", pinggyError);
+        throw pinggyError;
+      } else {
+        if (e instanceof Error) {
+          Logger.error("Error starting tunnel:", e);
+        } else {
+          Logger.error("Error starting tunnel:", new Error(String(e)));
+        }
+        throw e;
+      }
     }
   }
 
@@ -54,8 +81,19 @@ export class Pinggy {
     try {
       this.tunnel.startWebDebugging(port);
     } catch (e) {
-      Logger.error("Error starting web debugging:", e as Error);
-      throw e;
+      const lastEx = getLastException(this.addon);
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error starting web debugging:", pinggyError);
+        throw pinggyError;
+      } else {
+        if (e instanceof Error) {
+          Logger.error("Error starting web debugging:", e);
+        } else {
+          Logger.error("Error starting web debugging:", new Error(String(e)));
+        }
+        throw e;
+      }
     }
   }
 
@@ -64,8 +102,19 @@ export class Pinggy {
     try {
       this.tunnel.tunnelRequestAdditionalForwarding(hostname, target);
     } catch (e) {
-      Logger.error("Error requesting additional forwarding:", e as Error);
-      throw e;
+      const lastEx = getLastException(this.addon);
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error requesting additional forwarding:", pinggyError);
+        throw pinggyError;
+      } else {
+        if (e instanceof Error) {
+          Logger.error("Error requesting additional forwarding:", e);
+        } else {
+          Logger.error("Error requesting additional forwarding:", new Error(String(e)));
+        }
+        throw e;
+      }
     }
   }
 
@@ -94,8 +143,19 @@ export class Pinggy {
       Logger.info(`Tunnel active status: ${active}`);
       return active;
     } catch (e) {
-      Logger.error("Error checking tunnel active status:", e as Error);
-      return false;
+      const lastEx = getLastException(this.addon);
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error checking tunnel active status:", pinggyError);
+        throw pinggyError;
+      } else {
+        if (e instanceof Error) {
+          Logger.error("Error checking tunnel active status:", e);
+        } else {
+          Logger.error("Error checking tunnel active status:", new Error(String(e)));
+        }
+        throw e;
+      }
     }
   }
 
@@ -107,8 +167,19 @@ export class Pinggy {
     try {
       this.tunnel.tunnelStop();
     } catch (e) {
-      Logger.error("Error stopping tunnel:", e as Error);
-      throw e;
+      const lastEx = getLastException(this.addon);
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error stopping tunnel:", pinggyError);
+        throw pinggyError;
+      } else {
+        if (e instanceof Error) {
+          Logger.error("Error stopping tunnel:", e);
+        } else {
+          Logger.error("Error stopping tunnel:", new Error(String(e)));
+        }
+        throw e;
+      }
     } finally {
       // clear state
       this.tunnel = null;

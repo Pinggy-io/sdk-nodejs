@@ -19,7 +19,7 @@ export interface PinggyNative {
   setLogPath(path: string): void;
   tunnelInitiate(configRef: number): number;
   tunnelConnect(tunnelRef: number): boolean;
-  tunnelResume(tunnelRef: number): number;
+  tunnelResume(tunnelRef: number): boolean;
   tunnelStartWebDebugging(tunnelRef: number, port: number): void;
   tunnelRequestPrimaryForwarding(tunnelRef: number): void;
   tunnelRequestAdditionalForwarding(
@@ -34,6 +34,8 @@ export interface PinggyNative {
   ): void;
   tunnelStop(tunnelRef: number): boolean;
   tunnelIsActive(tunnelRef: number): boolean;
+  initExceptionHandling(): void;
+  getLastException(): string;
 }
 
 export interface Config {
