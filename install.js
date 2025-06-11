@@ -48,7 +48,7 @@ if (!fileName) {
 }
 
 // Version to use
-const version = "0.0.14";
+const version = "0.0.16";
 
 // Build artifact filename and URL
 function getArtifactInfo(os, arch) {

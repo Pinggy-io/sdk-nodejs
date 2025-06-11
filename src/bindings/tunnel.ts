@@ -114,7 +114,7 @@ export class Tunnel implements ITunnel {
       try {
         // tunnelResume throws on error (<0), otherwise returns >=0
         const ret = this.addon.tunnelResume(this.tunnelRef);
-        if (ret != 0) {
+        if (!ret) {
           Logger.error("Tunnel error detected, stopping polling.");
           return;        // STOP polling
         }
