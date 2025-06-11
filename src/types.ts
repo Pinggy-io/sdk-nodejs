@@ -5,6 +5,7 @@ export interface PinggyOptions {
   forwardTo?: string;
   debug?: boolean;
   debuggerPort?: number;
+  type?: "tcp" | "tls" | "http";
 }
 
 export interface PinggyNative {
@@ -13,6 +14,7 @@ export interface PinggyNative {
   configSetServerAddress(configRef: number, address: string): void;
   configSetSniServerName(configRef: number, name: string): void;
   configSetTcpForwardTo(configRef: number, address: string): void;
+  configSetType(configRef: number, type: string): void;
   configGetToken(configRef: number): string;
   configGetServerAddress(configRef: number): string;
   configGetSniServerName(configRef: number): string;

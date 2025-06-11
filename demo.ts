@@ -3,7 +3,7 @@ import pinggy, { PinggyOptions } from "./src/index";
 (async () => {
   const options: PinggyOptions = {
     forwardTo: "localhost:3000",
-
+    type: "http"
   };
   const addresses = await pinggy.startTunnel(options);
 
