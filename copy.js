@@ -44,6 +44,9 @@ if (fs.existsSync(srcAddon)) {
 if (fs.existsSync(srcLib)) {
   fs.copyFileSync(srcLib, destLib);
   console.log(`Copied ${nativeLibName} to lib/`);
+  // Delete the source library file after copying
+  fs.unlinkSync(srcLib);
+  console.log(`Deleted ${nativeLibName}`);
 } else {
   console.warn(`${nativeLibName} not found at ${srcLib}`);
 }
@@ -52,6 +55,9 @@ if (fs.existsSync(srcLib)) {
 if (process.platform === "win32" && fs.existsSync(srcDll)) {
   fs.copyFileSync(srcDll, destDll);
   console.log(`Copied pinggy.dll to lib/`);
+  // Delete the source DLL file after copying
+  fs.unlinkSync(srcDll);
+  console.log(`Deleted pinggy.dll`);
 } else if (process.platform === "win32") {
   console.warn(`pinggy.dll not found at ${srcDll}`);
 }
