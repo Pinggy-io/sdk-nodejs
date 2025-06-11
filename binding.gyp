@@ -24,12 +24,12 @@
             ],
             "defines": [
                 "NAPI_VERSION=8",
-                "__NOEXPORT_PINGGY_DLL__"
+                "_NOEXPORT_PINGGY_DLL_"
             ],
             "conditions": [
                 ["OS==\"win\"", {
                     "defines": [
-                        "__WINDOWS_OS__"
+                        "_WINDOWS_OS_"
                     ],
                     "libraries": [
                         "<(module_root_dir)/pinggy.lib",
@@ -61,7 +61,7 @@
                 ["OS==\"linux\"", {
                     "libraries": ["<(module_root_dir)/libpinggy.so"],
                     "cflags": ["-ggdb", "-Wno-ignored-qualifiers"],
-                    "ldflags": ["-Wl,-rpath='$$ORIGIN/..'"]
+                    "ldflags": ["-Wl,-rpath='$$ORIGIN/'"]
                 }]
             ]
         }

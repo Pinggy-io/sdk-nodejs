@@ -57,7 +57,7 @@ function getArtifactInfo(os, arch) {
     artifactName = `libpinggy-${version}-linux-${arch}.tgz`;
     innerLibName = "libpinggy.so";
   } else if (os === "windows") {
-    artifactName = `libpinggy-${version}-windows-${arch}-MTd.zip`;
+    artifactName = `libpinggy-${version}-windows-${arch}-MT.zip`;
     innerLibName = "pinggy.lib";
   } else if (os === "macos") {
     artifactName = `libpinggy-${version}-macos-universal.tgz`;
