@@ -34,6 +34,8 @@ export interface PinggyNative {
   ): void;
   tunnelStop(tunnelRef: number): boolean;
   tunnelIsActive(tunnelRef: number): boolean;
+  initExceptionHandling(): void;
+  getLastException(): string;
 }
 
 export interface Config {
