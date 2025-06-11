@@ -1,5 +1,6 @@
 import { Logger } from "../utils/logger";
 import { PinggyNative, Tunnel as ITunnel } from "../types";
+import { PinggyError } from "./exception";
 
 export class Tunnel implements ITunnel {
   public tunnelRef: number;
@@ -9,6 +10,7 @@ export class Tunnel implements ITunnel {
   private authPromise: Promise<void>;
   private forwardingPromise: Promise<string[]>;
   private resolveAuth: (() => void) | null = null;
+  private rejectAuth: ((reason?: any) => void) | null = null;
   private resolveForwarding: ((addresses: string[]) => void) | null = null;
 
   constructor(addon: PinggyNative, configRef: number) {
@@ -18,8 +20,9 @@ export class Tunnel implements ITunnel {
     this.primaryForwardingDone = false;
 
     // Create promises that will be resolved when authentication and forwarding complete
-    this.authPromise = new Promise((resolve) => {
+    this.authPromise = new Promise((resolve, reject) => {
       this.resolveAuth = resolve;
+      this.rejectAuth = reject;
     });
 
     this.forwardingPromise = new Promise((resolve) => {
@@ -33,8 +36,15 @@ export class Tunnel implements ITunnel {
       Logger.info(`Tunnel initiated with reference: ${tunnelRef}`);
       return tunnelRef;
     } catch (e) {
-      Logger.error("Error initiating tunnel:", e as Error);
-      return 0;
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error initiating tunnel:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error initiating tunnel:", e as Error);
+        return 0;
+      }
     }
   }
 
@@ -51,6 +61,11 @@ export class Tunnel implements ITunnel {
                 this.resolveAuth();
             }
             this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
+        });
+
+        this.addon.tunnelSetAuthenticationFailedCallback(this.tunnelRef, (tunnelRef, errorMessage) => {
+          Logger.error(`Authentication failed for tunnel ${tunnelRef}: ${errorMessage}`);
+          if (this.rejectAuth) this.rejectAuth(new PinggyError("Authentication failed: " + errorMessage));
         });
 
         this.addon.tunnelSetPrimaryForwardingSucceededCallback(
@@ -74,38 +89,17 @@ export class Tunnel implements ITunnel {
         // Wait for forwarding to complete and return the addresses
         return await this.forwardingPromise;
     } catch (error) {
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error in startTunnel:", pinggyError);
+        throw pinggyError;
+      } else {
         Logger.error("Error in startTunnel:", error as Error);
         throw error;
+      }
     }
   }
-
-  // private pollStart(): void {
-  //   const resume = async (): Promise<boolean> => {
-  //     try {
-  //       const error = this.addon.tunnelResume(this.tunnelRef);
-  //       if (error) {
-  //         Logger.error("Tunnel error detected, stopping polling.");
-  //         return false;
-  //       }
-  //       return true;
-  //     } catch (e) {
-  //       Logger.error("Error during tunnel polling:", e as Error);
-  //       return false;
-  //     }
-  //   };
-
-  //   const poll = async () => {
-  //     // const shouldContinue = await resume();
-  //     // if (shouldContinue) {
-  //     //   poll();
-  //     // }
-  //     resume().then((success) => {
-  //       poll();
-  //     });
-  //   };
-
-  //   poll();
-  // }
 
   private pollStart(): void {
     // A simple sync-style poll that schedules itself only on success:
@@ -120,8 +114,15 @@ export class Tunnel implements ITunnel {
         }
         shouldContinue = true;
       } catch (e) {
-        Logger.error("Error during tunnel polling:", e as Error);
-        return;          // STOP polling
+        const lastEx = this.addon.getLastException();
+        if (lastEx) {
+          const pinggyError = new PinggyError(lastEx);
+          Logger.error("Error during tunnel polling:", pinggyError);
+          return; // STOP polling
+        } else {
+          Logger.error("Error during tunnel polling:", e as Error);
+          return;          // STOP polling
+        }
       }
   
       // only schedule next poll if no error
@@ -148,7 +149,14 @@ export class Tunnel implements ITunnel {
         `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
       );
     } catch (e) {
-      Logger.error("Error starting web debugging:", e as Error);
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error starting web debugging:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error starting web debugging:", e as Error);
+      }
     }
   }
 
@@ -172,7 +180,14 @@ export class Tunnel implements ITunnel {
         `Requested additional forwarding from ${remoteAddress} to ${localAddress}`
       );
     } catch (e) {
-      Logger.error("Error requesting additional forwarding:", e as Error);
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error requesting additional forwarding:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error requesting additional forwarding:", e as Error);
+      }
     }
   }
 
@@ -190,8 +205,15 @@ export class Tunnel implements ITunnel {
       }
       return result;
     } catch (e) {
-      Logger.error("Error stopping tunnel:", e as Error);
-      return false;
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error stopping tunnel:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error stopping tunnel:", e as Error);
+        return false;
+      }
     }
   }
 

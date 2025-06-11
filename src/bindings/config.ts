@@ -51,11 +51,36 @@ export class Config implements IConfig {
         }
       }
 
-      this.addon.configSetTcpForwardTo(configRef, forwardTo);
+      if (type === "udp") {
+        try {
+          this.addon.configSetUdpForwardTo(configRef, forwardTo);
+          Logger.info(`Configured UDP forwarding to: ${forwardTo}`);
+        } catch (e) {
+          const lastEx = this.addon.getLastException();
+          if (lastEx) {
+            const pinggyError = new PinggyError(lastEx);
+            Logger.error("Error setting UDP forward to:", pinggyError);
+            throw pinggyError;
+          } else {
+            if (e instanceof Error) {
+              Logger.error("Error setting UDP forward to:", e);
+            } else {
+              Logger.error("Error setting UDP forward to:", new Error(String(e)));
+            }
+            throw e;
+          }
+        }
+      } else {
+        this.addon.configSetTcpForwardTo(configRef, forwardTo);
+      }
 
       if (type) {
         try {
-          this.addon.configSetType(configRef, type);
+          if (type === "udp") {
+            this.addon.configSetUdpType(configRef, type);
+          } else {
+            this.addon.configSetType(configRef, type);
+          }
           Logger.info(`Configured tunnel type: ${type}`);
         } catch (e) {
           const lastEx = this.addon.getLastException();
