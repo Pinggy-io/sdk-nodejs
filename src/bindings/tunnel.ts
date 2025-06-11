@@ -194,4 +194,19 @@ export class Tunnel implements ITunnel {
       return false;
     }
   }
+
+  public tunnelIsActive(): boolean {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return false;
+    }
+    try {
+      const result = this.addon.tunnelIsActive(this.tunnelRef);
+      Logger.info(`Tunnel active status: ${result}`);
+      return result;
+    } catch (e) {
+      Logger.error("Error checking tunnel active status:", e as Error);
+      return false;
+    }
+  }
 }

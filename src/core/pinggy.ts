@@ -81,6 +81,24 @@ export class Pinggy {
     return this.config?.getToken() ?? null;
   }
 
+  /**
+   * Checks if the tunnel is currently active.
+   */
+  public isActive(): boolean {
+    if (!this.tunnel) {
+      Logger.info("Tunnel is not initialized, so it's not active.");
+      return false;
+    }
+    try {
+      const active = this.tunnel.tunnelIsActive();
+      Logger.info(`Tunnel active status: ${active}`);
+      return active;
+    } catch (e) {
+      Logger.error("Error checking tunnel active status:", e as Error);
+      return false;
+    }
+  }
+
   /** 
    * Stops the tunnel and resets state so you can start a new one later.
    */

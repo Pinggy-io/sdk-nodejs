@@ -33,6 +33,7 @@ export interface PinggyNative {
     callback: (addresses: string[]) => void
   ): void;
   tunnelStop(tunnelRef: number): boolean;
+  tunnelIsActive(tunnelRef: number): boolean;
 }
 
 export interface Config {
@@ -55,4 +56,5 @@ export interface Tunnel {
     localAddress: string
   ): void;
   tunnelStop(): boolean;
+  tunnelIsActive(): boolean;
 }
