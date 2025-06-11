@@ -1,28 +1,29 @@
-import { Pinggy, startTunnel, startWebDebugging, stopTunnel } from "./src/index";
-import { PinggyOptions } from "./src/types";
+import pinggy, { PinggyOptions } from "./src/index";
 
-const options: PinggyOptions = {
-  forwardTo: "localhost:3000",
-  sniServerName: "t.pinggy.io",
-  // token: process.env.TUNNEL_TOKEN_SUB,
-};
+(async () => {
+  const options: PinggyOptions = {
+    forwardTo: "localhost:3000",
 
-(async function() {
-  console.log("Starting tunnel...");
-  const { tunnel, addresses } = await startTunnel(options);
-  console.log("Tunnel started. Addresses:", addresses);
+  };
+  const addresses = await pinggy.startTunnel(options);
 
-  console.log("Server Address:", tunnel.getServerAddress());
-  console.log("SNI Server Name:", tunnel.getSniServerName());
+  console.log("Tunnel addresses:", addresses);
+  console.log("Server address:", pinggy.getServerAddress());
 
-  console.log("Starting web debugging...");
-  startWebDebugging(tunnel, 8081);
+  pinggy.startWebDebugging(8080);
+  
+  console.log("about to stop tunnel")
+  // setTimeout(async () => {
+  //   try {
+  //     console.log("Stopping tunnel...")
+  //     await pinggy.close();
+  //     console.log("Tunnel cleanly closed.");
+  //   } catch (err) {
+  //     console.error("Failed to close tunnel:", err);
+  //   }
+  // }, 5000);
 
-  console.log("Waiting for 5 seconds...");
-  // add a stop method
-  // stop tunnel after 5 seconds
-  setTimeout(() => {
-    console.log("Stopping tunnel...");
-    stopTunnel(tunnel);
-  }, 5000);
-})().catch(console.error); 
+  await new Promise(res => setTimeout(res, 5000));
+
+  await pinggy.close();
+})();

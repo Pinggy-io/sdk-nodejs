@@ -79,33 +79,61 @@ export class Tunnel implements ITunnel {
     }
   }
 
+  // private pollStart(): void {
+  //   const resume = async (): Promise<boolean> => {
+  //     try {
+  //       const error = this.addon.tunnelResume(this.tunnelRef);
+  //       if (error) {
+  //         Logger.error("Tunnel error detected, stopping polling.");
+  //         return false;
+  //       }
+  //       return true;
+  //     } catch (e) {
+  //       Logger.error("Error during tunnel polling:", e as Error);
+  //       return false;
+  //     }
+  //   };
+
+  //   const poll = async () => {
+  //     // const shouldContinue = await resume();
+  //     // if (shouldContinue) {
+  //     //   poll();
+  //     // }
+  //     resume().then((success) => {
+  //       poll();
+  //     });
+  //   };
+
+  //   poll();
+  // }
+
   private pollStart(): void {
-    const resume = async (): Promise<boolean> => {
+    // A simple sync-style poll that schedules itself only on success:
+    const poll = (): void => {
+      let shouldContinue: boolean;
       try {
-        const error = this.addon.tunnelResume(this.tunnelRef);
-        if (error) {
+        // tunnelResume throws on error (<0), otherwise returns >=0
+        const ret = this.addon.tunnelResume(this.tunnelRef);
+        if (ret != 0) {
           Logger.error("Tunnel error detected, stopping polling.");
-          return false;
+          return;        // STOP polling
         }
-        return true;
+        shouldContinue = true;
       } catch (e) {
         Logger.error("Error during tunnel polling:", e as Error);
-        return false;
+        return;          // STOP polling
+      }
+  
+      // only schedule next poll if no error
+      if (shouldContinue) {
+        // use setImmediate to avoid blowing the stack
+        setImmediate(poll);
       }
     };
-
-    const poll = async () => {
-      // const shouldContinue = await resume();
-      // if (shouldContinue) {
-      //   poll();
-      // }
-      resume().then((success) => {
-        poll();
-      });
-    };
-
+  
+    // kick it off
     poll();
-  }
+  }  
 
   public async startWebDebugging(listeningPort: number): Promise<void> {
     if (!this.tunnelRef) {

@@ -1,4 +1,4 @@
-import { PinggySDK } from "./core/pinggy";
+import { Pinggy } from "./core/pinggy";
 import { PinggyOptions } from "./types";
 
 // // Example usage
@@ -40,24 +40,8 @@ import { PinggyOptions } from "./types";
 // // try to check if nodejs is running the processes on different threads
 // // check how to read threadlocal variable in nodejs
 
-export class Pinggy extends PinggySDK {
-  constructor(options: PinggyOptions) {
-    super(options);
-  }
-}
-
-export async function startTunnel(options: PinggyOptions): Promise<{ tunnel: PinggySDK, addresses: string[] }> {
-  const tunnel = new PinggySDK(options);
-  const addresses = await tunnel.startTunnel();
-  return { tunnel, addresses };
-}
-
-export function startWebDebugging(tunnel: PinggySDK, port: number) {
-  tunnel.startWebDebugging(port);
-}
-
-export function stopTunnel(tunnel: PinggySDK) {
-  tunnel.tunnelStop();
-}
+const pinggy = new Pinggy();
+export default pinggy;
+export type { PinggyOptions };
 
 // on master

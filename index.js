@@ -173,5 +173,6 @@ function stopTunnel(tunnel) {
 
 // Example: Stop the tunnel after 10 seconds
 setTimeout(() => {
-  stopTunnel(tunnelRef);
+  const res = stopTunnel(tunnelRef);
+  console.log(typeof res);
 }, 5000);
