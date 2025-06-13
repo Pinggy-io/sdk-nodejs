@@ -9,9 +9,13 @@ export class Tunnel implements ITunnel {
   private addon: PinggyNative;
   private authPromise: Promise<void>;
   private forwardingPromise: Promise<string[]>;
+  private additionalForwardingPromise: Promise<void>;
   private resolveAuth: (() => void) | null = null;
   private rejectAuth: ((reason?: any) => void) | null = null;
   private resolveForwarding: ((addresses: string[]) => void) | null = null;
+  private rejectForwarding: ((reason?: any) => void) | null = null;
+  private resolveAdditionalForwarding: (() => void) | null = null;
+  private rejectAdditionalForwarding: ((reason?: any) => void) | null = null;
 
   constructor(addon: PinggyNative, configRef: number) {
     this.addon = addon;
@@ -25,8 +29,14 @@ export class Tunnel implements ITunnel {
       this.rejectAuth = reject;
     });
 
-    this.forwardingPromise = new Promise((resolve) => {
+    this.forwardingPromise = new Promise((resolve, reject) => {
       this.resolveForwarding = resolve;
+      this.rejectForwarding = reject;
+    });
+
+    this.additionalForwardingPromise = new Promise((resolve, reject) => {
+      this.resolveAdditionalForwarding = resolve;
+      this.rejectAdditionalForwarding = reject;
     });
   }
 
@@ -50,44 +60,114 @@ export class Tunnel implements ITunnel {
 
   public async start(): Promise<string[]> {
     if (!this.tunnelRef) {
-        throw new Error("Tunnel not initialized.");
+      throw new Error("Tunnel not initialized.");
     }
 
     try {
-        this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
-            Logger.info("Tunnel authenticated, requesting primary forwarding...");
-            this.authenticated = true;
-            if (this.resolveAuth) {
-                this.resolveAuth();
-            }
-            this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
-        });
-
-        this.addon.tunnelSetAuthenticationFailedCallback(this.tunnelRef, (tunnelRef, errorMessage) => {
-          Logger.error(`Authentication failed for tunnel ${tunnelRef}: ${errorMessage}`);
-          if (this.rejectAuth) this.rejectAuth(new PinggyError("Authentication failed: " + errorMessage));
-        });
-
-        this.addon.tunnelSetPrimaryForwardingSucceededCallback(
-            this.tunnelRef,
-            (addresses) => {
-                this.primaryForwardingDone = true;
-                if (this.resolveForwarding) {
-                    this.resolveForwarding(addresses);
-                }
-            }
-        );
-
-        const connected = this.addon.tunnelConnect(this.tunnelRef);
-        if (!connected) {
-            throw new Error("Tunnel connection failed.");
+      this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
+        Logger.info("Tunnel authenticated, requesting primary forwarding...");
+        this.authenticated = true;
+        if (this.resolveAuth) {
+          this.resolveAuth();
         }
-        Logger.info("Tunnel connected, starting authentication monitoring...");
+        this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
+      });
 
-        this.pollStart();
+      this.addon.tunnelSetAuthenticationFailedCallback(
+        this.tunnelRef,
+        (tunnelRef, errorMessage) => {
+          Logger.error(
+            `Authentication failed for tunnel ${tunnelRef}: ${errorMessage}`
+          );
+          if (this.rejectAuth)
+            this.rejectAuth(
+              new PinggyError("Authentication failed: " + errorMessage)
+            );
+        }
+      );
 
-        // Wait for forwarding to complete and return the addresses
-        return await this.forwardingPromise;
+      this.addon.tunnelSetPrimaryForwardingSucceededCallback(
+        this.tunnelRef,
+        (addresses) => {
+          this.primaryForwardingDone = true;
+          if (this.resolveForwarding) {
+            this.resolveForwarding(addresses);
+          }
+        }
+      );
+
+      this.addon.tunnelSetPrimaryForwardingFailedCallback(
+        this.tunnelRef,
+        (tunnelRef: number, errorMessage: string) => {
+          Logger.error(
+            `Primary forwarding failed for tunnel ${tunnelRef}: ${errorMessage}`
+          );
+          if (this.rejectForwarding) {
+            this.rejectForwarding(
+              new PinggyError("Primary forwarding failed: " + errorMessage)
+            );
+          }
+        }
+      );
+
+      this.addon.tunnelSetAdditionalForwardingSucceededCallback(
+        this.tunnelRef,
+        (
+          tunnelRef: number,
+          bindAddr: string,
+          forwardToAddr: string,
+          protocol: string
+        ) => {
+          Logger.info(
+            `Additional forwarding succeeded for tunnel ${tunnelRef}: ${bindAddr} -> ${forwardToAddr} (${protocol})`
+          );
+          if (this.resolveAdditionalForwarding) {
+            this.resolveAdditionalForwarding();
+          }
+        }
+      );
+
+      this.addon.tunnelSetAdditionalForwardingFailedCallback(
+        this.tunnelRef,
+        (tunnelRef: number, remoteAddress: string, errorMessage: string) => {
+          Logger.error(
+            `Additional forwarding failed for ${remoteAddress} on tunnel ${tunnelRef}: ${errorMessage}`
+          );
+          if (this.rejectAdditionalForwarding) {
+            this.rejectAdditionalForwarding(
+              new PinggyError(
+                `Additional forwarding failed: ${remoteAddress} - ${errorMessage}`
+              )
+            );
+          }
+        }
+      );
+
+      this.addon.tunnelSetOnDisconnectedCallback(
+        this.tunnelRef,
+        (tunnelRef: number) => {
+          Logger.info(`Tunnel disconnected: ${tunnelRef}`);
+        }
+      );
+
+      this.addon.tunnelSetOnTunnelErrorCallback(
+        this.tunnelRef,
+        (tunnelRef: number, errorMessage: string) => {
+          Logger.error(`Tunnel error on ${tunnelRef}: ${errorMessage}`);
+          // maybe we can check for last exception here?
+        }
+      );
+
+      const connected = this.addon.tunnelConnect(this.tunnelRef);
+      if (!connected) {
+        throw new Error("Tunnel connection failed.");
+      }
+      Logger.info("Tunnel connected, starting authentication monitoring...");
+
+      this.pollStart();
+
+      // Wait for forwarding to complete and return the addresses
+      return await this.forwardingPromise;
     } catch (error) {
       const lastEx = this.addon.getLastException();
       if (lastEx) {
@@ -110,7 +190,7 @@ export class Tunnel implements ITunnel {
         const ret = this.addon.tunnelResume(this.tunnelRef);
         if (!ret) {
           Logger.error("Tunnel error detected, stopping polling.");
-          return;        // STOP polling
+          return; // STOP polling
         }
         shouldContinue = true;
       } catch (e) {
@@ -121,20 +201,20 @@ export class Tunnel implements ITunnel {
           return; // STOP polling
         } else {
           Logger.error("Error during tunnel polling:", e as Error);
-          return;          // STOP polling
+          return; // STOP polling
         }
       }
-  
+
       // only schedule next poll if no error
       if (shouldContinue) {
         // use setImmediate to avoid blowing the stack
         setImmediate(poll);
       }
     };
-  
+
     // kick it off
     poll();
-  }  
+  }
 
   public async startWebDebugging(listeningPort: number): Promise<void> {
     if (!this.tunnelRef) {
@@ -232,3 +312,5 @@ export class Tunnel implements ITunnel {
     }
   }
 }
+
+// upto tunnel on error callback done

@@ -36,11 +36,43 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (addresses: string[]) => void
   ): void;
+  tunnelSetPrimaryForwardingFailedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, errorMessage: string) => void
+  ): void;
+  tunnelSetAdditionalForwardingSucceededCallback(
+    tunnelRef: number,
+    callback: (
+      tunnelRef: number,
+      bindAddr: string,
+      forwardToAddr: string,
+      protocol: string
+    ) => void
+  ): void;
+  tunnelSetAdditionalForwardingFailedCallback(
+    tunnelRef: number,
+    callback: (
+      tunnelRef: number,
+      remoteAddress: string,
+      errorMessage: string
+    ) => void
+  ): void;
   tunnelStop(tunnelRef: number): boolean;
   tunnelIsActive(tunnelRef: number): boolean;
   initExceptionHandling(): void;
   getLastException(): string;
-  tunnelSetAuthenticationFailedCallback(tunnelRef: number, callback: (tunnelRef: number, errorMessage: string) => void): void;
+  tunnelSetAuthenticationFailedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, errorMessage: string) => void
+  ): void;
+  tunnelSetOnDisconnectedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number) => void
+  ): void;
+  tunnelSetOnTunnelErrorCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, errorMessage: string) => void
+  ): void;
 }
 
 export interface Config {
