@@ -1,5 +1,6 @@
 import { Logger } from "../utils/logger";
 import { PinggyNative, PinggyOptions, Config as IConfig } from "../types";
+import { PinggyError } from "./exception";
 
 export class Config implements IConfig {
   public configRef: number;
@@ -28,16 +29,75 @@ export class Config implements IConfig {
       const serverAddress = options.serverAddress || "a.pinggy.io:443";
       const sniServerName = options.sniServerName || "a.pinggy.io";
       const forwardTo = options.forwardTo || "localhost:4000";
+      const type = options.type || ""; // Default to empty string if not provided
 
       this.addon.configSetServerAddress(configRef, serverAddress);
 
       try {
         this.addon.configSetSniServerName(configRef, sniServerName);
       } catch (e) {
-        Logger.error("Error setting SNI server name:", e as Error);
+        const lastEx = this.addon.getLastException();
+        if (lastEx) {
+          const pinggyError = new PinggyError(lastEx);
+          Logger.error("Error setting SNI server name:", pinggyError);
+          throw pinggyError;
+        } else {
+          if (e instanceof Error) {
+            Logger.error("Error setting SNI server name:", e);
+          } else {
+            Logger.error("Error setting SNI server name:", new Error(String(e)));
+          }
+          throw e;
+        }
       }
 
-      this.addon.configSetTcpForwardTo(configRef, forwardTo);
+      if (type === "udp") {
+        try {
+          this.addon.configSetUdpForwardTo(configRef, forwardTo);
+          Logger.info(`Configured UDP forwarding to: ${forwardTo}`);
+        } catch (e) {
+          const lastEx = this.addon.getLastException();
+          if (lastEx) {
+            const pinggyError = new PinggyError(lastEx);
+            Logger.error("Error setting UDP forward to:", pinggyError);
+            throw pinggyError;
+          } else {
+            if (e instanceof Error) {
+              Logger.error("Error setting UDP forward to:", e);
+            } else {
+              Logger.error("Error setting UDP forward to:", new Error(String(e)));
+            }
+            throw e;
+          }
+        }
+      } else {
+        this.addon.configSetTcpForwardTo(configRef, forwardTo);
+      }
+
+      if (type) {
+        try {
+          if (type === "udp") {
+            this.addon.configSetUdpType(configRef, type);
+          } else {
+            this.addon.configSetType(configRef, type);
+          }
+          Logger.info(`Configured tunnel type: ${type}`);
+        } catch (e) {
+          const lastEx = this.addon.getLastException();
+          if (lastEx) {
+            const pinggyError = new PinggyError(lastEx);
+            Logger.error("Error setting type:", pinggyError);
+            throw pinggyError;
+          } else {
+            if (e instanceof Error) {
+              Logger.error("Error setting type:", e);
+            } else {
+              Logger.error("Error setting type:", new Error(String(e)));
+            }
+            throw e;
+          }
+        }
+      }
 
       // Set log path
       this.addon.setLogPath("./logs.log");

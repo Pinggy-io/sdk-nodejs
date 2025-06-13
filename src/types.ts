@@ -5,6 +5,7 @@ export interface PinggyOptions {
   forwardTo?: string;
   debug?: boolean;
   debuggerPort?: number;
+  type?: "tcp" | "tls" | "http" | "udp";
 }
 
 export interface PinggyNative {
@@ -13,6 +14,9 @@ export interface PinggyNative {
   configSetServerAddress(configRef: number, address: string): void;
   configSetSniServerName(configRef: number, name: string): void;
   configSetTcpForwardTo(configRef: number, address: string): void;
+  configSetUdpForwardTo(configRef: number, address: string): void;
+  configSetType(configRef: number, type: string): void;
+  configSetUdpType(configRef: number, type: string): void;
   configGetToken(configRef: number): string;
   configGetServerAddress(configRef: number): string;
   configGetSniServerName(configRef: number): string;
@@ -32,10 +36,43 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (addresses: string[]) => void
   ): void;
+  tunnelSetPrimaryForwardingFailedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, errorMessage: string) => void
+  ): void;
+  tunnelSetAdditionalForwardingSucceededCallback(
+    tunnelRef: number,
+    callback: (
+      tunnelRef: number,
+      bindAddr: string,
+      forwardToAddr: string,
+      protocol: string
+    ) => void
+  ): void;
+  tunnelSetAdditionalForwardingFailedCallback(
+    tunnelRef: number,
+    callback: (
+      tunnelRef: number,
+      remoteAddress: string,
+      errorMessage: string
+    ) => void
+  ): void;
   tunnelStop(tunnelRef: number): boolean;
   tunnelIsActive(tunnelRef: number): boolean;
   initExceptionHandling(): void;
   getLastException(): string;
+  tunnelSetAuthenticationFailedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, errorMessage: string) => void
+  ): void;
+  tunnelSetOnDisconnectedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number) => void
+  ): void;
+  tunnelSetOnTunnelErrorCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, errorMessage: string) => void
+  ): void;
 }
 
 export interface Config {
