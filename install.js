@@ -149,7 +149,7 @@ function extractArchive(archivePath, outDir, innerLibName, destLibPath) {
     fs.unlinkSync(destArchivePath);
     console.log(`[Pinggy Prebuild] Successfully extracted ${innerLibName}`);
 
-    fs.writeFileSync(path.join(__dirname, "..", ".prebuild-step-done"), "done");
+    fs.writeFileSync(path.join(__dirname, ".prebuild-step-done"), "done");
   } catch (err) {
     console.error(`Download or extraction failed: ${err.message}`);
     process.exit(1);

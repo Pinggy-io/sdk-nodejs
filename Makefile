@@ -11,6 +11,7 @@ clean:
 	rm -f pinggy.dll
 	rm -f pinggy.dylib
 	rm -f ../.prebuild-step-done
+	rm -f .prebuild-step-done
 	node-gyp clean
 
 install:
