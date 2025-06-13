@@ -3,7 +3,7 @@ import pinggy, { PinggyOptions } from "./src/index";
 (async () => {
   const options: PinggyOptions = {
     forwardTo: "localhost:3000",
-    type: "http" // defaults to http if not provided 
+    type: "http", // defaults to http if not provided
   };
   const addresses = await pinggy.startTunnel(options);
 
@@ -11,11 +11,11 @@ import pinggy, { PinggyOptions } from "./src/index";
   console.log("Server address:", pinggy.getServerAddress());
 
   pinggy.startWebDebugging(8080);
-  
-  console.log("about to stop tunnel")
+
+  console.log("about to stop tunnel");
   setTimeout(async () => {
     try {
-      console.log("Stopping tunnel...")
+      console.log("Stopping tunnel...");
       await pinggy.close();
       console.log("Tunnel cleanly closed.");
     } catch (err) {

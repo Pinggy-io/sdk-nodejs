@@ -830,7 +830,8 @@ void authentication_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t tunn
 
     // Create a JavaScript array to hold the reasons
     status = napi_create_array_with_length(env, num_reasons, &js_reasons_array);
-    if (status != napi_ok) {
+    if (status != napi_ok)
+    {
         // Handle error: Failed to create reasons array
         return;
     }
@@ -839,12 +840,14 @@ void authentication_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t tunn
     {
         napi_value js_reason;
         status = napi_create_string_utf8(env, reasons[i], NAPI_AUTO_LENGTH, &js_reason);
-        if (status != napi_ok) {
+        if (status != napi_ok)
+        {
             // Handle error: Failed to create reason string
             return;
         }
         status = napi_set_element(env, js_reasons_array, i, js_reason);
-        if (status != napi_ok) {
+        if (status != napi_ok)
+        {
             // Handle error: Failed to set element in reasons array
             return;
         }
@@ -907,7 +910,8 @@ napi_value SetAuthenticationFailedCallback(napi_env env, napi_callback_info info
     }
 
     AuthFailedCallbackData *cb_data = (AuthFailedCallbackData *)malloc(sizeof(AuthFailedCallbackData));
-    if (cb_data == NULL) {
+    if (cb_data == NULL)
+    {
         char error_message[256];
         snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to allocate memory for AuthFailedCallbackData", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
@@ -971,7 +975,8 @@ void primary_forwarding_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t 
     }
 
     status = napi_create_string_utf8(env, msg, NAPI_AUTO_LENGTH, &js_msg);
-    if (status != napi_ok) {
+    if (status != napi_ok)
+    {
         // Handle error: Failed to create message string
         return;
     }
@@ -1033,7 +1038,8 @@ napi_value SetPrimaryForwardingFailedCallback(napi_env env, napi_callback_info i
     }
 
     PrimaryForwardingFailedCallbackData *cb_data = (PrimaryForwardingFailedCallbackData *)malloc(sizeof(PrimaryForwardingFailedCallbackData));
-    if (cb_data == NULL) {
+    if (cb_data == NULL)
+    {
         char error_message[256];
         snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to allocate memory for PrimaryForwardingFailedCallbackData", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
@@ -1068,50 +1074,47 @@ napi_value SetPrimaryForwardingFailedCallback(napi_env env, napi_callback_info i
     return js_result;
 }
 
-typedef struct {
+typedef struct
+{
     napi_ref callback_ref;
     napi_env env;
 } AdditionalForwardingFailedCallbackData;
 
-void additional_forwarding_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_const_char_p_t remote_address, pinggy_const_char_p_t error_message) {
+void additional_forwarding_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_const_char_p_t remote_address, pinggy_const_char_p_t forward_to_addr, pinggy_const_char_p_t error_message)
+{
     AdditionalForwardingFailedCallbackData *cb_data = (AdditionalForwardingFailedCallbackData *)user_data;
-    napi_env env = cb_data->env;
+    napi_handle_scope scope;
+    napi_open_handle_scope(cb_data->env, &scope);
 
-    napi_value js_callback, js_tunnel, js_remote_address, js_error_message, js_undefined, js_result;
-    napi_status status;
+    napi_value global;
+    napi_get_global(cb_data->env, &global);
 
-    status = napi_get_reference_value(env, cb_data->callback_ref, &js_callback);
-    if (status != napi_ok) return;
+    napi_value callback;
+    napi_get_reference_value(cb_data->env, cb_data->callback_ref, &callback);
 
-    status = napi_create_uint32(env, tunnel, &js_tunnel);
-    if (status != napi_ok) return;
+    napi_value argv[3];
+    napi_create_uint32(cb_data->env, (uint32_t)tunnel, &argv[0]);
+    napi_create_string_utf8(cb_data->env, remote_address, NAPI_AUTO_LENGTH, &argv[1]);
+    napi_create_string_utf8(cb_data->env, error_message, NAPI_AUTO_LENGTH, &argv[2]);
 
-    status = napi_create_string_utf8(env, remote_address, NAPI_AUTO_LENGTH, &js_remote_address);
-    if (status != napi_ok) return;
+    napi_value undefined;
+    napi_get_undefined(cb_data->env, &undefined);
 
-    status = napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &js_error_message);
-    if (status != napi_ok) return;
+    napi_call_function(cb_data->env, global, callback, 3, argv, NULL);
 
-    status = napi_get_undefined(env, &js_undefined);
-    if (status != napi_ok) return;
-
-    napi_value args[3] = { js_tunnel, js_remote_address, js_error_message };
-    status = napi_call_function(env, js_undefined, js_callback, 3, args, &js_result);
-    if (status != napi_ok) {
-        // Optional: log failure to invoke JS callback
-    }
-
-    printf("[DEBUG] %s:%d %s callback invoked.\n", __FILE__, __LINE__, __func__);
+    napi_close_handle_scope(cb_data->env, scope);
 }
 
-napi_value SetAdditionalForwardingFailedCallback(napi_env env, napi_callback_info info) {
+napi_value SetAdditionalForwardingFailedCallback(napi_env env, napi_callback_info info)
+{
     napi_status status;
     size_t argc = 2;
     napi_value args[2];
     napi_value js_tunnel, js_callback;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok || argc < 2) {
+    if (status != napi_ok || argc < 2)
+    {
         napi_throw_error(env, NULL, "Expected 2 arguments: tunnelRef (uint32), callback (function)");
         return NULL;
     }
@@ -1121,37 +1124,41 @@ napi_value SetAdditionalForwardingFailedCallback(napi_env env, napi_callback_inf
 
     pinggy_ref_t tunnel;
     status = napi_get_value_uint32(env, js_tunnel, &tunnel);
-    if (status != napi_ok) {
+    if (status != napi_ok)
+    {
         napi_throw_error(env, NULL, "Invalid tunnel reference");
         return NULL;
     }
 
     napi_valuetype cb_type;
     status = napi_typeof(env, js_callback, &cb_type);
-    if (status != napi_ok || cb_type != napi_function) {
+    if (status != napi_ok || cb_type != napi_function)
+    {
         napi_throw_error(env, NULL, "Second argument must be a function");
         return NULL;
     }
 
     AdditionalForwardingFailedCallbackData *cb_data = malloc(sizeof(AdditionalForwardingFailedCallbackData));
-    if (cb_data == NULL) {
+    if (cb_data == NULL)
+    {
         napi_throw_error(env, NULL, "Failed to allocate callback data");
         return NULL;
     }
 
     cb_data->env = env;
     status = napi_create_reference(env, js_callback, 1, &cb_data->callback_ref);
-    if (status != napi_ok) {
+    if (status != napi_ok)
+    {
         free(cb_data);
         napi_throw_error(env, NULL, "Failed to create callback reference");
         return NULL;
     }
 
     pinggy_bool_t result = pinggy_tunnel_set_on_additional_forwarding_failed_callback(
-        tunnel, additional_forwarding_failed_callback, cb_data
-    );
+        tunnel, additional_forwarding_failed_callback, cb_data);
 
-    if (!result) {
+    if (!result)
+    {
         napi_delete_reference(env, cb_data->callback_ref);
         free(cb_data);
         napi_throw_error(env, NULL, "Failed to register callback in Pinggy native layer");
@@ -1163,13 +1170,15 @@ napi_value SetAdditionalForwardingFailedCallback(napi_env env, napi_callback_inf
     return js_result;
 }
 
-typedef struct {
+typedef struct
+{
     napi_env env;
     napi_ref callback_ref;
 } disconnected_callback_data;
 
-void on_disconnected_cb(pinggy_ref_t tunnel, pinggy_void_p_t user_data) {
-    disconnected_callback_data* cb_data = (disconnected_callback_data*)user_data;
+void on_disconnected_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_const_char_p_t error, pinggy_len_t msg_size, pinggy_char_p_p_t msg)
+{
+    disconnected_callback_data *cb_data = (disconnected_callback_data *)user_data;
     napi_handle_scope scope;
     napi_open_handle_scope(cb_data->env, &scope);
 
@@ -1179,23 +1188,37 @@ void on_disconnected_cb(pinggy_ref_t tunnel, pinggy_void_p_t user_data) {
     napi_value callback;
     napi_get_reference_value(cb_data->env, cb_data->callback_ref, &callback);
 
+    napi_value argv[3];
+    napi_create_uint32(cb_data->env, (uint32_t)tunnel_ref, &argv[0]);
+    napi_create_string_utf8(cb_data->env, error, NAPI_AUTO_LENGTH, &argv[1]);
+
+    // Create array for messages
+    napi_value msg_array;
+    napi_create_array(cb_data->env, &msg_array);
+    for (pinggy_len_t i = 0; i < msg_size; i++)
+    {
+        napi_value msg_str;
+        napi_create_string_utf8(cb_data->env, msg[i], NAPI_AUTO_LENGTH, &msg_str);
+        napi_set_element(cb_data->env, msg_array, i, msg_str);
+    }
+    argv[2] = msg_array;
+
     napi_value undefined;
     napi_get_undefined(cb_data->env, &undefined);
 
-    napi_value argv[1];
-    napi_create_uint32(cb_data->env, (uint32_t)tunnel, &argv[0]);
-
-    napi_call_function(cb_data->env, global, callback, 1, argv, NULL);
+    napi_call_function(cb_data->env, global, callback, 3, argv, NULL);
 
     napi_close_handle_scope(cb_data->env, scope);
 }
 
-napi_value TunnelSetDisconnectedCallback(napi_env env, napi_callback_info info) {
+napi_value TunnelSetDisconnectedCallback(napi_env env, napi_callback_info info)
+{
     size_t argc = 2;
     napi_value args[2];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
 
-    if (argc < 2) {
+    if (argc < 2)
+    {
         napi_throw_error(env, NULL, "Expected tunnelRef and callback");
         return NULL;
     }
@@ -1205,33 +1228,35 @@ napi_value TunnelSetDisconnectedCallback(napi_env env, napi_callback_info info) 
 
     napi_valuetype cb_type;
     napi_typeof(env, args[1], &cb_type);
-    if (cb_type != napi_function) {
+    if (cb_type != napi_function)
+    {
         napi_throw_type_error(env, NULL, "Callback must be a function");
         return NULL;
     }
 
-    disconnected_callback_data* cb_data = malloc(sizeof(disconnected_callback_data));
+    disconnected_callback_data *cb_data = malloc(sizeof(disconnected_callback_data));
     cb_data->env = env;
     napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
 
     pinggy_bool_t result = pinggy_tunnel_set_on_disconnected_callback(
         (pinggy_ref_t)tunnelRef,
         on_disconnected_cb,
-        cb_data
-    );
+        cb_data);
 
     napi_value js_result;
     napi_get_boolean(env, result, &js_result);
     return js_result;
 }
 
-typedef struct {
+typedef struct
+{
     napi_env env;
     napi_ref callback_ref;
 } tunnel_error_callback_data;
 
-void on_tunnel_error_cb(pinggy_ref_t tunnel, const char* error_message, pinggy_void_p_t user_data) {
-    tunnel_error_callback_data* cb_data = (tunnel_error_callback_data*)user_data;
+void on_tunnel_error_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_uint32_t error_no, pinggy_const_char_p_t error, pinggy_bool_t recoverable)
+{
+    tunnel_error_callback_data *cb_data = (tunnel_error_callback_data *)user_data;
     napi_handle_scope scope;
     napi_open_handle_scope(cb_data->env, &scope);
 
@@ -1241,24 +1266,28 @@ void on_tunnel_error_cb(pinggy_ref_t tunnel, const char* error_message, pinggy_v
     napi_value callback;
     napi_get_reference_value(cb_data->env, cb_data->callback_ref, &callback);
 
-    napi_value argv[2];
-    napi_create_uint32(cb_data->env, (uint32_t)tunnel, &argv[0]);
-    napi_create_string_utf8(cb_data->env, error_message, NAPI_AUTO_LENGTH, &argv[1]);
+    napi_value argv[4];
+    napi_create_uint32(cb_data->env, (uint32_t)tunnel_ref, &argv[0]);
+    napi_create_uint32(cb_data->env, error_no, &argv[1]);
+    napi_create_string_utf8(cb_data->env, error, NAPI_AUTO_LENGTH, &argv[2]);
+    napi_get_boolean(cb_data->env, recoverable, &argv[3]);
 
     napi_value undefined;
     napi_get_undefined(cb_data->env, &undefined);
 
-    napi_call_function(cb_data->env, global, callback, 2, argv, NULL);
+    napi_call_function(cb_data->env, global, callback, 4, argv, NULL);
 
     napi_close_handle_scope(cb_data->env, scope);
 }
 
-napi_value TunnelSetErrorCallback(napi_env env, napi_callback_info info) {
+napi_value TunnelSetErrorCallback(napi_env env, napi_callback_info info)
+{
     size_t argc = 2;
     napi_value args[2];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
 
-    if (argc < 2) {
+    if (argc < 2)
+    {
         napi_throw_error(env, NULL, "Expected tunnelRef and callback");
         return NULL;
     }
@@ -1268,26 +1297,25 @@ napi_value TunnelSetErrorCallback(napi_env env, napi_callback_info info) {
 
     napi_valuetype cb_type;
     napi_typeof(env, args[1], &cb_type);
-    if (cb_type != napi_function) {
+    if (cb_type != napi_function)
+    {
         napi_throw_type_error(env, NULL, "Callback must be a function");
         return NULL;
     }
 
-    tunnel_error_callback_data* cb_data = malloc(sizeof(tunnel_error_callback_data));
+    tunnel_error_callback_data *cb_data = malloc(sizeof(tunnel_error_callback_data));
     cb_data->env = env;
     napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
 
     pinggy_bool_t result = pinggy_tunnel_set_on_tunnel_error_callback(
         (pinggy_ref_t)tunnelRef,
         on_tunnel_error_cb,
-        cb_data
-    );
+        cb_data);
 
     napi_value js_result;
     napi_get_boolean(env, result, &js_result);
     return js_result;
 }
-
 
 // ================================= INITIALIZATION =================================
 
@@ -1356,7 +1384,7 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, SetAdditionalForwardingFailedCallback, NULL, &tunnel_set_additional_forwarding_failed_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetAdditionalForwardingFailedCallback", tunnel_set_additional_forwarding_failed_callback_fn);
-    
+
     napi_create_function(env, NULL, 0, TunnelIsActive, NULL, &tunnel_is_active_fn);
     napi_set_named_property(env, exports, "tunnelIsActive", tunnel_is_active_fn);
 
