@@ -6,10 +6,21 @@ export interface PinggyOptions {
   debug?: boolean;
   debuggerPort?: number;
   type?: "tcp" | "tls" | "http" | "udp";
+  ipWhitelist?: string[];
+  basicAuth?: Record<string, string>;
+  bearerAuth?: string[];
+  headerModification?: string[];
+  xff?: boolean;
+  httpsOnly?: boolean;
+  fullRequestUrl?: boolean;
+  allowPreflight?: boolean;
+  reverseProxy?: boolean;
+  cmd?: string; // optional command prefix
 }
 
 export interface PinggyNative {
   createConfig(): number;
+  configSetArgument: (configRef: number, arg: string) => void;
   configSetToken(configRef: number, token: string): void;
   configSetServerAddress(configRef: number, address: string): void;
   configSetSniServerName(configRef: number, name: string): void;
