@@ -1,3 +1,5 @@
+import { quote } from "shell-quote";
+
 import { Logger } from "../utils/logger";
 import { PinggyNative, PinggyOptions, Config as IConfig } from "../types";
 import { PinggyError } from "./exception";
@@ -31,6 +33,8 @@ export class Config implements IConfig {
       const forwardTo = options.forwardTo || "localhost:4000";
       const type = options.type || ""; // Default to empty string if not provided
 
+      this.prepareAndSetArgument(configRef, options);
+
       this.addon.configSetServerAddress(configRef, serverAddress);
 
       try {
@@ -45,7 +49,10 @@ export class Config implements IConfig {
           if (e instanceof Error) {
             Logger.error("Error setting SNI server name:", e);
           } else {
-            Logger.error("Error setting SNI server name:", new Error(String(e)));
+            Logger.error(
+              "Error setting SNI server name:",
+              new Error(String(e))
+            );
           }
           throw e;
         }
@@ -65,7 +72,10 @@ export class Config implements IConfig {
             if (e instanceof Error) {
               Logger.error("Error setting UDP forward to:", e);
             } else {
-              Logger.error("Error setting UDP forward to:", new Error(String(e)));
+              Logger.error(
+                "Error setting UDP forward to:",
+                new Error(String(e))
+              );
             }
             throw e;
           }
@@ -108,6 +118,45 @@ export class Config implements IConfig {
       Logger.error("Error creating configuration:", e as Error);
       return 0;
     }
+  }
+
+  private prepareAndSetArgument(configRef: number, options: PinggyOptions) {
+    const val: string[] = [];
+
+    if (options.ipWhitelist?.length) {
+      val.push(`w:${options.ipWhitelist.join(",")}`);
+    }
+
+    if (options.basicAuth && Object.keys(options.basicAuth).length > 0) {
+      for (const [user, pass] of Object.entries(options.basicAuth)) {
+        val.push(`b:${user}:${pass}`);
+      }
+    }
+
+    if (options.bearerAuth?.length) {
+      for (const token of options.bearerAuth) {
+        val.push(`k:${token}`);
+      }
+    }
+
+    if (options.headerModification?.length) {
+      for (const header of options.headerModification) {
+        val.push(header); // already in the right format
+      }
+    }
+
+    if (options.xff) val.push("x:xff");
+    if (options.httpsOnly) val.push("x:https");
+    if (options.fullRequestUrl) val.push("x:fullurl");
+    if (options.allowPreflight) val.push("x:passpreflight");
+    if (options.noReverseProxy) val.push("x:noreverseproxy");
+
+    let argument = quote(val);
+    if (options.cmd && options.cmd.trim()) {
+      argument = `${options.cmd.trim()} ${argument}`;
+    }
+
+    this.addon.configSetArgument(configRef, argument);
   }
 
   public setToken(token: string): void {

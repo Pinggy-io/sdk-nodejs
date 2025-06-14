@@ -3,7 +3,12 @@ import pinggy, { PinggyOptions } from "./src/index";
 (async () => {
   const options: PinggyOptions = {
     forwardTo: "localhost:3000",
-    type: "http", // defaults to http if not provided
+    // type: "http", // defaults to http if not provided
+    // fullRequestUrl: true,
+    // allowPreflight: true,
+    // noReverseProxy: true,
+    // httpsOnly: true,
+    // xff: true,
   };
   const addresses = await pinggy.startTunnel(options);
 
@@ -12,14 +17,14 @@ import pinggy, { PinggyOptions } from "./src/index";
 
   pinggy.startWebDebugging(8080);
 
-  console.log("about to stop tunnel");
-  setTimeout(async () => {
-    try {
-      console.log("Stopping tunnel...");
-      await pinggy.close();
-      console.log("Tunnel cleanly closed.");
-    } catch (err) {
-      console.error("Failed to close tunnel:", err);
-    }
-  }, 5000);
+  // console.log("about to stop tunnel");
+  // setTimeout(async () => {
+  //   try {
+  //     console.log("Stopping tunnel...");
+  //     await pinggy.close();
+  //     console.log("Tunnel cleanly closed.");
+  //   } catch (err) {
+  //     console.error("Failed to close tunnel:", err);
+  //   }
+  // }, 15000);
 })();
