@@ -149,7 +149,7 @@ export class Config implements IConfig {
     if (options.httpsOnly) val.push("x:https");
     if (options.fullRequestUrl) val.push("x:fullurl");
     if (options.allowPreflight) val.push("x:passpreflight");
-    if (options.reverseProxy === false) val.push("x:noreverseproxy");
+    if (options.noReverseProxy) val.push("x:noreverseproxy");
 
     let argument = quote(val);
     if (options.cmd && options.cmd.trim()) {

@@ -14,7 +14,7 @@ export interface PinggyOptions {
   httpsOnly?: boolean;
   fullRequestUrl?: boolean;
   allowPreflight?: boolean;
-  reverseProxy?: boolean;
+  noReverseProxy?: boolean;
   cmd?: string; // optional command prefix
 }
 
