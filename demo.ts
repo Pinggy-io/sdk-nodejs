@@ -9,6 +9,9 @@ import pinggy, { PinggyOptions } from "./src/index";
     // noReverseProxy: true,
     // httpsOnly: true,
     // xff: true,
+    // bearerAuth: ["hello"],
+    // basicAuth: { username: "password" },
+    // ipWhitelist: [""],
   };
   const addresses = await pinggy.startTunnel(options);
 
