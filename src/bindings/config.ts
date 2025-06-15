@@ -156,6 +156,8 @@ export class Config implements IConfig {
       argument = `${options.cmd.trim()} ${argument}`;
     }
 
+    Logger.info(`Setting config argument: ${argument}`);
+
     this.addon.configSetArgument(configRef, argument);
   }
 
