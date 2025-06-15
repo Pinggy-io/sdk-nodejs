@@ -141,7 +141,47 @@ export class Config implements IConfig {
 
     if (options.headerModification?.length) {
       for (const header of options.headerModification) {
-        val.push(header); // already in the right format
+        switch (header.action) {
+          case "add":
+            if (header.key && header.value) {
+              val.push(`a:${header.key}:${header.value}`);
+            } else {
+              Logger.error(
+                `Invalid add header: missing key or value for ${JSON.stringify(
+                  header
+                )}`
+              );
+            }
+            break;
+          case "remove":
+            if (header.key) {
+              val.push(`r:${header.key}`);
+            } else {
+              Logger.error(
+                `Invalid remove header: missing key for ${JSON.stringify(
+                  header
+                )}`
+              );
+            }
+            break;
+          case "update":
+            if (header.key && header.value) {
+              val.push(`u:${header.key}:${header.value}`);
+            } else {
+              Logger.error(
+                `Invalid update header: missing key or value for ${JSON.stringify(
+                  header
+                )}`
+              );
+            }
+            break;
+          default:
+            Logger.error(
+              `Unknown header action: ${header.action} for ${JSON.stringify(
+                header
+              )}`
+            );
+        }
       }
     }
 

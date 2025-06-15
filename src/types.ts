@@ -1,3 +1,9 @@
+export interface HeaderModification {
+  key: string;
+  value?: string;
+  action: "add" | "remove" | "update";
+}
+
 export interface PinggyOptions {
   token?: string;
   serverAddress?: string;
@@ -9,7 +15,7 @@ export interface PinggyOptions {
   ipWhitelist?: string[];
   basicAuth?: Record<string, string>;
   bearerAuth?: string[];
-  headerModification?: string[];
+  headerModification?: HeaderModification[]; // Updated to use structured format
   xff?: boolean;
   httpsOnly?: boolean;
   fullRequestUrl?: boolean;
