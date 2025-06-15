@@ -12,6 +12,7 @@ import pinggy, { PinggyOptions } from "./src/index";
     // bearerAuth: ["hello"],
     // basicAuth: { username: "password" },
     // ipWhitelist: [""],
+    // headerModification: ["x-custom-header: value"],
   };
   const addresses = await pinggy.startTunnel(options);
 
