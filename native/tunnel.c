@@ -1317,6 +1317,52 @@ napi_value TunnelSetErrorCallback(napi_env env, napi_callback_info info)
     return js_result;
 }
 
+// Wrapper for pinggy_config_set_ssl
+napi_value ConfigSetSsl(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 2)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected 2 arguments: configRef and ssl", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Get config reference
+    uint32_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid config reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Get ssl boolean
+    bool ssl;
+    status = napi_get_value_bool(env, args[1], &ssl);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid ssl value", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the native function
+    pinggy_config_set_ssl(config, ssl ? pinggy_true : pinggy_false);
+    printf("[DEBUG] %s:%d %s ret = void\n", __FILE__, __LINE__, __func__);
+
+    return NULL;
+}
+
 // ================================= INITIALIZATION =================================
 
 // Initialize the module and export the function
@@ -1336,7 +1382,8 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_set_primary_forwarding_failed_callback_fn,
         tunnel_set_additional_forwarding_failed_callback_fn,
         tunnel_set_on_disconnected_callback_fn,
-        tunnel_set_on_tunnel_error_callback_fn;
+        tunnel_set_on_tunnel_error_callback_fn,
+        config_set_ssl_fn;
 
     napi_create_function(env, NULL, 0, TunnelRequestPrimaryForwarding, NULL, &request_primary_forwarding_fn);
     napi_set_named_property(env, exports, "tunnelRequestPrimaryForwarding", request_primary_forwarding_fn);
@@ -1393,6 +1440,9 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, TunnelSetErrorCallback, NULL, &tunnel_set_on_tunnel_error_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetOnTunnelErrorCallback", tunnel_set_on_tunnel_error_callback_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetSsl, NULL, &config_set_ssl_fn);
+    napi_set_named_property(env, exports, "configSetSsl", config_set_ssl_fn);
 
     return exports;
 }

@@ -145,16 +145,25 @@ export class Tunnel implements ITunnel {
 
       this.addon.tunnelSetOnDisconnectedCallback(
         this.tunnelRef,
-        (tunnelRef: number) => {
-          Logger.info(`Tunnel disconnected: ${tunnelRef}`);
+        (tunnelRef: number, error: string, messages: string[]) => {
+          Logger.info(`Tunnel disconnected: ${tunnelRef}, error: ${error}`);
+          if (messages && messages.length > 0) {
+            Logger.info(`Disconnection messages: ${messages.join(", ")}`);
+          }
         }
       );
 
       this.addon.tunnelSetOnTunnelErrorCallback(
         this.tunnelRef,
-        (tunnelRef: number, errorMessage: string) => {
-          Logger.error(`Tunnel error on ${tunnelRef}: ${errorMessage}`);
-          // maybe we can check for last exception here?
+        (
+          tunnelRef: number,
+          errorNo: number,
+          error: string,
+          recoverable: boolean
+        ) => {
+          Logger.error(
+            `Tunnel error on ${tunnelRef} (${errorNo}): ${error} (recoverable: ${recoverable})`
+          );
         }
       );
 

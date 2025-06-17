@@ -2,7 +2,9 @@ import pinggy, { PinggyOptions } from "./src/index";
 
 (async () => {
   const options: PinggyOptions = {
-    forwardTo: "localhost:3000",
+    forwardTo: "localhost:7878",
+    // token: "noprimaryforwarding",
+    // ssl: false,
     // type: "http", // defaults to http if not provided
     // fullRequestUrl: true,
     // allowPreflight: true,
