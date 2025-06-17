@@ -22,6 +22,7 @@ export interface PinggyOptions {
   allowPreflight?: boolean;
   noReverseProxy?: boolean;
   cmd?: string; // optional command prefix
+  ssl?: boolean; // whether to use SSL connection for tunnel setup
 }
 
 export interface PinggyNative {
@@ -34,6 +35,7 @@ export interface PinggyNative {
   configSetUdpForwardTo(configRef: number, address: string): void;
   configSetType(configRef: number, type: string): void;
   configSetUdpType(configRef: number, type: string): void;
+  configSetSsl(configRef: number, ssl: boolean): void;
   configGetToken(configRef: number): string;
   configGetServerAddress(configRef: number): string;
   configGetSniServerName(configRef: number): string;
@@ -82,13 +84,18 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (tunnelRef: number, errorMessage: string) => void
   ): void;
-  tunnelSetOnDisconnectedCallback(
-    tunnelRef: number,
-    callback: (tunnelRef: number) => void
-  ): void;
   tunnelSetOnTunnelErrorCallback(
     tunnelRef: number,
-    callback: (tunnelRef: number, errorMessage: string) => void
+    callback: (
+      tunnelRef: number,
+      errorNo: number,
+      error: string,
+      recoverable: boolean
+    ) => void
+  ): void;
+  tunnelSetOnDisconnectedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, error: string, messages: string[]) => void
   ): void;
 }
 

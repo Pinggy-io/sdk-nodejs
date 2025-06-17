@@ -28,10 +28,11 @@ export class Config implements IConfig {
       }
 
       // Apply user-defined values or set defaults
-      const serverAddress = options.serverAddress || "a.pinggy.io:443";
-      const sniServerName = options.sniServerName || "a.pinggy.io";
+      const serverAddress = options.serverAddress || "t.pinggy.io:443";
+      const sniServerName = options.sniServerName || "t.pinggy.io";
       const forwardTo = options.forwardTo || "localhost:4000";
       const type = options.type || ""; // Default to empty string if not provided
+      const ssl = options.ssl !== undefined ? options.ssl : true; // Default to true if not specified
 
       this.prepareAndSetArgument(configRef, options);
 
@@ -51,6 +52,29 @@ export class Config implements IConfig {
           } else {
             Logger.error(
               "Error setting SNI server name:",
+              new Error(String(e))
+            );
+          }
+          throw e;
+        }
+      }
+
+      // Set SSL configuration
+      try {
+        this.addon.configSetSsl(configRef, ssl);
+        Logger.info(`SSL configuration set to: ${ssl}`);
+      } catch (e) {
+        const lastEx = this.addon.getLastException();
+        if (lastEx) {
+          const pinggyError = new PinggyError(lastEx);
+          Logger.error("Error setting SSL configuration:", pinggyError);
+          throw pinggyError;
+        } else {
+          if (e instanceof Error) {
+            Logger.error("Error setting SSL configuration:", e);
+          } else {
+            Logger.error(
+              "Error setting SSL configuration:",
               new Error(String(e))
             );
           }
