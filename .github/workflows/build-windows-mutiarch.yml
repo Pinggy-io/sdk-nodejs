@@ -1,0 +1,62 @@
+name: Build Multi‑Arch Windows Binaries
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    name: Build ${{ matrix.arch }} on ubuntu → Windows
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+        node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # Install native build tools + cross‑compiler
+      - name: Install build essentials
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3
+
+      - name: Install Windows cross‑compiler
+        run: |
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            sudo apt-get install -y gcc-aarch64-w64-mingw32 g++-aarch64-w64-mingw32
+          else
+            sudo apt-get install -y gcc-mingw-w64 g++-mingw-w64
+          fi
+
+          - name: Build native addon
+          run: |
+            if [ "${{ matrix.arch }}" = "arm64" ]; then
+              export CC=aarch64-w64-mingw32-gcc
+              export CXX=aarch64-w64-mingw32-g++
+            else
+              export CC=x86_64-w64-mingw32-gcc
+              export CXX=x86_64-w64-mingw32-g++
+            fi
+            export npm_config_arch=${{ matrix.arch }}
+            npm install
+            npx node-gyp clean configure build --arch=${{ matrix.arch }}
+
+      - name: Package artifact
+        run: npm run package
+
+      - name: Publish to GitHub Release
+        env:
+          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx node-pre-gyp-github publish --release
