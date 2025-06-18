@@ -1,4 +1,4 @@
-name: Build Native Binaries
+name: Build Native Binaries for linux arm54
 
 on:
   workflow_dispatch: # Trigger manually from Actions tab
