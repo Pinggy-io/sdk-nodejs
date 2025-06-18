@@ -6,7 +6,6 @@ clean:
 	rm -rf build
 	rm -rf libpinggy-0.0.14-linux-x86_64.tgz
 	rm -f libpinggy.so
-	rm -f pinggy.h
 	rm -f pinggy.lib
 	rm -f pinggy.dll
 	rm -f pinggy.dylib
