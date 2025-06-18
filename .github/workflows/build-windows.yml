@@ -1,4 +1,4 @@
-name: Build Windows arm64 Binaries
+name: Build Windows Binaries
 
 on:
   workflow_dispatch: # Trigger manually from Actions tab
