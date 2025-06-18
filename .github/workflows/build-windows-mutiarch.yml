@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-windows:
-    name: Build ${{ matrix.arch }} on ubuntu → Windows
+    name: Build ${{ matrix.arch }} for Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -17,53 +17,49 @@ jobs:
         node-version: [18, 20, 22]
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
+      - name: Install Docker CLI
+        uses: docker/setup-buildx-action@v2
 
-      - name: Install build essentials
+      - name: Setup dockcross wrapper
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential python3 software-properties-common
-          sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
-          sudo apt-get update
+          # choose the right dockcross image
+          IMAGE=$(
+            if [ "${{ matrix.arch }}" = "arm64" ]; then
+              echo dockcross/windows-arm64
+            else
+              echo dockcross/windows-amd64
+            fi
+          )
+          docker pull $IMAGE
+          docker run --rm $IMAGE > ./dockcross
+          chmod +x ./dockcross
 
-      - name: Install Windows cross‑compiler
+      - name: Build & package inside container
         run: |
-          if [ "${{ matrix.arch }}" = "arm64" ]; then
-            sudo apt-get install -y gcc-aarch64-w64-mingw32 g++-aarch64-w64-mingw32
-          else
-            sudo apt-get install -y gcc-mingw-w64 g++-mingw-w64
-          fi
+          ./dockcross bash << 'EOF'
+          set -eux
 
-      - name: Check cross-compiler version
-        run: |
-          if [ "${{ matrix.arch }}" = "arm64" ]; then
-            aarch64-w64-mingw32-gcc --version
-          else
-            x86_64-w64-mingw32-gcc --version
-          fi
+          # bootstrap Node.js from NodeSource
+          curl -fsSL https://deb.nodesource.com/setup_${{ matrix.node-version }}.x | bash -
+          apt-get update
+          apt-get install -y nodejs python3 build-essential
 
-      - name: Build native addon
-        run: |
-          if [ "${{ matrix.arch }}" = "arm64" ]; then
-            export CC=aarch64-w64-mingw32-gcc
-            export CXX=aarch64-w64-mingw32-g++
-          else
-            export CC=x86_64-w64-mingw32-gcc
-            export CXX=x86_64-w64-mingw32-g++
-          fi
-
-          export npm_config_arch=${{ matrix.arch }}
+          # CI‑only build step (avoids fallback logic)
           npm ci --ignore-scripts
           npm run build-native
 
-      - name: Package artifact
-        run: npm run package
+          # package your .node + shared-libs into a tarball
+          npm run package
+          EOF
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.arch }}-node${{ matrix.node-version }}
+          path: build/stage/*.tar.gz
 
       - name: Publish to GitHub Release
         env:
