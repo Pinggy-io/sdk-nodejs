@@ -59,8 +59,8 @@ jobs:
           fi
 
           export npm_config_arch=${{ matrix.arch }}
-          npm install
-          npx node-gyp clean configure build --arch=${{ matrix.arch }}
+          npm ci --ignore-scripts
+          npm run build-native
 
       - name: Package artifact
         run: npm run package

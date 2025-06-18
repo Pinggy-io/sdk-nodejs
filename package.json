@@ -1,12 +1,13 @@
 {
   "name": "pinggy-test",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Test for pinggy native module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
     "build": "tsc",
+    "build-native": "node-gyp clean configure build && node ./copy.js",
     "package": "node-pre-gyp package",
     "publish-binary": "node-pre-gyp publish",
     "test": "jest",
