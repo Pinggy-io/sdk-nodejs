@@ -28,8 +28,8 @@ export class Config implements IConfig {
       }
 
       // Apply user-defined values or set defaults
-      const serverAddress = options.serverAddress || "t.pinggy.io:443";
-      const sniServerName = options.sniServerName || "t.pinggy.io";
+      const serverAddress = options.serverAddress || "a.pinggy.io:443";
+      const sniServerName = options.sniServerName || "a.pinggy.io";
       const forwardTo = options.forwardTo || "localhost:4000";
       const type = options.type || ""; // Default to empty string if not provided
       const ssl = options.ssl !== undefined ? options.ssl : true; // Default to true if not specified
