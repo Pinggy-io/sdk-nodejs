@@ -28,7 +28,6 @@ jobs:
       - name: Install dependencies and build
         run: |
           npm ci --ignore-scripts
-          npm install --global windows-build-tools
 
       - name: Install node-gyp globally
         run: npm install -g node-gyp
