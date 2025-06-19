@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Install node-gyp globally
+        run: npm install -g node-gyp
+
       - name: Build native addon and copy to lib
         run: |
           node-gyp clean
