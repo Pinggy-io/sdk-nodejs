@@ -36,7 +36,9 @@ jobs:
 
       - name: Build native addon and copy to lib
         run: |
-          node-gyp clean configure build
+          node-gyp clean
+          node-gyp configure
+          node-gyp build
           node ./copy.js
 
       - name: Package native binary
