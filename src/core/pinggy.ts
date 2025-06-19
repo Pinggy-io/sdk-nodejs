@@ -3,7 +3,11 @@ import { PinggyNative, PinggyOptions } from "../types";
 import { Config } from "../bindings/config";
 import { Tunnel } from "../bindings/tunnel";
 import { Logger } from "../utils/logger";
-import { getLastException, PinggyError, initExceptionHandling } from "../bindings/exception";
+import {
+  getLastException,
+  PinggyError,
+  initExceptionHandling,
+} from "../bindings/exception";
 
 export class Pinggy {
   private config: Config | null = null;
@@ -14,13 +18,13 @@ export class Pinggy {
     const binary = require("@mapbox/node-pre-gyp");
     const path = require("path");
     const binding_path = binary.find(
-      path.resolve(path.join(__dirname, "../../package.json"))
+      path.resolve(path.join(__dirname, "../package.json"))
     );
     this.addon = require(binding_path) as PinggyNative;
     initExceptionHandling(this.addon);
   }
 
-  /** 
+  /**
    * Initialize the native bindings & Tunnel if not already done.
    * Called internally by startTunnel().
    */
@@ -97,7 +101,10 @@ export class Pinggy {
     }
   }
 
-  public tunnelRequestAdditionalForwarding(hostname: string, target: string): void {
+  public tunnelRequestAdditionalForwarding(
+    hostname: string,
+    target: string
+  ): void {
     if (!this.tunnel) throw new Error("Tunnel not initialized");
     try {
       this.tunnel.tunnelRequestAdditionalForwarding(hostname, target);
@@ -111,7 +118,10 @@ export class Pinggy {
         if (e instanceof Error) {
           Logger.error("Error requesting additional forwarding:", e);
         } else {
-          Logger.error("Error requesting additional forwarding:", new Error(String(e)));
+          Logger.error(
+            "Error requesting additional forwarding:",
+            new Error(String(e))
+          );
         }
         throw e;
       }
@@ -152,14 +162,17 @@ export class Pinggy {
         if (e instanceof Error) {
           Logger.error("Error checking tunnel active status:", e);
         } else {
-          Logger.error("Error checking tunnel active status:", new Error(String(e)));
+          Logger.error(
+            "Error checking tunnel active status:",
+            new Error(String(e))
+          );
         }
         throw e;
       }
     }
   }
 
-  /** 
+  /**
    * Stops the tunnel and resets state so you can start a new one later.
    */
   public async close(): Promise<void> {

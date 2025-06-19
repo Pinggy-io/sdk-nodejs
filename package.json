@@ -2,17 +2,17 @@
   "name": "pinggy-test",
   "version": "0.1.0",
   "description": "Test for pinggy native module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
-    "build": "tsc",
+    "build": "tsup",
     "build-native": "node-gyp clean configure build && node ./copy.js",
     "package": "node-pre-gyp package",
     "publish-binary": "node-pre-gyp publish",
     "test": "jest",
-    "start": "node dist/index.js",
-    "postinstall": "node ./copy.js"
+    "start": "node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
     "node-api-headers": "^1.5.0",
     "node-pre-gyp-github": "^2.0.0",
     "ts-jest": "^29.3.1",
+    "tsup": "^8.5.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-import pinggy, { PinggyOptions } from "./src/index";
+import { pinggy, PinggyOptions } from "./src/index";
 
 (async () => {
   const options: PinggyOptions = {

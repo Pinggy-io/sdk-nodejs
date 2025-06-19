@@ -4,7 +4,7 @@ on:
   workflow_dispatch: # Trigger manually from Actions tab
   push:
     tags:
-      - 'v*'          # OR when you push a version tag like `v1.0.0`
+      - "v*" # OR when you push a version tag like `v1.0.0`
 
 jobs:
   build:
@@ -14,7 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [x64]
-        node-version: [18, 20, 22]
+        node-version: [18, 19, 20, 21, 22, 23, 24]
 
     steps:
       - name: Checkout code
@@ -31,13 +31,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential python3
 
-      - name: Install dependencies and build
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build native addon and copy to lib
         run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH
-          fi
-          npm install
-          npm run build
+          node-gyp clean configure build
+          node ./copy.js
 
       - name: Package native binary
         run: npm run package
