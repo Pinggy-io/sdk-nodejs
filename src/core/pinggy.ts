@@ -29,6 +29,8 @@ export class Pinggy {
    * Called internally by startTunnel().
    */
   private initialize(options: PinggyOptions): void {
+    // Disable logs
+    this.addon.setLogEnable(false);
     if (this.tunnel) return; // already initialized
 
     try {

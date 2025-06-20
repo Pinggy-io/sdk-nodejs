@@ -40,6 +40,7 @@ export interface PinggyNative {
   configGetServerAddress(configRef: number): string;
   configGetSniServerName(configRef: number): string;
   setLogPath(path: string): void;
+  setLogEnable(enable: boolean): void;
   tunnelInitiate(configRef: number): number;
   tunnelConnect(tunnelRef: number): boolean;
   tunnelResume(tunnelRef: number): boolean;

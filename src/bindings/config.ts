@@ -133,9 +133,6 @@ export class Config implements IConfig {
         }
       }
 
-      // Set log path
-      this.addon.setLogPath("./logs.log");
-
       Logger.info("Configurations applied successfully.");
       return configRef;
     } catch (e) {
