@@ -17,6 +17,7 @@ export class Tunnel implements ITunnel {
   private rejectForwarding: ((reason?: any) => void) | null = null;
   private resolveAdditionalForwarding: (() => void) | null = null;
   private rejectAdditionalForwarding: ((reason?: any) => void) | null = null;
+  private _urls: string[] = [];
 
   constructor(addon: PinggyNative, configRef: number) {
     this.addon = addon;
@@ -92,6 +93,7 @@ export class Tunnel implements ITunnel {
         this.tunnelRef,
         (addresses) => {
           this.primaryForwardingDone = true;
+          this._urls = addresses;
           if (this.resolveForwarding) {
             this.resolveForwarding(addresses);
           }
@@ -327,6 +329,10 @@ export class Tunnel implements ITunnel {
       Logger.error("Error checking tunnel active status:", e as Error);
       return false;
     }
+  }
+
+  public getUrls(): string[] {
+    return this._urls;
   }
 }
 

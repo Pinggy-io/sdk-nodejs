@@ -12,7 +12,6 @@ export class TunnelInstance {
   private config: Config | null = null;
   private tunnel: Tunnel | null = null;
   private addon: PinggyNative;
-  private _urls: string[] = [];
 
   constructor(addon: PinggyNative, options: PinggyOptions) {
     this.addon = addon;
@@ -24,25 +23,6 @@ export class TunnelInstance {
       if (!this.config.configRef)
         throw new Error("Failed to initialize config.");
       this.tunnel = new Tunnel(this.addon, this.config.configRef);
-      // Patch the tunnel's callback to capture addresses
-      if (this.tunnel) {
-        const origSetPrimaryForwardingSucceededCallback =
-          this.addon.tunnelSetPrimaryForwardingSucceededCallback.bind(
-            this.addon
-          );
-        this.addon.tunnelSetPrimaryForwardingSucceededCallback = (
-          tunnelRef: number,
-          callback: (addresses: string[]) => void
-        ) => {
-          origSetPrimaryForwardingSucceededCallback(
-            tunnelRef,
-            (addresses: string[]) => {
-              this._urls = addresses;
-              callback(addresses);
-            }
-          );
-        };
-      }
     } catch (e) {
       const lastEx = getLastException(this.addon);
       const pinggyError = lastEx
@@ -55,13 +35,11 @@ export class TunnelInstance {
 
   public async start(): Promise<string[]> {
     if (!this.tunnel) throw new Error("Tunnel not initialized");
-    const urls = await this.tunnel.start();
-    this._urls = urls;
-    return urls;
+    return await this.tunnel.start();
   }
 
   public urls(): string[] {
-    return this._urls;
+    return this.tunnel?.getUrls() ?? [];
   }
 
   public stop(): void {
@@ -69,7 +47,6 @@ export class TunnelInstance {
     this.tunnel.tunnelStop();
     this.tunnel = null;
     this.config = null;
-    this._urls = [];
   }
 
   public isActive(): boolean {

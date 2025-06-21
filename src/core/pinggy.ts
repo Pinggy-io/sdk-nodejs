@@ -1,12 +1,6 @@
 // core/pinggy.ts
 import { PinggyNative, PinggyOptions } from "../types";
 import { TunnelInstance } from "./tunnel-instance";
-import { Logger } from "../utils/logger";
-import {
-  getLastException,
-  PinggyError,
-  initExceptionHandling,
-} from "../bindings/exception";
 const binary = require("@mapbox/node-pre-gyp");
 const path = require("path");
 
