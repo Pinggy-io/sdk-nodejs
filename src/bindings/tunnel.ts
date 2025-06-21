@@ -6,6 +6,7 @@ export class Tunnel implements ITunnel {
   public tunnelRef: number;
   public authenticated: boolean;
   public primaryForwardingDone: boolean;
+  public status: "starting" | "live" | "closed";
   private addon: PinggyNative;
   private authPromise: Promise<void>;
   private forwardingPromise: Promise<string[]>;
@@ -22,6 +23,7 @@ export class Tunnel implements ITunnel {
     this.tunnelRef = this.initialize(configRef);
     this.authenticated = false;
     this.primaryForwardingDone = false;
+    this.status = "starting";
 
     // Create promises that will be resolved when authentication and forwarding complete
     this.authPromise = new Promise((resolve, reject) => {
@@ -178,6 +180,7 @@ export class Tunnel implements ITunnel {
       // Wait for forwarding to complete and return the addresses
       return await this.forwardingPromise;
     } catch (error) {
+      this.status = "closed";
       const lastEx = this.addon.getLastException();
       if (lastEx) {
         const pinggyError = new PinggyError(lastEx);
@@ -195,14 +198,19 @@ export class Tunnel implements ITunnel {
     const poll = (): void => {
       let shouldContinue: boolean;
       try {
-        // tunnelResume throws on error (<0), otherwise returns >=0
+        // tunnelResume returns boolean
         const ret = this.addon.tunnelResume(this.tunnelRef);
         if (!ret) {
           Logger.error("Tunnel error detected, stopping polling.");
+          this.status = "closed";
           return; // STOP polling
+        }
+        if (this.status === "starting") {
+          this.status = "live";
         }
         shouldContinue = true;
       } catch (e) {
+        this.status = "closed";
         const lastEx = this.addon.getLastException();
         if (lastEx) {
           const pinggyError = new PinggyError(lastEx);
