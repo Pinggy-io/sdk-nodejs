@@ -14,12 +14,68 @@ npm install pinggy
 
 ---
 
+## Build From Source
+
+> **Compatibility Note:**
+>
+> - The Pinggy SDK only works on:
+>   - **Node.js 18 or newer** for **Linux x64**, **Linux arm64**, and **Windows x64**
+>   - **Node.js 19 or newer** for **Windows arm64**
+> - Other platforms and Node.js versions are not supported as of now.
+
+### Prerequisites
+
+- Ensure you have [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed.
+- [git](https://git-scm.com/) for cloning the repository.
+
+### Steps
+
+1. **Clone the repository and checkout the latest code:**
+
+   ```bash
+   git clone https://github.com/your-org/pinggy.git
+   cd pinggy
+   git checkout master
+   ```
+
+2. **Install dependencies and build the package:**
+
+   ```bash
+   npm install
+   npm run build
+   npm pack
+   ```
+
+   This will generate a file like `pinggy-test-{version}.tgz` in your project directory.
+
+3. **Test the package in a separate project:**
+
+   - Create a new directory for your example/test project:
+     ```bash
+     mkdir ../pinggy-example
+     cd ../pinggy-example
+     npm init -y
+     ```
+   - Install the locally built package (use the correct relative or absolute path):
+     ```bash
+     npm install ../pinggy/pinggy-test-{version}.tgz
+     ```
+
+4. **Use the SDK in your example project:**
+   - Create an `index.js` or `index.ts` and import/use the SDK as described in the Quick Start section.
+
+### Notes
+
+- You can now develop and test against your local build before publishing or using in production.
+
+---
+
 ## Quick Start
 
 ### Import the SDK
 
 ```ts
-import { pinggy } from "pinggy";
+import { pinggy } from "pinggy-test"; (to change to import { pinggy } from "@pinggy/pinggy"; upon release)
 ```
 
 ### Create and Start a Tunnel
