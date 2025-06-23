@@ -1,4 +1,4 @@
-name: Build Native Binaries for macOS
+name: Build Native Binaries for macOS (arm64)
 
 on:
   workflow_dispatch:
@@ -8,15 +8,14 @@ on:
 
 jobs:
   build:
-    name: Build ${{ matrix.os }} (${{ matrix.arch }}) Node.js ${{ matrix.node-version }}
+    name: Build ${{ matrix.os }} (arm64) Node.js ${{ matrix.node-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13]
-        arch: [x64]
+        os: [macos-latest]
+        arch: [arm64]
         node-version: [18, 19, 20, 21, 22, 23, 24]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,10 +38,10 @@ jobs:
       - name: Install node-gyp globally
         run: npm install -g node-gyp
 
-      - name: Build native addon and copy to lib
+      - name: Build native addon and copy to lib (arm64)
         run: |
           node-gyp clean
-          node-gyp configure -- -arch=${{ matrix.arch }}
+          node-gyp configure
           node-gyp build
           node ./copy.js
 
