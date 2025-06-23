@@ -42,7 +42,7 @@ jobs:
       - name: Build native addon and copy to lib
         run: |
           node-gyp clean
-          node-gyp configure -- -arch=${{ matrix.arch }}
+          node-gyp configure
           node-gyp build
           node ./copy.js
 

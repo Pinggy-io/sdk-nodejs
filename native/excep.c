@@ -12,9 +12,16 @@ static DWORD tlsIndexMessage = TLS_OUT_OF_INDEXES;
 static pthread_key_t keyType;
 static pthread_key_t keyMessage;
 static pthread_once_t onceControl = PTHREAD_ONCE_INIT;
+
+// moved out of init_tls so it's a proper top-level function
+static void create_keys(void)
+{
+    pthread_key_create(&keyType, free);
+    pthread_key_create(&keyMessage, free);
+}
 #endif
 
-#include "../pinggy.h" // Adjust path if needed
+#include "../pinggy.h" // adjust path if needed
 
 #define TLS_BUFFER_SIZE 512
 
@@ -27,11 +34,7 @@ void init_tls()
     if (tlsIndexMessage == TLS_OUT_OF_INDEXES)
         tlsIndexMessage = TlsAlloc();
 #else
-    void create_keys()
-    {
-        pthread_key_create(&keyType, free);
-        pthread_key_create(&keyMessage, free);
-    }
+    // single call to our top-level create_keys()
     pthread_once(&onceControl, create_keys);
 #endif
 }
@@ -49,6 +52,10 @@ void cleanup_tls()
         TlsFree(tlsIndexMessage);
         tlsIndexMessage = TLS_OUT_OF_INDEXES;
     }
+#else
+    // not strictly needed on POSIX, but you could delete keys:
+    pthread_key_delete(keyType);
+    pthread_key_delete(keyMessage);
 #endif
 }
 
@@ -60,16 +67,16 @@ static char *get_tls_buffer(int isType)
     char *buf = (char *)TlsGetValue(index);
     if (!buf)
     {
-        buf = (char *)calloc(1, TLS_BUFFER_SIZE);
+        buf = calloc(1, TLS_BUFFER_SIZE);
         TlsSetValue(index, buf);
     }
     return buf;
 #else
     pthread_key_t key = isType ? keyType : keyMessage;
-    char *buf = (char *)pthread_getspecific(key);
+    char *buf = pthread_getspecific(key);
     if (!buf)
     {
-        buf = (char *)calloc(1, TLS_BUFFER_SIZE);
+        buf = calloc(1, TLS_BUFFER_SIZE);
         pthread_setspecific(key, buf);
     }
     return buf;
@@ -82,15 +89,8 @@ void set_tls_exception(const char *type, const char *message)
     snprintf(get_tls_buffer(0), TLS_BUFFER_SIZE, "%s", message);
 }
 
-char *get_tls_exception_type()
-{
-    return get_tls_buffer(1);
-}
-
-char *get_tls_exception_message()
-{
-    return get_tls_buffer(0);
-}
+char *get_tls_exception_type() { return get_tls_buffer(1); }
+char *get_tls_exception_message() { return get_tls_buffer(0); }
 
 void clear_tls_exception()
 {
@@ -110,7 +110,9 @@ napi_value GetLastException(napi_env env, napi_callback_info info)
 {
     napi_value result;
     char buffer[TLS_BUFFER_SIZE * 2];
-    snprintf(buffer, sizeof(buffer), "%s: %s", get_tls_exception_type(), get_tls_exception_message());
+    snprintf(buffer, sizeof(buffer), "%s: %s",
+             get_tls_exception_type(),
+             get_tls_exception_message());
 
     napi_create_string_utf8(env, buffer, NAPI_AUTO_LENGTH, &result);
     clear_tls_exception();
@@ -125,7 +127,7 @@ napi_value InitExceptionHandling(napi_env env, napi_callback_info info)
     return NULL;
 }
 
-// --- N-API: Cleanup Hook (Optional for Windows) ---
+// --- N-API: Cleanup Hook ---
 void Cleanup(void *arg)
 {
     cleanup_tls();
@@ -134,13 +136,13 @@ void Cleanup(void *arg)
 // Module initialization
 napi_value Init3(napi_env env, napi_value exports)
 {
-    napi_value init_exception_handling_fn, get_last_exception_fn;
+    napi_value fnInit, fnGetLast;
 
-    napi_create_function(env, NULL, 0, InitExceptionHandling, NULL, &init_exception_handling_fn);
-    napi_set_named_property(env, exports, "initExceptionHandling", init_exception_handling_fn);
+    napi_create_function(env, NULL, 0, InitExceptionHandling, NULL, &fnInit);
+    napi_set_named_property(env, exports, "initExceptionHandling", fnInit);
 
-    napi_create_function(env, NULL, 0, GetLastException, NULL, &get_last_exception_fn);
-    napi_set_named_property(env, exports, "getLastException", get_last_exception_fn);
+    napi_create_function(env, NULL, 0, GetLastException, NULL, &fnGetLast);
+    napi_set_named_property(env, exports, "getLastException", fnGetLast);
 
     napi_add_env_cleanup_hook(env, Cleanup, NULL);
     return exports;
