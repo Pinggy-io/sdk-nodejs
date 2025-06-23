@@ -11,6 +11,7 @@ jobs:
     name: Build ${{ matrix.os }} ${{ matrix.arch }} Node.js ${{ matrix.node-version }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         arch: [x64]

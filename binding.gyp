@@ -62,6 +62,26 @@
                     "libraries": ["<(module_root_dir)/libpinggy.so"],
                     "cflags": ["-ggdb", "-Wno-ignored-qualifiers"],
                     "ldflags": ["-Wl,-rpath='$$ORIGIN/'"]
+                }],
+                ["OS==\"mac\"", {
+                    "cflags": [
+                        "-ggdb",
+                        # minimum deployment target; adjust as needed
+                        "-mmacosx-version-min=10.14"
+                    ],
+                    "link_settings": {
+                        "libraries": [
+                            # point at your .dylib
+                            "<(module_root_dir)/libpinggy.dylib",
+                            # embed rpaths so the loader searches next to the .node
+                            "-Wl,-rpath,@loader_path",
+                            "-Wl,-rpath,@loader_path/.."
+                        ]
+                    },
+                    "xcode_settings": {
+                        # ensures binary compatibility
+                        "MACOSX_DEPLOYMENT_TARGET": "10.14"
+                    }
                 }]
             ]
         }

@@ -11,6 +11,7 @@ jobs:
     name: Build ${{ matrix.os }} ${{ matrix.arch }} (Node ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest]
         arch: [x64] # You can add more like arm64 if needed
