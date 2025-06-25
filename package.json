@@ -1,5 +1,5 @@
 {
-  "name": "pinggy-test",
+  "name": "@skified/pinggy-test",
   "version": "0.1.0",
   "description": "Test for pinggy native module",
   "main": "./dist/index.js",
