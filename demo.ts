@@ -16,12 +16,12 @@ import { pinggy, PinggyOptions } from "./src/index";
     // ipWhitelist: [""],
     // headerModification: ["x-custom-header: value"],
   };
-  const addresses = await pinggy.startTunnel(options);
+  const tunnel = pinggy.createTunnel(options);
+  await tunnel.start();
 
-  console.log("Tunnel addresses:", addresses);
-  console.log("Server address:", pinggy.getServerAddress());
+  console.log("Tunnel addresses:", tunnel.urls());
 
-  pinggy.startWebDebugging(8080);
+  tunnel.startWebDebugging(3001);
 
   // console.log("about to stop tunnel");
   // setTimeout(async () => {

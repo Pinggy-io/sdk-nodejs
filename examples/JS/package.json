@@ -1,0 +1,16 @@
+{
+  "name": "pack_test_js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "pinggy-test": "file:../with_static/pinggy-test-0.1.0.tgz"
+  }
+}
