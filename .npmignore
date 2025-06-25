@@ -17,3 +17,6 @@ Makefile
 
 tsconfig.json
 tsup.config.ts
+*.tgz
+
+Workflow.md
