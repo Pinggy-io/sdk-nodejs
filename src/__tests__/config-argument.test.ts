@@ -1,0 +1,111 @@
+import { describe, beforeEach, test, expect } from "@jest/globals";
+import { Config } from "../bindings/config";
+
+describe("Config.prepareAndSetArgument", () => {
+  let mockAddon: any;
+  let setArgumentValue: string | null;
+  let config: Config;
+
+  beforeEach(() => {
+    setArgumentValue = null;
+    mockAddon = {
+      createConfig: jest.fn(() => 1),
+      configSetArgument: jest.fn((ref: number, arg: string) => {
+        setArgumentValue = arg;
+      }),
+      configSetToken: jest.fn(),
+      configSetServerAddress: jest.fn(),
+      configSetSniServerName: jest.fn(),
+      configSetTcpForwardTo: jest.fn(),
+      configSetUdpForwardTo: jest.fn(),
+      configSetType: jest.fn(),
+      configSetUdpType: jest.fn(),
+      configSetSsl: jest.fn(),
+      getLastException: jest.fn(() => null),
+    };
+
+    // Create a minimal config instance for testing
+    config = new Config(mockAddon, {});
+    setArgumentValue = null; // Reset after constructor
+  });
+
+  function testPrepareAndSetArgument(options: any) {
+    config.prepareAndSetArgument(1, options);
+    return setArgumentValue;
+  }
+
+  test("ipWhitelist", () => {
+    const result = testPrepareAndSetArgument({
+      ipWhitelist: ["1.2.3.4", "5.6.7.8"],
+    });
+    expect(result).toContain("w:1.2.3.4,5.6.7.8");
+  });
+
+  test("basicAuth", () => {
+    const result = testPrepareAndSetArgument({
+      basicAuth: { user1: "pass1", user2: "pass two" },
+    });
+    expect(result).toContain("b:user1:pass1");
+    expect(result).toContain("b:user2:pass two");
+  });
+
+  test("bearerAuth", () => {
+    const result = testPrepareAndSetArgument({
+      bearerAuth: ["token1", "token2"],
+    });
+    expect(result).toContain("k:token1");
+    expect(result).toContain("k:token2");
+  });
+
+  test("headerModification add", () => {
+    const result = testPrepareAndSetArgument({
+      headerModification: [{ action: "add", key: "X-Test", value: "abc" }],
+    });
+    expect(result).toContain("a:X-Test:abc");
+  });
+
+  test("headerModification remove", () => {
+    const result = testPrepareAndSetArgument({
+      headerModification: [{ action: "remove", key: "X-Remove" }],
+    });
+    expect(result).toContain("r:X-Remove");
+  });
+
+  test("headerModification update", () => {
+    const result = testPrepareAndSetArgument({
+      headerModification: [{ action: "update", key: "X-Up", value: "val" }],
+    });
+    expect(result).toContain("u:X-Up:val");
+  });
+
+  test("xff", () => {
+    const result = testPrepareAndSetArgument({ xff: true });
+    expect(result).toContain("x:xff");
+  });
+
+  test("httpsOnly", () => {
+    const result = testPrepareAndSetArgument({ httpsOnly: true });
+    expect(result).toContain("x:https");
+  });
+
+  test("fullRequestUrl", () => {
+    const result = testPrepareAndSetArgument({ fullRequestUrl: true });
+    expect(result).toContain("x:fullurl");
+  });
+
+  test("allowPreflight", () => {
+    const result = testPrepareAndSetArgument({ allowPreflight: true });
+    expect(result).toContain("x:passpreflight");
+  });
+
+  test("noReverseProxy", () => {
+    const result = testPrepareAndSetArgument({ noReverseProxy: true });
+    expect(result).toContain("x:noreverseproxy");
+  });
+
+  test("cmd prepends argument", () => {
+    const result = testPrepareAndSetArgument({ cmd: "echo test", xff: true });
+    expect(result?.startsWith("echo test ")).toBe(true);
+    expect(result).toContain("x:xff");
+  });
+});

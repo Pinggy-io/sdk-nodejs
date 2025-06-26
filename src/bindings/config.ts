@@ -1,4 +1,4 @@
-import { quote } from "shell-quote";
+import { join } from "shlex";
 
 import { Logger } from "../utils/logger";
 import { PinggyNative, PinggyOptions, Config as IConfig } from "../types";
@@ -141,7 +141,7 @@ export class Config implements IConfig {
     }
   }
 
-  private prepareAndSetArgument(configRef: number, options: PinggyOptions) {
+  public prepareAndSetArgument(configRef: number, options: PinggyOptions) {
     const val: string[] = [];
 
     if (options.ipWhitelist?.length) {
@@ -212,7 +212,7 @@ export class Config implements IConfig {
     if (options.allowPreflight) val.push("x:passpreflight");
     if (options.noReverseProxy) val.push("x:noreverseproxy");
 
-    let argument = quote(val);
+    let argument = join(val);
     if (options.cmd && options.cmd.trim()) {
       argument = `${options.cmd.trim()} ${argument}`;
     }

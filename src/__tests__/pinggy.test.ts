@@ -1,47 +1,46 @@
-import { PinggySDK } from "../core/pinggy";
+import { Pinggy } from "../core/pinggy";
 import { PinggyOptions } from "../types";
 
-describe("PinggySDK", () => {
-  let sdk: PinggySDK;
+describe("Pinggy", () => {
+  let tunnel: any;
+  let options: PinggyOptions;
 
   beforeAll(() => {
-    const options: PinggyOptions = {
+    options = {
       forwardTo: "localhost:3000",
       sniServerName: "a.pinggy.io",
       // token: process.env.TUNNEL_TOKEN_SUB,
     };
-    sdk = new PinggySDK(options);
+    tunnel = Pinggy.instance.createTunnel(options);
   });
 
   afterAll(async () => {
     // Cleanup any resources
-    if (sdk) {
-      // Add any necessary cleanup here
+    if (tunnel) {
+      tunnel.stop();
     }
   });
 
   test("should get server address", () => {
-    const serverAddress = sdk.getServerAddress();
+    const serverAddress = tunnel.getServerAddress();
     expect(serverAddress).toBe("a.pinggy.io:443");
   });
 
   test("should get SNI server name", () => {
-    const sniServerName = sdk.getSniServerName();
+    const sniServerName = tunnel.config?.getSniServerName();
     expect(sniServerName).toBe("a.pinggy.io");
   });
 
   test("should start the tunnel", async () => {
-    await new Promise<void>((resolve) => {
-      sdk.startTunnel();
-      // Wait a bit for the tunnel to initialize
+    await new Promise<void>(async (resolve) => {
+      await tunnel.start();
       setTimeout(resolve, 1000);
     });
   });
 
   test("should start web debugging", async () => {
     await new Promise<void>((resolve) => {
-      sdk.startWebDebugging(8081);
-      // Wait a bit for web debugging to start
+      tunnel.startWebDebugging(8081);
       setTimeout(resolve, 1000);
     });
   });
