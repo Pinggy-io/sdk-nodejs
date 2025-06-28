@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "tsc && node dist/index.js",
-    "build": "tsc"
+    "build": "tsc",
+    "single": "tsc && node dist/single-tunnel.js",
+    "multiple": "tsc && node dist/multiple-tunnels.js"
   },
   "keywords": [],
   "author": "",

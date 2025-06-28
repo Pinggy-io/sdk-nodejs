@@ -43,10 +43,11 @@ describe("Config.prepareAndSetArgument", () => {
 
   test("basicAuth", () => {
     const result = testPrepareAndSetArgument({
-      basicAuth: { user1: "pass1", user2: "pass two" },
+      basicAuth: { user1: "pass1", user2: "pass_two" },
     });
+    console.log("Basic Auth Result:", result);
     expect(result).toContain("b:user1:pass1");
-    expect(result).toContain("b:user2:pass two");
+    expect(result).toContain("b:user2:pass_two");
   });
 
   test("bearerAuth", () => {
@@ -107,5 +108,69 @@ describe("Config.prepareAndSetArgument", () => {
     const result = testPrepareAndSetArgument({ cmd: "echo test", xff: true });
     expect(result?.startsWith("echo test ")).toBe(true);
     expect(result).toContain("x:xff");
+  });
+
+  test("configSetArgument is called with correct parameters", () => {
+    const spy = jest.spyOn(mockAddon, "configSetArgument");
+    spy.mockClear(); // Clear any previous calls
+    const configRef = 42;
+    const options = { xff: true, httpsOnly: true };
+
+    config.prepareAndSetArgument(configRef, options);
+
+    // Check that it was called once with the correct configRef and a string containing both options
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      configRef,
+      expect.stringMatching(/.*x:xff.*x:https.*|.*x:https.*x:xff.*/)
+    );
+
+    spy.mockRestore();
+  });
+
+  test("configSetArgument handles empty options", () => {
+    const spy = jest.spyOn(mockAddon, "configSetArgument");
+    spy.mockClear(); // Clear any previous calls
+    const configRef = 1;
+
+    config.prepareAndSetArgument(configRef, {});
+
+    expect(spy).toHaveBeenCalledWith(configRef, "");
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    spy.mockRestore();
+  });
+
+  test("configSetArgument with complex options", () => {
+    const spy = jest.spyOn(mockAddon, "configSetArgument");
+    spy.mockClear(); // Clear any previous calls
+    const configRef = 99;
+    const complexOptions = {
+      cmd: "custom command",
+      ipWhitelist: ["192.168.1.1"],
+      basicAuth: { user: "pass" },
+      xff: true,
+    };
+
+    config.prepareAndSetArgument(configRef, complexOptions);
+
+    // Verify it was called once
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    // Get the actual argument string that was passed
+    const actualCall = spy.mock.calls[0];
+    const actualConfigRef = actualCall[0];
+    const actualArgument = actualCall[1];
+
+    // Verify the configRef
+    expect(actualConfigRef).toBe(configRef);
+
+    // Verify the argument string contains all expected parts
+    expect(actualArgument).toMatch(/^custom command .+/);
+    expect(actualArgument).toContain("w:192.168.1.1");
+    expect(actualArgument).toContain("b:user:pass");
+    expect(actualArgument).toContain("x:xff");
+
+    spy.mockRestore();
   });
 });

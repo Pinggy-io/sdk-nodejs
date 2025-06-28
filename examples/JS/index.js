@@ -1,22 +1,26 @@
-const { pinggy } = require("pinggy-test");
+const { pinggy } = require("pinggy");
 
 (async () => {
   const options = {
     forwardTo: "localhost:7878",
   };
 
-  const addresses = await pinggy.startTunnel(options);
+  // Use the modern API as documented in README
+  const tunnel = await pinggy.forward(options);
 
-  console.log("Tunnel addresses:", addresses);
-  console.log("Server address:", pinggy.getServerAddress());
+  console.log("Tunnel URLs:", tunnel.urls());
+  console.log("Server address:", tunnel.getServerAddress());
+  console.log("Status:", tunnel.getStatus());
 
-  pinggy.startWebDebugging(8080);
+  // Start web debugging interface
+  tunnel.startWebDebugging(8080);
+  console.log("Web debugging available at: http://localhost:8080");
 
   console.log("about to stop tunnel");
-  setTimeout(async () => {
+  setTimeout(() => {
     try {
       console.log("Stopping tunnel...");
-      await pinggy.close();
+      tunnel.stop();
       console.log("Tunnel cleanly closed.");
     } catch (err) {
       console.error("Failed to close tunnel:", err);
