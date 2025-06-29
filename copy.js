@@ -65,3 +65,26 @@ if (process.platform === "win32" && fs.existsSync(srcDll)) {
 // Remove build directory
 fs.rmSync(path.join(__dirname, "build"), { recursive: true, force: true });
 console.log(`Removed build/ directory`);
+
+// For macOS, copy SSL libraries from the extracted archive
+if (process.platform === "darwin") {
+  const sslLibDir = path.join(__dirname, "openssl", "lib");
+  if (fs.existsSync(sslLibDir)) {
+    const sslFiles = fs.readdirSync(sslLibDir);
+    for (const file of sslFiles) {
+      const srcFile = path.join(sslLibDir, file);
+      const destFile = path.join(__dirname, "lib", file);
+      fs.copyFileSync(srcFile, destFile);
+      console.log(`Copied SSL library: ${file}`);
+    }
+
+    // Clean up the openssl directory after copying
+    fs.rmSync(path.join(__dirname, "openssl"), {
+      recursive: true,
+      force: true,
+    });
+    console.log(`SSL libraries copied and openssl directory cleaned up`);
+  } else {
+    console.warn(`SSL libraries not found at ${sslLibDir}`);
+  }
+}
