@@ -6,7 +6,8 @@
                 "native/addon.c",
                 "native/config.c",
                 "native/tunnel.c",
-                "native/excep.c"
+                "native/excep.c",
+                "native/debug.c"
             ],
             "actions": [
                 {
