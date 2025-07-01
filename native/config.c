@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../pinggy.h"
+#include "debug.h"
 
 // Binding for pinggy_set_log_path
 napi_value SetLogPath(napi_env env, napi_callback_info info)

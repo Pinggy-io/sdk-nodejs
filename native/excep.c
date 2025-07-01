@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <node_api.h>
+#include "debug.h"
 
 #ifdef _WIN32
 #include <windows.h>

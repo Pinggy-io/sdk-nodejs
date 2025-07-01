@@ -37,4 +37,7 @@ export class Pinggy {
     }
     this.tunnels.clear();
   }
+  public setDebugLogging(enabled: boolean): void {
+    Pinggy.addon.setDebugLogging(enabled);
+  }
 }
