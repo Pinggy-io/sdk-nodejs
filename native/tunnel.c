@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../pinggy.h"
+#include "debug.h"
 
 // Wrapper for pinggy_tunnel_initiate
 napi_value TunnelInitiate(napi_env env, napi_callback_info info)
@@ -29,7 +30,7 @@ napi_value TunnelInitiate(napi_env env, napi_callback_info info)
 
     // Call the pinggy_tunnel_initiate function
     uint32_t tunnel = pinggy_tunnel_initiate(config);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, tunnel);
+    PINGGY_DEBUG_RET(tunnel);
 
     // Return the newly created tunnel reference (pinggy_ref_t)
     napi_create_uint32(env, tunnel, &result);
@@ -76,7 +77,7 @@ napi_value TunnelStart(napi_env env, napi_callback_info info)
 
     // Call the pinggy_tunnel_start function
     pinggy_bool_t success = pinggy_tunnel_start(tunnel);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, success);
+    PINGGY_DEBUG_RET(success);
     if (!success)
     {
         char error_message[256];
@@ -120,7 +121,7 @@ napi_value TunnelConnect(napi_env env, napi_callback_info info)
 
     // Call the pinggy_tunnel_connect function
     pinggy_bool_t result = pinggy_tunnel_connect((pinggy_ref_t)tunnel_ref);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 
     // Convert the result (pinggy_bool_t) to a JavaScript boolean
     napi_value js_result;
@@ -166,7 +167,7 @@ napi_value TunnelResume(napi_env env, napi_callback_info info)
 
     // Call the pinggy_tunnel_resume function
     pinggy_bool_t ret = pinggy_tunnel_resume((pinggy_ref_t)tunnel_ref);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, ret);
+    PINGGY_DEBUG_RET(ret);
 
     // Return the result as a JavaScript boolean
     napi_value result;
@@ -212,7 +213,7 @@ napi_value TunnelStop(napi_env env, napi_callback_info info)
 
     // Call the pinggy_tunnel_stop function
     pinggy_bool_t result = pinggy_tunnel_stop((pinggy_ref_t)tunnel_ref);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 
     // Convert the result (pinggy_bool_t) to a JavaScript boolean
     napi_value js_result;
@@ -269,7 +270,7 @@ napi_value TunnelStartWebDebugging(napi_env env, napi_callback_info info)
 
     // Call the actual Pinggy function
     pinggy_uint16_t result = pinggy_tunnel_start_web_debugging(tunnel, (pinggy_uint16_t)port);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 
     // Return the result as a JavaScript number
     napi_value jsResult;
@@ -326,7 +327,7 @@ napi_value TunnelRequestPrimaryForwarding(napi_env env, napi_callback_info info)
 
     // Call the pinggy_tunnel_request_primary_forwarding function
     pinggy_tunnel_request_primary_forwarding(tunnel);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, tunnel);
+    PINGGY_DEBUG_RET(tunnel);
 
     // Return undefined (void return type in C)
     napi_get_undefined(env, &result);
@@ -391,7 +392,7 @@ napi_value TunnelRequestAdditionalForwarding(napi_env env, napi_callback_info in
 
     // Call the Pinggy function
     pinggy_tunnel_request_additional_forwarding((pinggy_ref_t)tunnelRef, remoteBindingAddr, forwardTo);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, tunnelRef);
+    PINGGY_DEBUG_RET(tunnelRef);
 
     // Free allocated memory
     free(remoteBindingAddr);
@@ -438,7 +439,7 @@ void primary_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_ref
     // Call the JavaScript callback with the array of addresses
     napi_value result;
     napi_call_function(env, undefined, js_callback, 1, &js_addresses_array, &result);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 }
 
 napi_value SetPrimaryForwardingCallback(napi_env env, napi_callback_info info)
@@ -507,7 +508,7 @@ napi_value SetPrimaryForwardingCallback(napi_env env, napi_callback_info info)
 
     // Register callback with Pinggy
     pinggy_bool_t result = pinggy_tunnel_set_primary_forwarding_succeeded_callback(tunnel, primary_forwarding_succeeded_callback, cb_data);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
     if (result != pinggy_true)
     {
         char error_message[256];
@@ -550,7 +551,7 @@ void additional_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_
     napi_value args[3] = {js_tunnel, js_address, js_protocol};
     napi_value result;
     napi_call_function(env, undefined, js_callback, 3, args, &result);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 }
 
 // JavaScript wrapper function to set the callback
@@ -617,7 +618,7 @@ napi_value SetAdditionalForwardingCallback(napi_env env, napi_callback_info info
 
     // Register callback with Pinggy
     pinggy_bool_t result = pinggy_tunnel_set_additional_forwarding_succeeded_callback(tunnel, additional_forwarding_succeeded_callback, cb_data);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
     if (result != pinggy_true)
     {
         char error_message[256];
@@ -683,7 +684,7 @@ void authenticated_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel)
         snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to call JavaScript callback", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
     }
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, js_result);
+    PINGGY_DEBUG_RET(js_result);
 }
 
 napi_value SetAuthenticatedCallback(napi_env env, napi_callback_info info)
@@ -735,7 +736,7 @@ napi_value SetAuthenticatedCallback(napi_env env, napi_callback_info info)
 
     // Register callback with Pinggy
     pinggy_bool_t result = pinggy_tunnel_set_authenticated_callback(tunnel, authenticated_callback, cb_data);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 
     // If registration failed, decrease reference count and free memory
     if (!result)
@@ -783,7 +784,7 @@ napi_value TunnelIsActive(napi_env env, napi_callback_info info)
 
     // Call the pinggy_tunnel_is_active function
     pinggy_bool_t result = pinggy_tunnel_is_active((pinggy_ref_t)tunnel_ref);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 
     // Convert the result (pinggy_bool_t) to a JavaScript boolean
     napi_value js_result;
@@ -866,7 +867,7 @@ void authentication_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t tunn
     {
         // Handle error: Failed to call JavaScript callback
     }
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, js_result);
+    PINGGY_DEBUG_RET(js_result);
 }
 
 napi_value SetAuthenticationFailedCallback(napi_env env, napi_callback_info info)
@@ -929,7 +930,7 @@ napi_value SetAuthenticationFailedCallback(napi_env env, napi_callback_info info
     }
 
     pinggy_bool_t result = pinggy_tunnel_set_on_authentication_failed_callback(tunnel, authentication_failed_callback, cb_data);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 
     if (!result)
     {
@@ -994,7 +995,7 @@ void primary_forwarding_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t 
     {
         // Handle error: Failed to call JavaScript callback
     }
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, js_result);
+    PINGGY_DEBUG_RET(js_result);
 }
 
 napi_value SetPrimaryForwardingFailedCallback(napi_env env, napi_callback_info info)
@@ -1057,7 +1058,7 @@ napi_value SetPrimaryForwardingFailedCallback(napi_env env, napi_callback_info i
     }
 
     pinggy_bool_t result = pinggy_tunnel_set_on_primary_forwarding_failed_callback(tunnel, primary_forwarding_failed_callback, cb_data);
-    printf("[DEBUG] %s:%d %s ret = %d\n", __FILE__, __LINE__, __func__, result);
+    PINGGY_DEBUG_RET(result);
 
     if (!result)
     {
@@ -1358,7 +1359,7 @@ napi_value ConfigSetSsl(napi_env env, napi_callback_info info)
 
     // Call the native function
     pinggy_config_set_ssl(config, ssl ? pinggy_true : pinggy_false);
-    printf("[DEBUG] %s:%d %s ret = void\n", __FILE__, __LINE__, __func__);
+    PINGGY_DEBUG_VOID();
 
     return NULL;
 }

@@ -98,6 +98,7 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (tunnelRef: number, error: string, messages: string[]) => void
   ): void;
+  setDebugLogging(enabled: boolean): void;
 }
 
 export interface Config {

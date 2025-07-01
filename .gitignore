@@ -38,3 +38,5 @@ Thumbs.db
 
 python-sdk-implementation.md
 pinggy-test*
+*.tgz
+*.zip
