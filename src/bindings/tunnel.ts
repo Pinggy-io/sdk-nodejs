@@ -18,6 +18,7 @@ export class Tunnel implements ITunnel {
   private resolveAdditionalForwarding: (() => void) | null = null;
   private rejectAdditionalForwarding: ((reason?: any) => void) | null = null;
   private _urls: string[] = [];
+  private intentionallyStopped: boolean = false; // Track intentional stops
 
   constructor(addon: PinggyNative, configRef: number) {
     this.addon = addon;
@@ -198,12 +199,20 @@ export class Tunnel implements ITunnel {
   private pollStart(): void {
     // A simple sync-style poll that schedules itself only on success:
     const poll = (): void => {
+      // Check if tunnel was intentionally stopped
+      if (this.intentionallyStopped) {
+        return; // STOP polling silently
+      }
+
       let shouldContinue: boolean;
       try {
         // tunnelResume returns boolean
         const ret = this.addon.tunnelResume(this.tunnelRef);
         if (!ret) {
-          Logger.error("Tunnel error detected, stopping polling.");
+          // Only log error if tunnel was not intentionally stopped
+          if (!this.intentionallyStopped) {
+            Logger.error("Tunnel error detected, stopping polling.");
+          }
           this.status = "closed";
           return; // STOP polling
         }
@@ -213,19 +222,22 @@ export class Tunnel implements ITunnel {
         shouldContinue = true;
       } catch (e) {
         this.status = "closed";
-        const lastEx = this.addon.getLastException();
-        if (lastEx) {
-          const pinggyError = new PinggyError(lastEx);
-          Logger.error("Error during tunnel polling:", pinggyError);
-          return; // STOP polling
-        } else {
-          Logger.error("Error during tunnel polling:", e as Error);
-          return; // STOP polling
+
+        // Only log errors if tunnel was not intentionally stopped
+        if (!this.intentionallyStopped) {
+          const lastEx = this.addon.getLastException();
+          if (lastEx) {
+            const pinggyError = new PinggyError(lastEx);
+            Logger.error("Error during tunnel polling:", pinggyError);
+          } else {
+            Logger.error("Error during tunnel polling:", e as Error);
+          }
         }
+        return; // STOP polling
       }
 
-      // only schedule next poll if no error
-      if (shouldContinue) {
+      // only schedule next poll if no error and not intentionally stopped
+      if (shouldContinue && !this.intentionallyStopped) {
         // use setImmediate to avoid blowing the stack
         setImmediate(poll);
       }
@@ -296,6 +308,10 @@ export class Tunnel implements ITunnel {
       return false;
     }
     try {
+      // Mark as intentionally stopped before calling native stop
+      this.intentionallyStopped = true;
+      this.status = "closed";
+
       const result = this.addon.tunnelStop(this.tunnelRef);
       if (result) {
         Logger.info("Tunnel stopped successfully.");
