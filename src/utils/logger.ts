@@ -8,6 +8,17 @@ export class Logger {
   );
   private static logDir: string = path.dirname(Logger.logFilePath);
 
+  // Debug state management
+  private static debugEnabled: boolean = false;
+
+  public static setDebugEnabled(enabled: boolean): void {
+    Logger.debugEnabled = enabled;
+  }
+
+  public static isDebugEnabled(): boolean {
+    return Logger.debugEnabled;
+  }
+
   private static ensureLogDirectory(): void {
     if (!fs.existsSync(Logger.logDir)) {
       fs.mkdirSync(Logger.logDir, { recursive: true });
@@ -57,10 +68,14 @@ export class Logger {
   }
 
   public static info(message: string): void {
-    this.log("info", message);
+    // Only log info messages if debug logging is enabled
+    if (Logger.isDebugEnabled()) {
+      this.log("info", message);
+    }
   }
 
   public static error(message: string, error?: Error): void {
+    // Always log error messages regardless of debug state
     this.log("error", message, error || null);
   }
 }

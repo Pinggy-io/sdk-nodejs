@@ -1,6 +1,7 @@
 // core/pinggy.ts
 import { PinggyNative, PinggyOptions } from "../types";
 import { TunnelInstance } from "./tunnel-instance";
+import { Logger } from "../utils/logger";
 const binary = require("@mapbox/node-pre-gyp");
 const path = require("path");
 
@@ -38,6 +39,10 @@ export class Pinggy {
     this.tunnels.clear();
   }
   public setDebugLogging(enabled: boolean): void {
+    // Set debug state for native C code
     Pinggy.addon.setDebugLogging(enabled);
+
+    // Set debug state for JavaScript Logger
+    Logger.setDebugEnabled(enabled);
   }
 }
