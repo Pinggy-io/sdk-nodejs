@@ -57,7 +57,7 @@ const mockAddon = {
 jest.mock("mocked-path", () => mockAddon, { virtual: true });
 
 import { Logger } from "../utils/logger";
-import { Pinggy } from "../core/pinggy";
+import { Pinggy } from "../pinggy";
 
 describe("Logger Debug Control", () => {
   let consoleInfoSpy: any;

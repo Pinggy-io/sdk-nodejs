@@ -1,6 +1,6 @@
-import { Pinggy } from "./core/pinggy";
+import { Pinggy } from "./pinggy";
 import { PinggyOptions } from "./types";
-import { TunnelInstance } from "./core/tunnel-instance";
+import { TunnelInstance } from "./tunnel-instance";
 
 const pinggy = Pinggy.instance;
 export { pinggy, TunnelInstance };

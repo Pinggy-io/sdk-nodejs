@@ -1,12 +1,12 @@
-import { PinggyNative, PinggyOptions } from "../types";
-import { Config } from "../bindings/config";
-import { Tunnel } from "../bindings/tunnel";
-import { Logger } from "../utils/logger";
+import { PinggyNative, PinggyOptions } from "./types";
+import { Config } from "./bindings/config";
+import { Tunnel } from "./bindings/tunnel";
+import { Logger } from "./utils/logger";
 import {
   getLastException,
   PinggyError,
   initExceptionHandling,
-} from "../bindings/exception";
+} from "./bindings/exception";
 
 export class TunnelInstance {
   private config: Config | null = null;

@@ -1,4 +1,4 @@
-import { Pinggy } from "../core/pinggy";
+import { Pinggy } from "../pinggy";
 import { PinggyOptions } from "../types";
 
 describe("Pinggy", () => {

@@ -53,7 +53,7 @@ const mockAddon = {
 
 jest.mock("mocked-path", () => mockAddon, { virtual: true });
 
-import { Pinggy } from "../core/pinggy";
+import { Pinggy } from "../pinggy";
 
 describe("Debug Logging", () => {
   let originalEnv: string | undefined;
