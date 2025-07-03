@@ -1,4 +1,4 @@
-// See EXAMPLES_EXPRESS_LISTEN.md for full documentation and more usage notes
+// See README.md for full documentation and more usage notes
 const express = require("express");
 const { listen } = require("pinggy");
 

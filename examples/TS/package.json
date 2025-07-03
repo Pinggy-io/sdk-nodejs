@@ -1,5 +1,5 @@
 {
-  "name": "pack-test",
+  "name": "pack_test_ts",
   "version": "1.0.0",
   "main": "index.ts",
   "type": "module",
@@ -19,6 +19,6 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "pinggy-test": "file:../with_static/pinggy-test-0.1.0.tgz"
+    "pinggy": "^0.1.1"
   }
 }
