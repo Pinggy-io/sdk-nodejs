@@ -1,5 +1,5 @@
 {
-  "name": "pinggy",
+  "name": "@pinggy/pinggy",
   "version": "0.1.1",
   "description": "Test for pinggy native module",
   "main": "./dist/index.js",
@@ -38,6 +38,12 @@
     "follow-redirects": "^1.15.9",
     "shlex": "^2.1.2",
     "tar": "^7.4.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "binary": {
     "module_name": "addon",
