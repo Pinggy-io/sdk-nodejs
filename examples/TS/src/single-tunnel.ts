@@ -1,4 +1,4 @@
-import { pinggy, PinggyOptions } from "pinggy";
+import { pinggy, PinggyOptions } from "@pinggy/pinggy";
 
 (async () => {
   console.log("=== Single Tunnel Example ===");
@@ -15,7 +15,6 @@ import { pinggy, PinggyOptions } from "pinggy";
 
     console.log("Tunnel URLs:", tunnel.urls());
     console.log("Status:", tunnel.getStatus());
-    console.log("Server Address:", tunnel.getServerAddress());
     console.log("Is Active:", tunnel.isActive());
 
     // Let the tunnel run for 10 seconds

@@ -5,7 +5,7 @@ This example demonstrates how to use the Pinggy SDK in a Node.js JavaScript proj
 ## Installation
 
 ```bash
-npm install pinggy
+npm install @pinggy/pinggy
 ```
 
 ## Basic Usage
@@ -13,7 +13,7 @@ npm install pinggy
 ### Simple Tunnel Creation
 
 ```javascript
-const { pinggy } = require("pinggy");
+const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
   // Create and start a tunnel
@@ -30,7 +30,7 @@ const { pinggy } = require("pinggy");
 ### Multiple Tunnels
 
 ```javascript
-const { pinggy } = require("pinggy");
+const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
   // Create multiple tunnels
@@ -108,7 +108,7 @@ headerModification: [
 ## Complete Example
 
 ```javascript
-const { pinggy } = require("pinggy");
+const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
   const options = {
@@ -130,7 +130,6 @@ const { pinggy } = require("pinggy");
   const tunnel = await pinggy.forward(options);
 
   console.log("Tunnel URLs:", tunnel.urls());
-  console.log("Server Address:", tunnel.getServerAddress());
   console.log("Status:", tunnel.getStatus());
 
   // Start web debugging interface
@@ -174,7 +173,6 @@ const { pinggy } = require("pinggy");
 - `tunnel.urls()` - Get public URLs
 - `tunnel.isActive()` - Check if tunnel is active
 - `tunnel.getStatus()` - Get tunnel status: `"starting"`, `"live"`, or `"closed"`
-- `tunnel.getServerAddress()` - Get Pinggy server address
 - `tunnel.getToken()` - Get tunnel token
 - `tunnel.startWebDebugging(port)` - Start web debugging interface
 - `tunnel.tunnelRequestAdditionalForwarding(hostname, target)` - Request additional forwarding
@@ -182,7 +180,7 @@ const { pinggy } = require("pinggy");
 ## Error Handling
 
 ```javascript
-const { pinggy } = require("pinggy");
+const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
   try {

@@ -5,7 +5,7 @@ This example demonstrates how to use the Pinggy SDK in a Node.js TypeScript proj
 ## Installation
 
 ```bash
-npm install pinggy
+npm install @pinggy/pinggy
 ```
 
 ## Setup
@@ -44,7 +44,7 @@ npm start
 ### Simple Tunnel Creation
 
 ```typescript
-import { pinggy } from "pinggy";
+import { pinggy } from "@pinggy/pinggy";
 
 (async () => {
   // Create and start a tunnel
@@ -61,7 +61,7 @@ import { pinggy } from "pinggy";
 ### Multiple Tunnels with Type Safety
 
 ```typescript
-import { pinggy, PinggyOptions, TunnelInstance } from "pinggy";
+import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
 
 (async () => {
   // Create multiple tunnels with typed options
@@ -190,7 +190,7 @@ const options: PinggyOptions = {
 ## Complete TypeScript Example
 
 ```typescript
-import { pinggy, PinggyOptions, TunnelInstance } from "pinggy";
+import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
 
 (async () => {
   // Fully typed configuration
@@ -219,7 +219,6 @@ import { pinggy, PinggyOptions, TunnelInstance } from "pinggy";
 
     // Type-safe method calls
     const urls: string[] = tunnel.urls();
-    const serverAddress: string | null = tunnel.getServerAddress();
     const status: "starting" | "live" | "closed" = tunnel.getStatus();
 
     console.log("Tunnel URLs:", urls);

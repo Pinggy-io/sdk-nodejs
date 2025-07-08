@@ -1,4 +1,4 @@
-import { pinggy } from "pinggy";
+import { pinggy } from "@pinggy/pinggy";
 
 (async () => {
   console.log("Quick demonstration - creating a simple tunnel:");

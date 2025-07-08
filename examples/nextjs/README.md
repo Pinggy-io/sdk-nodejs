@@ -16,7 +16,7 @@ This example is configured to use [Pinggy](https://pinggy.io/) to expose your lo
 
 - Make sure you have the `pinggy` package installed:
   ```bash
-  npm install pinggy
+  npm install @pinggy/pinggy
   ```
 - The tunnel is started via the `pinggy.config.js` file in the project root. You can customize the tunnel options there if needed.
 
@@ -29,7 +29,7 @@ This example is configured to use [Pinggy](https://pinggy.io/) to expose your lo
 You can edit `pinggy.config.js` to customize the tunnel. For example:
 
 ```js
-import { pinggy } from "pinggy";
+import { pinggy } from "@pinggy/pinggy";
 
 const makeListener = process.send === undefined;
 let host = "localhost";

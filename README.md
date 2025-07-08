@@ -63,6 +63,51 @@ console.log("Tunnel URLs:", tunnel.urls());
 
 ---
 
+## Examples
+
+[Degit](https://www.npmjs.com/package/degit) can be used for cloning and running an example directory like this:
+
+```bash
+npx degit github:Pinggy-io/sdk-nodejs/examples/<example> <folder-name>
+cd <folder-name>
+npm i
+```
+
+For example:
+
+```bash
+npx degit github:Pinggy-io/sdk-nodejs/examples/express express && cd express && npm i
+```
+
+### Available Examples
+
+- **[JavaScript](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/js)** - Basic JavaScript usage examples
+  ```bash
+  npx degit github:Pinggy-io/sdk-nodejs/examples/js js-example
+  cd js-example && npm i
+  ```
+- **[TypeScript](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/ts)** - TypeScript examples with full type safety
+  ```bash
+  npx degit github:Pinggy-io/sdk-nodejs/examples/ts ts-example
+  cd ts-example && npm i
+  ```
+- **[Express](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/express)** - Using `pinggy.listen` with Express
+
+  ```bash
+  npx degit github:Pinggy-io/sdk-nodejs/examples/express express-example
+  cd express-example && npm i
+  ```
+
+- **[Next.js](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/nextjs)** - Next.js with Pinggy tunneling
+  ```bash
+  npx degit github:Pinggy-io/sdk-nodejs/examples/nextjs nextjs-example
+  cd nextjs-example && npm i
+  ```
+
+**Note:** Each example includes its own README with detailed setup and usage instructions.
+
+---
+
 ## Tunnel Management
 
 - **Get all public URLs for a tunnel:**

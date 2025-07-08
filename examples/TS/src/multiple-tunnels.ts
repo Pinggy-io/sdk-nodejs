@@ -1,4 +1,4 @@
-import { pinggy, PinggyOptions } from "pinggy";
+import { pinggy, PinggyOptions } from "@pinggy/pinggy";
 
 (async () => {
   console.log("=== Multiple Tunnels Example ===");

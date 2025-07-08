@@ -6,14 +6,14 @@ This example demonstrates how to use the new `pinggy.listen` feature to start an
 
 - Install dependencies:
   ```sh
-  npm install express pinggy
+  npm install express @pinggy/pinggy
   ```
 
 ## Usage (async/await)
 
 ```js
 const express = require("express");
-const { listen } = require("pinggy");
+const { listen } = require("@pinggy/pinggy");
 
 const app = express();
 app.get("/", (req, res) => res.send("Hello from Express over Pinggy!"));
@@ -36,7 +36,7 @@ app.get("/", (req, res) => res.send("Hello from Express over Pinggy!"));
 
 ```js
 const express = require("express");
-const { listen } = require("pinggy");
+const { listen } = require("@pinggy/pinggy");
 
 const app = express();
 app.get("/", (req, res) => res.send("Hello from Express over Pinggy!"));
