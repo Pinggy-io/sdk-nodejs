@@ -1,8 +1,9 @@
-# Pinggy SDK User Guide
+# Pinggy Node.js SDK
 
-Welcome to the Pinggy SDK! This guide will help you get started with installation, creating tunnels, managing multiple tunnels, and using advanced features.
+`@pinggy/pinggy` is the official Node.js SDK for [Pinggy](http://pinggy.io/)
 
----
+This guide will help you get started with installation, creating tunnels, managing multiple tunnels, and using advanced features.
+
 
 ## Installation
 
@@ -19,7 +20,6 @@ npm i @pinggy/pinggy
 >   - **Node.js 19 or newer** for **Windows arm64**
 > - Other platforms and Node.js versions are not supported as of now.
 
----
 
 ## Quick Start
 
@@ -39,7 +39,6 @@ console.log("Tunnel URLs:", tunnel.urls()); // Get all public addresses
 
 Find complete examples at [examples](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples)
 
----
 
 ## Managing Multiple Tunnels
 
@@ -81,32 +80,36 @@ npx degit github:Pinggy-io/sdk-nodejs/examples/express express && cd express && 
 
 ### Available Examples
 
+- **[Next.js](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/nextjs)** - Next.js with Pinggy tunneling
+  ```bash
+  npx degit github:Pinggy-io/sdk-nodejs/examples/nextjs nextjs-example
+  cd nextjs-example && npm i
+  npm run dev
+  ```
+
 - **[JavaScript](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/js)** - Basic JavaScript usage examples
   ```bash
   npx degit github:Pinggy-io/sdk-nodejs/examples/js js-example
   cd js-example && npm i
   ```
+
 - **[TypeScript](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/ts)** - TypeScript examples with full type safety
   ```bash
   npx degit github:Pinggy-io/sdk-nodejs/examples/ts ts-example
   cd ts-example && npm i
   ```
+
 - **[Express](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/express)** - Using `pinggy.listen` with Express
 
   ```bash
   npx degit github:Pinggy-io/sdk-nodejs/examples/express express-example
   cd express-example && npm i
+  node express-listen-example.js
   ```
 
-- **[Next.js](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/nextjs)** - Next.js with Pinggy tunneling
-  ```bash
-  npx degit github:Pinggy-io/sdk-nodejs/examples/nextjs nextjs-example
-  cd nextjs-example && npm i
-  ```
 
 **Note:** Each example includes its own README with detailed setup and usage instructions.
 
----
 
 ## Tunnel Management
 
