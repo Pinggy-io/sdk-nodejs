@@ -28,6 +28,7 @@ export interface PinggyOptions {
 export interface PinggyNative {
   createConfig(): number;
   configSetArgument: (configRef: number, arg: string) => void;
+  configGetArgument(configRef: number): string;
   configSetToken(configRef: number, token: string): void;
   configSetServerAddress(configRef: number, address: string): void;
   configSetSniServerName(configRef: number, name: string): void;

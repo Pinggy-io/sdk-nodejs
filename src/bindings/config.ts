@@ -269,4 +269,15 @@ export class Config implements IConfig {
       return null;
     }
   }
+
+  public getArgument(): string | null {
+    try {
+      return this.configRef
+        ? this.addon.configGetArgument(this.configRef)
+        : null;
+    } catch (e) {
+      Logger.error("Error getting argument:", e as Error);
+      return null;
+    }
+  }
 }

@@ -77,4 +77,8 @@ export class TunnelInstance {
     if (!this.tunnel) throw new Error("Tunnel not initialized");
     this.tunnel.tunnelRequestAdditionalForwarding(hostname, target);
   }
+
+  public getArgument(): string | null {
+    return this.config?.getArgument() ?? null;
+  }
 }

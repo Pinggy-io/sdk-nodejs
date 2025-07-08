@@ -1,9 +1,12 @@
 // See README.md for full documentation and more usage notes
 const express = require("express");
-const { listen } = require("pinggy");
+const { listen } = require("@pinggy/pinggy");
 
 const app = express();
+
 app.get("/", (req, res) => res.send("Hello from Express over Pinggy!"));
+
+// Define more routes
 
 listen(app, {
   /* you can add PinggyOptions here, e.g. token: "..." */

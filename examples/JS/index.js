@@ -1,22 +1,20 @@
-const { pinggy } = require("pinggy");
+const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
   const options = {
     forwardTo: "localhost:7878",
   };
 
-  // Use the modern API as documented in README
+  // Create and start tunnel using forward method
   const tunnel = await pinggy.forward(options);
 
   console.log("Tunnel URLs:", tunnel.urls());
-  console.log("Server address:", tunnel.getServerAddress());
   console.log("Status:", tunnel.getStatus());
 
   // Start web debugging interface
   tunnel.startWebDebugging(8080);
   console.log("Web debugging available at: http://localhost:8080");
 
-  console.log("about to stop tunnel");
   setTimeout(() => {
     try {
       console.log("Stopping tunnel...");

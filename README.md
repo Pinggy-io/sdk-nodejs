@@ -9,12 +9,8 @@ Welcome to the Pinggy SDK! This guide will help you get started with installatio
 Install the SDK via npm:
 
 ```bash
-npm install pinggy
+npm i @pinggy/pinggy
 ```
-
----
-
-## Build From Source
 
 > **Compatibility Note:**
 >
@@ -23,51 +19,6 @@ npm install pinggy
 >   - **Node.js 19 or newer** for **Windows arm64**
 > - Other platforms and Node.js versions are not supported as of now.
 
-### Prerequisites
-
-- Ensure you have [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed.
-- [git](https://git-scm.com/) for cloning the repository.
-
-### Steps
-
-1. **Clone the repository and checkout the latest code:**
-
-   ```bash
-   git clone https://github.com/your-org/pinggy.git
-   cd pinggy
-   git checkout master
-   ```
-
-2. **Install dependencies and build the package:**
-
-   ```bash
-   npm install
-   npm run build
-   npm pack
-   ```
-
-   This will generate a file like `pinggy-test-{version}.tgz` in your project directory.
-
-3. **Test the package in a separate project:**
-
-   - Create a new directory for your example/test project:
-     ```bash
-     mkdir ../pinggy-example
-     cd ../pinggy-example
-     npm init -y
-     ```
-   - Install the locally built package (use the correct relative or absolute path):
-     ```bash
-     npm install ../pinggy/pinggy-test-{version}.tgz
-     ```
-
-4. **Use the SDK in your example project:**
-   - Create an `index.js` or `index.ts` and import/use the SDK as described in the Quick Start section.
-
-### Notes
-
-- You can now develop and test against your local build before publishing or using in production.
-
 ---
 
 ## Quick Start
@@ -75,7 +26,7 @@ npm install pinggy
 ### Import the SDK
 
 ```ts
-import { pinggy } from "pinggy-test"; (to change to import { pinggy } from "@pinggy/pinggy"; upon release)
+import { pinggy } from "@pinggy/pinggy";
 ```
 
 ### Create and Start a Tunnel
@@ -85,6 +36,8 @@ const tunnel = pinggy.createTunnel({ forwardTo: "localhost:3000" });
 await tunnel.start();
 console.log("Tunnel URLs:", tunnel.urls()); // Get all public addresses
 ```
+
+Find complete examples at [examples](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples)
 
 ---
 
@@ -112,27 +65,18 @@ console.log("Tunnel URLs:", tunnel.urls());
 
 ## Tunnel Management
 
-- **Get all tunnels:**
+- **Get all public URLs for a tunnel:**
   ```ts
-  const allTunnels = pinggy.getAllTunnels();
+  const urls = tunnel.urls(); // array of public addresses
+  console.log("Tunnel URLs:", urls);
   ```
-- **Check tunnel status:**
+  - **Check tunnel status:**
   ```ts
   tunnel.getStatus(); // "starting" | "live" | "closed"
   ```
 - **Check if tunnel is active:**
   ```ts
   tunnel.isActive(); // true or false
-  ```
-- **Get all public URLs for a tunnel:**
-  ```ts
-  const urls = tunnel.urls(); // array of public addresses
-  console.log("Tunnel URLs:", urls);
-  ```
-- **Get the Pinggy server address (advanced):**
-  ```ts
-  const serverAddr = tunnel.getServerAddress(); // address of the Pinggy backend server
-  console.log("Pinggy server address:", serverAddr);
   ```
 - **Stop a tunnel:**
   ```ts
@@ -163,11 +107,21 @@ console.log("Tunnel URLs:", tunnel.urls());
 
 ## API Reference
 
+### Imports
+
+```ts
+import {
+  pinggy,
+  TunnelInstance,
+  type PinggyOptions,
+  listen,
+} from "@pinggy/pinggy";
+```
+
 ### `pinggy`
 
 - `createTunnel(options: PinggyOptions): TunnelInstance` — Create a new tunnel (does not start it).
 - `forward(options: PinggyOptions): Promise<TunnelInstance>` — Create and start a tunnel, returns the instance when ready.
-- `getAllTunnels(): TunnelInstance[]` — Get all active tunnel instances.
 - `closeAllTunnels(): void` — Stop and remove all tunnels.
 
 ### `TunnelInstance`
@@ -184,7 +138,57 @@ console.log("Tunnel URLs:", tunnel.urls());
 
 ### `PinggyOptions`
 
-See the type definition for all available options (e.g., `forwardTo`, `token`, `serverAddress`, etc.).
+The `PinggyOptions` interface defines all available configuration options for creating a tunnel. Here are the available fields:
+
+```ts
+interface PinggyOptions {
+  token?: string; // Optional authentication token for the tunnel
+  serverAddress?: string; // Custom Pinggy server address
+  sniServerName?: string; // SNI server name for TLS
+  forwardTo?: string; // Local address to forward traffic to (e.g., "localhost:3000")
+  debug?: boolean; // Enable debug logging for this tunnel
+  debuggerPort?: number; // Port for web debugging
+  type?: "tcp" | "tls" | "http" | "udp"; // Tunnel protocol type
+  ipWhitelist?: string[]; // List of allowed client IPs
+  basicAuth?: Record<string, string>; // Basic authentication users (username: password)
+  bearerAuth?: string[]; // Bearer tokens for authentication
+  headerModification?: HeaderModification[]; // Modify headers (add, remove, update)
+  xff?: boolean; // Enable X-Forwarded-For header
+  httpsOnly?: boolean; // Only allow HTTPS traffic
+  fullRequestUrl?: boolean; // Provide full request URL to backend
+  allowPreflight?: boolean; // Allow CORS preflight requests
+  noReverseProxy?: boolean; // Disable reverse proxy behavior
+  cmd?: string; // Optional command prefix
+  ssl?: boolean; // Use SSL for tunnel setup
+}
+
+interface HeaderModification {
+  key: string;
+  value?: string;
+  action: "add" | "remove" | "update";
+}
+```
+
+**Descriptions:**
+
+- `token`: Use this to authenticate your tunnel with a Pinggy token.
+- `serverAddress`: Specify a custom Pinggy server if needed.
+- `sniServerName`: For advanced TLS/SNI routing.
+- `forwardTo`: The local address (host:port) to forward incoming traffic to.
+- `debug`: Enable debug logging for this tunnel instance.
+- `debuggerPort`: Port to use for web debugging.
+- `type`: Choose the protocol for your tunnel (`tcp`, `tls`, `http`, or `udp`).
+- `ipWhitelist`: Restrict access to specific client IPs.
+- `basicAuth`: Provide a map of usernames to passwords for HTTP basic authentication.
+- `bearerAuth`: List of bearer tokens for HTTP authentication.
+- `headerModification`: Modify HTTP headers (add, remove, update) for incoming requests.
+- `xff`: Enable the X-Forwarded-For header for client IP forwarding.
+- `httpsOnly`: Only allow HTTPS connections to your tunnel.
+- `fullRequestUrl`: Pass the full request URL to your backend.
+- `allowPreflight`: Allow CORS preflight (OPTIONS) requests.
+- `noReverseProxy`: Disable reverse proxy features if not needed.
+- `cmd`: Optional command prefix for advanced use.
+- `ssl`: Use SSL for tunnel setup and communication.
 
 ---
 
@@ -202,3 +206,12 @@ See the type definition for all available options (e.g., `forwardTo`, `token`, `
 
 - If you encounter errors, check your local server is running and accessible.
 - For advanced debugging, enable logs in your application (see SDK source for details).
+- **Enable Debug Logs:**
+  To get detailed logs for troubleshooting, enable debug logging:
+  ```ts
+  pinggy.setDebugLogging(true);
+  ```
+  This will print detailed debug information to the console. To turn off debug logs, call:
+  ```ts
+  pinggy.setDebugLogging(false);
+  ```

@@ -11,6 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "pinggy": "^0.1.1"
+    "@pinggy/pinggy": "^0.1.3"
   }
 }

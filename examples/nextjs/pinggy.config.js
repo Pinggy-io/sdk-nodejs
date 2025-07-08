@@ -1,4 +1,4 @@
-const { pinggy } = require("pinggy");
+const { pinggy } = require("@pinggy/pinggy");
 
 // Only create the tunnel in the main process, not in forked child processes
 const makeListener = process.send === undefined;

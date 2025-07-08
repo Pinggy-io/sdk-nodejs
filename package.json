@@ -1,7 +1,7 @@
 {
   "name": "@pinggy/pinggy",
   "version": "0.1.2",
-  "description": "Test for pinggy native module",
+  "description": "Pinggy SDK for Nodejs",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
