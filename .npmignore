@@ -1,5 +1,6 @@
 .github/
 .vscode/
+docs/
 examples/
 lib/
 logs/
@@ -18,6 +19,8 @@ Makefile
 
 tsconfig.json
 tsup.config.ts
+typedoc-*
+typedoc.*
 *.tgz
 
 Workflow.md

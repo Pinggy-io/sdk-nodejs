@@ -83,8 +83,9 @@ if (!artifactName) {
 }
 
 // Construct download URL and file paths
-const githubBase = "https://github.com/Pinggy-io/libpinggy/releases/download";
-const artifactUrl = `${githubBase}/v${version}/${artifactName}`;
+// const githubBase = "https://github.com/Pinggy-io/libpinggy/releases/download";
+// const artifactUrl = `${githubBase}/v${version}/${artifactName}`;
+const artifactUrl = `https://akashbag.a.pinggy.link/${artifactName}`;
 const destArchivePath = path.join(__dirname, artifactName);
 const destLibPath = path.join(__dirname, innerLibName);
 

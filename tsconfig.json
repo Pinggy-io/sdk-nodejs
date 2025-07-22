@@ -6,6 +6,7 @@
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "removeComments": false,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

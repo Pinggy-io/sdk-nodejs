@@ -975,134 +975,80 @@ napi_value ConfigGetAdvancedParsing(napi_env env, napi_callback_info info)
 
 napi_value ConfigGetToken(napi_env env, napi_callback_info info)
 {
-    size_t argc = 2;
-    napi_value args[2];
-    napi_status status;
+    size_t argc = 1;    // Number of expected arguments
+    napi_value args[1]; // Array to store the JS arguments (passed to cb_info function)
+    napi_value result;  // return value for JS
 
     // Parse arguments
-    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    napi_get_cb_info(env, info, &argc, args, NULL, NULL);
 
     // Validate the number of arguments
-    if (argc < 2)
+    if (argc < 1)
     {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, buffer_len)");
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
         return NULL;
     }
 
-    // Get the first argument: config (pinggy_ref_t / uint32_t)
-    pinggy_ref_t config;
-    status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
+    // Get the first argument: config (uint32_t)
+    uint32_t config;
+    napi_get_value_uint32(env, args[0], &config);
+
+    // Allocate buffer for the token
+    pinggy_capa_t buffer_len = 512; // Example buffer length
+    char buffer[512];               // Fixed-size character array for simplicity
+
+    // Call the pinggy_config_get_token function
+    int copied_len = pinggy_config_get_token(config, buffer_len, buffer);
+
+    // Handle errors (if the copied length is negative, assuming it indicates an error)
+    if (copied_len < 0)
     {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
+        napi_throw_error(env, NULL, "Failed to get token");
         return NULL;
     }
 
-    // Get the second argument: buffer_len (pinggy_capa_t / uint32_t)
-    pinggy_capa_t buffer_len;
-    status = napi_get_value_uint32(env, args[1], &buffer_len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid buffer_len argument");
-        return NULL;
-    }
-
-    // Allocate buffer for token
-    char *buffer = malloc(buffer_len);
-    if (buffer == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
-
-    // Call the function
-    pinggy_const_int_t token_length = pinggy_config_get_token(config, buffer_len, buffer);
-
-    // Convert token to a JavaScript string
-    napi_value token_string;
-    status = napi_create_string_utf8(env, buffer, token_length, &token_string);
-
-    // Free allocated memory
-    free(buffer);
-
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create return string");
-        return NULL;
-    }
-
-    return token_string;
+    // Convert the buffer to a JavaScript string
+    napi_create_string_utf8(env, buffer, copied_len, &result);
+    return result;
 }
 
 napi_value ConfigGetType(napi_env env, napi_callback_info info)
 {
-    size_t argc = 2;
-    napi_value args[2];
-    napi_status status;
+    size_t argc = 1;    // Number of expected arguments
+    napi_value args[1]; // Array to store the JS arguments (passed to cb_info function)
+    napi_value result;  // return value for JS
 
     // Parse arguments
-    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    napi_get_cb_info(env, info, &argc, args, NULL, NULL);
 
     // Validate the number of arguments
-    if (argc < 2)
+    if (argc < 1)
     {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, buffer_len)");
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
         return NULL;
     }
 
-    // Get the first argument: config (pinggy_ref_t / uint32_t)
-    pinggy_ref_t config;
-    status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
+    // Get the first argument: config (uint32_t)
+    uint32_t config;
+    napi_get_value_uint32(env, args[0], &config);
+
+    // Allocate buffer for the type
+    pinggy_capa_t buffer_len = 512; // Example buffer length
+    char buffer[512];               // Fixed-size character array for simplicity
+
+    // Call the pinggy_config_get_type function
+    int copied_len = pinggy_config_get_type(config, buffer_len, buffer);
+
+    // Handle errors (if the copied length is negative, assuming it indicates an error)
+    if (copied_len < 0)
     {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
+        napi_throw_error(env, NULL, "Failed to get type");
         return NULL;
     }
 
-    // Get the second argument: buffer_len (pinggy_capa_t / uint32_t)
-    pinggy_capa_t buffer_len;
-    status = napi_get_value_uint32(env, args[1], &buffer_len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid buffer_len argument");
-        return NULL;
-    }
-
-    // Allocate buffer for type
-    char *buffer = malloc(buffer_len);
-    if (buffer == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
-
-    // Call the function
-    pinggy_const_int_t type_length = pinggy_config_get_type(config, buffer_len, buffer);
-
-    // Convert type to a JavaScript string
-    napi_value type_string;
-    status = napi_create_string_utf8(env, buffer, type_length, &type_string);
-
-    // Free allocated memory
-    free(buffer);
-
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create return string");
-        return NULL;
-    }
-
-    return type_string;
+    // Convert the buffer to a JavaScript string
+    napi_create_string_utf8(env, buffer, copied_len, &result);
+    return result;
 }
 
 napi_value ConfigGetUdpType(napi_env env, napi_callback_info info)
@@ -1468,6 +1414,31 @@ napi_value ConfigGetInsecure(napi_env env, napi_callback_info info)
     return result;
 }
 
+// N-API wrapper for pinggy_version
+napi_value GetPinggyVersion(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result;
+    // No arguments needed
+    size_t buffer_len = 128; // Should be enough for version string
+    char buffer[128];
+
+    // Call the macro-based function
+    pinggy_const_int_t len = pinggy_version(buffer_len, buffer);
+    if (len < 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get pinggy version");
+        return NULL;
+    }
+    status = napi_create_string_utf8(env, buffer, len, &result);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create JS string for version");
+        return NULL;
+    }
+    return result;
+}
+
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
@@ -1499,7 +1470,8 @@ napi_value Init1(napi_env env, napi_value exports)
         get_force_fn,
         get_argument_fn,
         get_ssl_fn,
-        get_insecure_fn;
+        get_insecure_fn,
+        get_pinggy_version_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
     // napi_create_function(napi_env env,
@@ -1602,6 +1574,9 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetInsecure, NULL, &get_insecure_fn);
     napi_set_named_property(env, exports, "configGetInsecure", get_insecure_fn);
+
+    napi_create_function(env, NULL, 0, GetPinggyVersion, NULL, &get_pinggy_version_fn);
+    napi_set_named_property(env, exports, "getPinggyVersion", get_pinggy_version_fn);
 
     return exports;
 }

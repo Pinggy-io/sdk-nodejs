@@ -1,0 +1,344 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="./"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Pinggy SDK - v0.1.3</title><meta name="description" content="Documentation for Pinggy SDK"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script defer src="assets/main.js"></script><script async src="assets/icons.js" id="tsd-icons-script"></script><script async src="assets/search.js" id="tsd-search-script"></script><script async src="assets/navigation.js" id="tsd-nav-script"></script><style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --md-sys-color-primary: #f6be46;
+    --md-sys-color-on-primary: #412d00;
+    --md-sys-color-primary-container: #5d4200;
+    --md-sys-color-on-primary-container: #ffdea3;
+    --md-sys-color-secondary: #d9c4a0;
+    --md-sys-color-on-secondary: #3b2f15;
+    --md-sys-color-secondary-container: #53452a;
+    --md-sys-color-on-secondary-container: #f6e0bb;
+    --md-sys-color-tertiary: #b2cfa8;
+    --md-sys-color-on-tertiary: #1e361a;
+    --md-sys-color-tertiary-container: #344d2f;
+    --md-sys-color-on-tertiary-container: #cdebc2;
+    --md-sys-color-error: #ffb4ab;
+    --md-sys-color-on-error: #690005;
+    --md-sys-color-error-container: #93000a;
+    --md-sys-color-on-error-container: #ffb4ab;
+    --md-sys-color-background: #1e1b16;
+    --md-sys-color-on-background: #e9e1d9;
+    --md-sys-color-surface: #1e1b16;
+    --md-sys-color-on-surface: #e9e1d9;
+    --md-sys-color-surface-variant: #4e4639;
+    --md-sys-color-on-surface-variant: #d1c5b4;
+    --md-sys-color-outline: #9a8f80;
+    --md-sys-color-outline-variant: #4e4639;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-inverse-surface: #e9e1d9;
+    --md-sys-color-inverse-on-surface: #34302a;
+    --md-sys-color-inverse-primary: #7a5900;
+    --md-sys-color-surface-dim: #16130e;
+    --md-sys-color-surface-bright: #3d3933;
+    --md-sys-color-surface-container-lowest: #110e09;
+    --md-sys-color-surface-container-low: #1e1b16;
+    --md-sys-color-surface-container: #221f1a;
+    --md-sys-color-surface-container-high: #2d2924;
+    --md-sys-color-surface-container-highest: #38342e
+  }
+}
+:root[data-theme="dark"] {
+  --md-sys-color-primary: #f6be46;
+  --md-sys-color-on-primary: #412d00;
+  --md-sys-color-primary-container: #5d4200;
+  --md-sys-color-on-primary-container: #ffdea3;
+  --md-sys-color-secondary: #d9c4a0;
+  --md-sys-color-on-secondary: #3b2f15;
+  --md-sys-color-secondary-container: #53452a;
+  --md-sys-color-on-secondary-container: #f6e0bb;
+  --md-sys-color-tertiary: #b2cfa8;
+  --md-sys-color-on-tertiary: #1e361a;
+  --md-sys-color-tertiary-container: #344d2f;
+  --md-sys-color-on-tertiary-container: #cdebc2;
+  --md-sys-color-error: #ffb4ab;
+  --md-sys-color-on-error: #690005;
+  --md-sys-color-error-container: #93000a;
+  --md-sys-color-on-error-container: #ffb4ab;
+  --md-sys-color-background: #1e1b16;
+  --md-sys-color-on-background: #e9e1d9;
+  --md-sys-color-surface: #1e1b16;
+  --md-sys-color-on-surface: #e9e1d9;
+  --md-sys-color-surface-variant: #4e4639;
+  --md-sys-color-on-surface-variant: #d1c5b4;
+  --md-sys-color-outline: #9a8f80;
+  --md-sys-color-outline-variant: #4e4639;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-inverse-surface: #e9e1d9;
+  --md-sys-color-inverse-on-surface: #34302a;
+  --md-sys-color-inverse-primary: #7a5900;
+  --md-sys-color-surface-dim: #16130e;
+  --md-sys-color-surface-bright: #3d3933;
+  --md-sys-color-surface-container-lowest: #110e09;
+  --md-sys-color-surface-container-low: #1e1b16;
+  --md-sys-color-surface-container: #221f1a;
+  --md-sys-color-surface-container-high: #2d2924;
+  --md-sys-color-surface-container-highest: #38342e
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --md-sys-color-primary: #7a5900;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #ffdea3;
+    --md-sys-color-on-primary-container: #261900;
+    --md-sys-color-secondary: #6c5c3f;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #f6e0bb;
+    --md-sys-color-on-secondary-container: #251a04;
+    --md-sys-color-tertiary: #4b6545;
+    --md-sys-color-on-tertiary: #ffffff;
+    --md-sys-color-tertiary-container: #cdebc2;
+    --md-sys-color-on-tertiary-container: #092007;
+    --md-sys-color-error: #ba1a1a;
+    --md-sys-color-on-error: #ffffff;
+    --md-sys-color-error-container: #ffdad6;
+    --md-sys-color-on-error-container: #410002;
+    --md-sys-color-background: #fffbff;
+    --md-sys-color-on-background: #1e1b16;
+    --md-sys-color-surface: #fffbff;
+    --md-sys-color-on-surface: #1e1b16;
+    --md-sys-color-surface-variant: #ede1cf;
+    --md-sys-color-on-surface-variant: #4e4639;
+    --md-sys-color-outline: #7f7667;
+    --md-sys-color-outline-variant: #d1c5b4;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-inverse-surface: #34302a;
+    --md-sys-color-inverse-on-surface: #f8efe7;
+    --md-sys-color-inverse-primary: #f6be46;
+    --md-sys-color-surface-dim: #e1d9d0;
+    --md-sys-color-surface-bright: #fff8f2;
+    --md-sys-color-surface-container-lowest: #ffffff;
+    --md-sys-color-surface-container-low: #fbf2e9;
+    --md-sys-color-surface-container: #f5ede4;
+    --md-sys-color-surface-container-high: #efe7de;
+    --md-sys-color-surface-container-highest: #e9e1d9
+  }
+}
+:root[data-theme="light"] {
+  --md-sys-color-primary: #7a5900;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #ffdea3;
+  --md-sys-color-on-primary-container: #261900;
+  --md-sys-color-secondary: #6c5c3f;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #f6e0bb;
+  --md-sys-color-on-secondary-container: #251a04;
+  --md-sys-color-tertiary: #4b6545;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #cdebc2;
+  --md-sys-color-on-tertiary-container: #092007;
+  --md-sys-color-error: #ba1a1a;
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-error-container: #ffdad6;
+  --md-sys-color-on-error-container: #410002;
+  --md-sys-color-background: #fffbff;
+  --md-sys-color-on-background: #1e1b16;
+  --md-sys-color-surface: #fffbff;
+  --md-sys-color-on-surface: #1e1b16;
+  --md-sys-color-surface-variant: #ede1cf;
+  --md-sys-color-on-surface-variant: #4e4639;
+  --md-sys-color-outline: #7f7667;
+  --md-sys-color-outline-variant: #d1c5b4;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+  --md-sys-color-inverse-surface: #34302a;
+  --md-sys-color-inverse-on-surface: #f8efe7;
+  --md-sys-color-inverse-primary: #f6be46;
+  --md-sys-color-surface-dim: #e1d9d0;
+  --md-sys-color-surface-bright: #fff8f2;
+  --md-sys-color-surface-container-lowest: #ffffff;
+  --md-sys-color-surface-container-low: #fbf2e9;
+  --md-sys-color-surface-container: #f5ede4;
+  --md-sys-color-surface-container-high: #efe7de;
+  --md-sys-color-surface-container-highest: #e9e1d9
+}
+</style><link rel="stylesheet" href="assets/material-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="index.html" class="title">Pinggy SDK - v0.1.3</a><div id="tsd-toolbar-links"><a href="https://github.com/Pinggy-io/sdk-nodejs">GitHub</a><a href="https://www.npmjs.com/package/@pinggy/pinggy">NPM</a></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><h1>Pinggy SDK - v0.1.3</h1></div><div class="tsd-panel tsd-typography"><h1 id="pinggy-nodejs-sdk" class="tsd-anchor-link">Pinggy Node.js SDK<a href="#pinggy-nodejs-sdk" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h1><p><code>@pinggy/pinggy</code> is the official Node.js SDK for <a href="http://pinggy.io/">Pinggy</a></p>
+<p>This guide will help you get started with installation, creating tunnels, managing multiple tunnels, and using advanced features.</p>
+<h2 id="installation" class="tsd-anchor-link">Installation<a href="#installation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><p>Install the SDK via npm:</p>
+<pre><code class="bash"><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">i</span><span class="hl-1"> </span><span class="hl-2">@pinggy/pinggy</span>
+</code><button type="button">Copy</button></pre>
+
+<blockquote>
+<p><strong>Compatibility Note:</strong></p>
+<ul>
+<li>The Pinggy SDK only works on:
+<ul>
+<li><strong>Node.js 18 or newer</strong> for <strong>Linux x64</strong>, <strong>Linux arm64</strong>, and <strong>Windows x64</strong></li>
+<li><strong>Node.js 19 or newer</strong> for <strong>Windows arm64</strong></li>
+</ul>
+</li>
+<li>Other platforms and Node.js versions are not supported as of now.</li>
+</ul>
+</blockquote>
+<h2 id="quick-start" class="tsd-anchor-link">Quick Start<a href="#quick-start" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><h3 id="import-the-sdk" class="tsd-anchor-link">Import the SDK<a href="#import-the-sdk" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><pre><code class="ts"><span class="hl-3">import</span><span class="hl-1"> { pinggy } </span><span class="hl-3">from</span><span class="hl-1"> </span><span class="hl-2">&quot;@pinggy/pinggy&quot;</span><span class="hl-1">;</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="create-and-start-a-tunnel" class="tsd-anchor-link">Create and Start a Tunnel<a href="#create-and-start-a-tunnel" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><pre><code class="ts"><span class="hl-3">const</span><span class="hl-1"> </span><span class="hl-4">tunnel</span><span class="hl-1"> </span><span class="hl-3">=</span><span class="hl-1"> pinggy.</span><span class="hl-0">createTunnel</span><span class="hl-1">({ forwardTo: </span><span class="hl-2">&quot;localhost:3000&quot;</span><span class="hl-1"> });</span><br/><span class="hl-3">await</span><span class="hl-1"> tunnel.</span><span class="hl-0">start</span><span class="hl-1">();</span><br/><span class="hl-1">console.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-2">&quot;Tunnel URLs:&quot;</span><span class="hl-1">, tunnel.</span><span class="hl-0">urls</span><span class="hl-1">()); </span><span class="hl-5">// Get all public addresses</span>
+</code><button type="button">Copy</button></pre>
+
+<p>Find complete examples at <a href="https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples">examples</a></p>
+<h2 id="managing-multiple-tunnels" class="tsd-anchor-link">Managing Multiple Tunnels<a href="#managing-multiple-tunnels" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><p>You can create and manage multiple tunnels simultaneously:</p>
+<pre><code class="ts"><span class="hl-3">const</span><span class="hl-1"> </span><span class="hl-4">tunnel1</span><span class="hl-1"> </span><span class="hl-3">=</span><span class="hl-1"> pinggy.</span><span class="hl-0">createTunnel</span><span class="hl-1">({ forwardTo: </span><span class="hl-2">&quot;localhost:3000&quot;</span><span class="hl-1"> });</span><br/><span class="hl-3">const</span><span class="hl-1"> </span><span class="hl-4">tunnel2</span><span class="hl-1"> </span><span class="hl-3">=</span><span class="hl-1"> pinggy.</span><span class="hl-0">createTunnel</span><span class="hl-1">({ forwardTo: </span><span class="hl-2">&quot;localhost:4000&quot;</span><span class="hl-1"> });</span><br/><span class="hl-3">await</span><span class="hl-1"> tunnel1.</span><span class="hl-0">start</span><span class="hl-1">();</span><br/><span class="hl-3">await</span><span class="hl-1"> tunnel2.</span><span class="hl-0">start</span><span class="hl-1">();</span><br/><span class="hl-1">console.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-2">&quot;Tunnel 1 URLs:&quot;</span><span class="hl-1">, tunnel1.</span><span class="hl-0">urls</span><span class="hl-1">());</span><br/><span class="hl-1">console.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-2">&quot;Tunnel 2 URLs:&quot;</span><span class="hl-1">, tunnel2.</span><span class="hl-0">urls</span><span class="hl-1">());</span>
+</code><button type="button">Copy</button></pre>
+
+<p>Or use the convenient <code>forward</code> method:</p>
+<pre><code class="ts"><span class="hl-3">const</span><span class="hl-1"> </span><span class="hl-4">tunnel</span><span class="hl-1"> </span><span class="hl-3">=</span><span class="hl-1"> </span><span class="hl-3">await</span><span class="hl-1"> pinggy.</span><span class="hl-0">forward</span><span class="hl-1">({ forwardTo: </span><span class="hl-2">&quot;localhost:5000&quot;</span><span class="hl-1"> });</span><br/><span class="hl-1">console.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-2">&quot;Tunnel URLs:&quot;</span><span class="hl-1">, tunnel.</span><span class="hl-0">urls</span><span class="hl-1">());</span>
+</code><button type="button">Copy</button></pre>
+
+<hr>
+<h2 id="examples" class="tsd-anchor-link">Examples<a href="#examples" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><p><a href="https://www.npmjs.com/package/degit">Degit</a> can be used for cloning and running an example directory like this:</p>
+<pre><code class="bash"><span class="hl-0">npx</span><span class="hl-1"> </span><span class="hl-2">degit</span><span class="hl-1"> </span><span class="hl-2">github:Pinggy-io/sdk-nodejs/examples/</span><span class="hl-3">&lt;</span><span class="hl-2">exampl</span><span class="hl-1">e</span><span class="hl-3">&gt;</span><span class="hl-1"> </span><span class="hl-3">&lt;</span><span class="hl-2">folder-nam</span><span class="hl-1">e</span><span class="hl-3">&gt;</span><br/><span class="hl-4">cd</span><span class="hl-1"> </span><span class="hl-3">&lt;</span><span class="hl-2">folder-nam</span><span class="hl-1">e</span><span class="hl-3">&gt;</span><br/><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">i</span>
+</code><button type="button">Copy</button></pre>
+
+<p>For example:</p>
+<pre><code class="bash"><span class="hl-0">npx</span><span class="hl-1"> </span><span class="hl-2">degit</span><span class="hl-1"> </span><span class="hl-2">github:Pinggy-io/sdk-nodejs/examples/express</span><span class="hl-1"> </span><span class="hl-2">express</span><span class="hl-1"> &amp;&amp; </span><span class="hl-4">cd</span><span class="hl-1"> </span><span class="hl-2">express</span><span class="hl-1"> &amp;&amp; </span><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">i</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="available-examples" class="tsd-anchor-link">Available Examples<a href="#available-examples" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><ul>
+<li>
+<p><strong><a href="https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/nextjs">Next.js</a></strong> - Next.js with Pinggy tunneling</p>
+<pre><code class="bash"><span class="hl-0">npx</span><span class="hl-1"> </span><span class="hl-2">degit</span><span class="hl-1"> </span><span class="hl-2">github:Pinggy-io/sdk-nodejs/examples/nextjs</span><span class="hl-1"> </span><span class="hl-2">nextjs-example</span><br/><span class="hl-4">cd</span><span class="hl-1"> </span><span class="hl-2">nextjs-example</span><span class="hl-1"> &amp;&amp; </span><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">i</span><br/><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">run</span><span class="hl-1"> </span><span class="hl-2">dev</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+<li>
+<p><strong><a href="https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/js">JavaScript</a></strong> - Basic JavaScript usage examples</p>
+<pre><code class="bash"><span class="hl-0">npx</span><span class="hl-1"> </span><span class="hl-2">degit</span><span class="hl-1"> </span><span class="hl-2">github:Pinggy-io/sdk-nodejs/examples/js</span><span class="hl-1"> </span><span class="hl-2">js-example</span><br/><span class="hl-4">cd</span><span class="hl-1"> </span><span class="hl-2">js-example</span><span class="hl-1"> &amp;&amp; </span><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">i</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+<li>
+<p><strong><a href="https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/ts">TypeScript</a></strong> - TypeScript examples with full type safety</p>
+<pre><code class="bash"><span class="hl-0">npx</span><span class="hl-1"> </span><span class="hl-2">degit</span><span class="hl-1"> </span><span class="hl-2">github:Pinggy-io/sdk-nodejs/examples/ts</span><span class="hl-1"> </span><span class="hl-2">ts-example</span><br/><span class="hl-4">cd</span><span class="hl-1"> </span><span class="hl-2">ts-example</span><span class="hl-1"> &amp;&amp; </span><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">i</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+<li>
+<p><strong><a href="https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/express">Express</a></strong> - Using <code>pinggy.listen</code> with Express</p>
+<pre><code class="bash"><span class="hl-0">npx</span><span class="hl-1"> </span><span class="hl-2">degit</span><span class="hl-1"> </span><span class="hl-2">github:Pinggy-io/sdk-nodejs/examples/express</span><span class="hl-1"> </span><span class="hl-2">express-example</span><br/><span class="hl-4">cd</span><span class="hl-1"> </span><span class="hl-2">express-example</span><span class="hl-1"> &amp;&amp; </span><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">i</span><br/><span class="hl-0">node</span><span class="hl-1"> </span><span class="hl-2">express-listen-example.js</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+</ul>
+<p><strong>Note:</strong> Each example includes its own README with detailed setup and usage instructions.</p>
+<h2 id="tunnel-management" class="tsd-anchor-link">Tunnel Management<a href="#tunnel-management" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<li><strong>Get all public URLs for a tunnel:</strong><pre><code class="ts"><span class="hl-3">const</span><span class="hl-1"> </span><span class="hl-4">urls</span><span class="hl-1"> </span><span class="hl-3">=</span><span class="hl-1"> tunnel.</span><span class="hl-0">urls</span><span class="hl-1">(); </span><span class="hl-5">// array of public addresses</span><br/><span class="hl-1">console.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-2">&quot;Tunnel URLs:&quot;</span><span class="hl-1">, urls);</span>
+</code><button type="button">Copy</button></pre>
+
+<ul>
+<li><strong>Check tunnel status:</strong></li>
+</ul>
+<pre><code class="ts"><span class="hl-1">tunnel.</span><span class="hl-0">getStatus</span><span class="hl-1">(); </span><span class="hl-5">// &quot;starting&quot; | &quot;live&quot; | &quot;closed&quot;</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+<li><strong>Check if tunnel is active:</strong><pre><code class="ts"><span class="hl-1">tunnel.</span><span class="hl-0">isActive</span><span class="hl-1">(); </span><span class="hl-5">// true or false</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+<li><strong>Stop a tunnel:</strong><pre><code class="ts"><span class="hl-1">tunnel.</span><span class="hl-0">stop</span><span class="hl-1">();</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+<li><strong>Close all tunnels:</strong><pre><code class="ts"><span class="hl-1">pinggy.</span><span class="hl-0">closeAllTunnels</span><span class="hl-1">();</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+</ul>
+<hr>
+<h2 id="advanced-features" class="tsd-anchor-link">Advanced Features<a href="#advanced-features" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<li><strong>Start web debugging:</strong><pre><code class="ts"><span class="hl-1">tunnel.</span><span class="hl-0">startWebDebugging</span><span class="hl-1">(</span><span class="hl-4">8080</span><span class="hl-1">); </span><span class="hl-5">// Starts web debugging on localhost:8080</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+<li><strong>Request additional forwarding:</strong><pre><code class="ts"><span class="hl-1">tunnel.</span><span class="hl-0">tunnelRequestAdditionalForwarding</span><span class="hl-1">(</span><br/><span class="hl-1">  </span><span class="hl-2">&quot;custom.pinggy.io:443&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-2">&quot;localhost:6000&quot;</span><br/><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+</ul>
+<hr>
+<h2 id="api-reference" class="tsd-anchor-link">API Reference<a href="#api-reference" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><h3 id="imports" class="tsd-anchor-link">Imports<a href="#imports" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><pre><code class="ts"><span class="hl-3">import</span><span class="hl-1"> {</span><br/><span class="hl-1">  pinggy,</span><br/><span class="hl-1">  TunnelInstance,</span><br/><span class="hl-1">  </span><span class="hl-3">type</span><span class="hl-1"> PinggyOptions,</span><br/><span class="hl-1">  listen,</span><br/><span class="hl-1">} </span><span class="hl-3">from</span><span class="hl-1"> </span><span class="hl-2">&quot;@pinggy/pinggy&quot;</span><span class="hl-1">;</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="pinggy" class="tsd-anchor-link"><code>pinggy</code><a href="#pinggy" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><ul>
+<li><code>createTunnel(options: PinggyOptions): TunnelInstance</code> — Create a new tunnel (does not start it).</li>
+<li><code>forward(options: PinggyOptions): Promise&lt;TunnelInstance&gt;</code> — Create and start a tunnel, returns the instance when ready.</li>
+<li><code>closeAllTunnels(): void</code> — Stop and remove all tunnels.</li>
+</ul>
+<h3 id="tunnelinstance" class="tsd-anchor-link"><code>TunnelInstance</code><a href="#tunnelinstance" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><ul>
+<li><code>start(): Promise&lt;string[]&gt;</code> — Start the tunnel.</li>
+<li><code>stop(): void</code> — Stop the tunnel and clean up resources.</li>
+<li><code>isActive(): boolean</code> — Check if the tunnel is active.</li>
+<li><code>getStatus(): &quot;starting&quot; | &quot;live&quot; | &quot;closed&quot;</code> — Get the tunnel's current status.</li>
+<li><code>urls(): string[]</code> — <strong>Get the array of public addresses returned by the tunnel's primary forwarding callback.</strong></li>
+<li><code>getServerAddress(): string | null</code> — <strong>Get the address of the Pinggy backend server this tunnel is connected to.</strong></li>
+<li><code>getToken(): string | null</code> — Get the tunnel token.</li>
+<li><code>startWebDebugging(port: number): void</code> — Start web debugging on a local port.</li>
+<li><code>tunnelRequestAdditionalForwarding(hostname: string, target: string): void</code> — Request additional forwarding.</li>
+</ul>
+<h3 id="pinggyoptions" class="tsd-anchor-link"><code>PinggyOptions</code><a href="#pinggyoptions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><p>The <code>PinggyOptions</code> interface defines all available configuration options for creating a tunnel. Here are the available fields:</p>
+<pre><code class="ts"><span class="hl-3">interface</span><span class="hl-1"> </span><span class="hl-0">PinggyOptions</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-6">token</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">; </span><span class="hl-5">// Optional authentication token for the tunnel</span><br/><span class="hl-1">  </span><span class="hl-6">serverAddress</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">; </span><span class="hl-5">// Custom Pinggy server address</span><br/><span class="hl-1">  </span><span class="hl-6">sniServerName</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">; </span><span class="hl-5">// SNI server name for TLS</span><br/><span class="hl-1">  </span><span class="hl-6">forwardTo</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">; </span><span class="hl-5">// Local address to forward traffic to (e.g., &quot;localhost:3000&quot;)</span><br/><span class="hl-1">  </span><span class="hl-6">debug</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">boolean</span><span class="hl-1">; </span><span class="hl-5">// Enable debug logging for this tunnel</span><br/><span class="hl-1">  </span><span class="hl-6">debuggerPort</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">number</span><span class="hl-1">; </span><span class="hl-5">// Port for web debugging</span><br/><span class="hl-1">  </span><span class="hl-6">type</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-2">&quot;tcp&quot;</span><span class="hl-1"> </span><span class="hl-3">|</span><span class="hl-1"> </span><span class="hl-2">&quot;tls&quot;</span><span class="hl-1"> </span><span class="hl-3">|</span><span class="hl-1"> </span><span class="hl-2">&quot;http&quot;</span><span class="hl-1"> </span><span class="hl-3">|</span><span class="hl-1"> </span><span class="hl-2">&quot;udp&quot;</span><span class="hl-1">; </span><span class="hl-5">// Tunnel protocol type</span><br/><span class="hl-1">  </span><span class="hl-6">ipWhitelist</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">[]; </span><span class="hl-5">// List of allowed client IPs</span><br/><span class="hl-1">  </span><span class="hl-6">basicAuth</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-0">Record</span><span class="hl-1">&lt;</span><span class="hl-4">string</span><span class="hl-1">, </span><span class="hl-4">string</span><span class="hl-1">&gt;; </span><span class="hl-5">// Basic authentication users (username: password)</span><br/><span class="hl-1">  </span><span class="hl-6">bearerAuth</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">[]; </span><span class="hl-5">// Bearer tokens for authentication</span><br/><span class="hl-1">  </span><span class="hl-6">headerModification</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-0">HeaderModification</span><span class="hl-1">[]; </span><span class="hl-5">// Modify headers (add, remove, update)</span><br/><span class="hl-1">  </span><span class="hl-6">xff</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">boolean</span><span class="hl-1">; </span><span class="hl-5">// Enable X-Forwarded-For header</span><br/><span class="hl-1">  </span><span class="hl-6">httpsOnly</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">boolean</span><span class="hl-1">; </span><span class="hl-5">// Only allow HTTPS traffic</span><br/><span class="hl-1">  </span><span class="hl-6">fullRequestUrl</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">boolean</span><span class="hl-1">; </span><span class="hl-5">// Provide full request URL to backend</span><br/><span class="hl-1">  </span><span class="hl-6">allowPreflight</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">boolean</span><span class="hl-1">; </span><span class="hl-5">// Allow CORS preflight requests</span><br/><span class="hl-1">  </span><span class="hl-6">noReverseProxy</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">boolean</span><span class="hl-1">; </span><span class="hl-5">// Disable reverse proxy behavior</span><br/><span class="hl-1">  </span><span class="hl-6">cmd</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">; </span><span class="hl-5">// Optional command prefix</span><br/><span class="hl-1">  </span><span class="hl-6">ssl</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">boolean</span><span class="hl-1">; </span><span class="hl-5">// Use SSL for tunnel setup</span><br/><span class="hl-1">}</span><br/><br/><span class="hl-3">interface</span><span class="hl-1"> </span><span class="hl-0">HeaderModification</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-6">key</span><span class="hl-3">:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">;</span><br/><span class="hl-1">  </span><span class="hl-6">value</span><span class="hl-3">?:</span><span class="hl-1"> </span><span class="hl-4">string</span><span class="hl-1">;</span><br/><span class="hl-1">  </span><span class="hl-6">action</span><span class="hl-3">:</span><span class="hl-1"> </span><span class="hl-2">&quot;add&quot;</span><span class="hl-1"> </span><span class="hl-3">|</span><span class="hl-1"> </span><span class="hl-2">&quot;remove&quot;</span><span class="hl-1"> </span><span class="hl-3">|</span><span class="hl-1"> </span><span class="hl-2">&quot;update&quot;</span><span class="hl-1">;</span><br/><span class="hl-1">}</span>
+</code><button type="button">Copy</button></pre>
+
+<p><strong>Descriptions:</strong></p>
+<ul>
+<li><code>token</code>: Use this to authenticate your tunnel with a Pinggy token.</li>
+<li><code>serverAddress</code>: Specify a custom Pinggy server if needed.</li>
+<li><code>sniServerName</code>: For advanced TLS/SNI routing.</li>
+<li><code>forwardTo</code>: The local address (host:port) to forward incoming traffic to.</li>
+<li><code>debug</code>: Enable debug logging for this tunnel instance.</li>
+<li><code>debuggerPort</code>: Port to use for web debugging.</li>
+<li><code>type</code>: Choose the protocol for your tunnel (<code>tcp</code>, <code>tls</code>, <code>http</code>, or <code>udp</code>).</li>
+<li><code>ipWhitelist</code>: Restrict access to specific client IPs.</li>
+<li><code>basicAuth</code>: Provide a map of usernames to passwords for HTTP basic authentication.</li>
+<li><code>bearerAuth</code>: List of bearer tokens for HTTP authentication.</li>
+<li><code>headerModification</code>: Modify HTTP headers (add, remove, update) for incoming requests.</li>
+<li><code>xff</code>: Enable the X-Forwarded-For header for client IP forwarding.</li>
+<li><code>httpsOnly</code>: Only allow HTTPS connections to your tunnel.</li>
+<li><code>fullRequestUrl</code>: Pass the full request URL to your backend.</li>
+<li><code>allowPreflight</code>: Allow CORS preflight (OPTIONS) requests.</li>
+<li><code>noReverseProxy</code>: Disable reverse proxy features if not needed.</li>
+<li><code>cmd</code>: Optional command prefix for advanced use.</li>
+<li><code>ssl</code>: Use SSL for tunnel setup and communication.</li>
+</ul>
+<hr>
+<h2 id="best-practices" class="tsd-anchor-link">Best Practices<a href="#best-practices" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<li>Always call <code>stop()</code> on tunnels you no longer need to free resources.</li>
+<li>Use <code>getStatus()</code> to monitor tunnel lifecycle.</li>
+<li>Use <code>pinggy.closeAllTunnels()</code> before application exit to ensure cleanup.</li>
+<li>Prefer <code>urls()</code> to get all available public addresses for your tunnel.</li>
+<li>Use <code>getServerAddress()</code> only if you need to know which Pinggy backend server your tunnel is connected to (for diagnostics or advanced use).</li>
+</ul>
+<hr>
+<h2 id="troubleshooting" class="tsd-anchor-link">Troubleshooting<a href="#troubleshooting" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><ul>
+<li>If you encounter errors, check your local server is running and accessible.</li>
+<li>For advanced debugging, enable logs in your application (see SDK source for details).</li>
+<li><strong>Enable Debug Logs:</strong>
+To get detailed logs for troubleshooting, enable debug logging:<pre><code class="ts"><span class="hl-1">pinggy.</span><span class="hl-0">setDebugLogging</span><span class="hl-1">(</span><span class="hl-4">true</span><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+This will print detailed debug information to the console. To turn off debug logs, call:<pre><code class="ts"><span class="hl-1">pinggy.</span><span class="hl-0">setDebugLogging</span><span class="hl-1">(</span><span class="hl-4">false</span><span class="hl-1">);</span>
+</code><button type="button">Copy</button></pre>
+
+</li>
+</ul>
+</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-alpha" name="alpha"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Alpha</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-beta" name="beta" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Beta</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#pinggy-nodejs-sdk"><span>Pinggy <wbr/>Node.js <wbr/>SDK</span></a><ul><li><a href="#installation"><span>Installation</span></a></li><li><a href="#quick-start"><span>Quick <wbr/>Start</span></a></li><li><ul><li><a href="#import-the-sdk"><span>Import the <wbr/>SDK</span></a></li><li><a href="#create-and-start-a-tunnel"><span>Create and <wbr/>Start a <wbr/>Tunnel</span></a></li></ul></li><li><a href="#managing-multiple-tunnels"><span>Managing <wbr/>Multiple <wbr/>Tunnels</span></a></li><li><a href="#examples"><span>Examples</span></a></li><li><ul><li><a href="#available-examples"><span>Available <wbr/>Examples</span></a></li></ul></li><li><a href="#tunnel-management"><span>Tunnel <wbr/>Management</span></a></li><li><a href="#advanced-features"><span>Advanced <wbr/>Features</span></a></li><li><a href="#api-reference"><span>API <wbr/>Reference</span></a></li><li><ul><li><a href="#imports"><span>Imports</span></a></li><li><a href="#pinggy"><span>pinggy</span></a></li><li><a href="#tunnelinstance"><span>Tunnel<wbr/>Instance</span></a></li><li><a href="#pinggyoptions"><span>Pinggy<wbr/>Options</span></a></li></ul></li><li><a href="#best-practices"><span>Best <wbr/>Practices</span></a></li><li><a href="#troubleshooting"><span>Troubleshooting</span></a></li></ul></div></details></div><div class="site-menu"><nav id="tsd-sidebar-links" class="tsd-navigation"><a href="https://github.com/Pinggy-io/sdk-nodejs" class="tsd-nav-link">GitHub</a><a href="https://www.npmjs.com/package/@pinggy/pinggy" class="tsd-nav-link">NPM</a></nav><nav class="tsd-navigation"><a href="modules.html">Pinggy SDK - v0.1.3</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer><p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer><div class="overlay"></div><script>
+          try {
+            const generateLinkElement = document.querySelector(".tsd-generator a");
+            const link = document.createElement("a");
+            Object.assign(link, {
+              href: "https://github.com/dmnsgn/typedoc-material-theme",
+              target: "_blank",
+              rel: "noreferrer",
+              innerText: "typedoc-material-theme."
+            });
+            generateLinkElement.insertAdjacentElement("afterend", link);
+            generateLinkElement.insertAdjacentText("afterend", " with ");
+          } catch (error) {
+
+          }
+        </script></body></html>
