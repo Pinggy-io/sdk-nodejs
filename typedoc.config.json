@@ -10,8 +10,7 @@
   "excludePrivate": true,
   "excludeInternal": true,
   "treatWarningsAsErrors": false,
-  "plugin": ["typedoc-material-theme"],
-  "themeColor": "#cb9820",
+  "plugin": ["typedoc-github-theme"],
   "navigationLinks": {
     "GitHub": "https://github.com/Pinggy-io/sdk-nodejs",
     "NPM": "https://www.npmjs.com/package/@pinggy/pinggy"
