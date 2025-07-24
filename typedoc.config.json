@@ -1,0 +1,65 @@
+{
+  "entryPoints": ["./src/index.ts"],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "includeVersion": true,
+  "name": "Pinggy SDK",
+  "readme": "./README.md",
+  "disableSources": false,
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "treatWarningsAsErrors": false,
+  "plugin": ["typedoc-github-theme"],
+  "navigationLinks": {
+    "GitHub": "https://github.com/Pinggy-io/sdk-nodejs",
+    "NPM": "https://www.npmjs.com/package/@pinggy/pinggy"
+  },
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "categorizeByGroup": true,
+  "groupOrder": [
+    "Classes",
+    "Functions",
+    "Interfaces",
+    "Variables",
+    "Type Aliases"
+  ],
+  "defaultCategory": "Other",
+  "visibilityFilters": {
+    "protected": true,
+    "private": false,
+    "inherited": true,
+    "external": true,
+    "@alpha": false,
+    "@beta": true
+  },
+  "searchInComments": true,
+  "darkHighlightTheme": "github-dark",
+  "lightHighlightTheme": "github-light",
+  "sort": ["kind", "static-first", "alphabetical"],
+  "tsconfig": "./tsconfig.json",
+  "validation": {
+    "invalidLink": true,
+    "notExported": true
+  },
+  "externalSymbolLinkMappings": {
+    "@pinggy/pinggy": {
+      "Pinggy": "#",
+      "Config": "#",
+      "Tunnel": "#",
+      "Config.getServerAddress": "#",
+      "Config.getToken": "#",
+      "Config.getArgument": "#",
+      "Tunnel.start": "#",
+      "Tunnel.getUrls": "#",
+      "Tunnel.tunnelStop": "#",
+      "Tunnel.tunnelIsActive": "#",
+      "Tunnel.status": "#",
+      "Tunnel.startWebDebugging": "#",
+      "Tunnel.tunnelRequestAdditionalForwarding": "#"
+    }
+  }
+}

@@ -2,10 +2,22 @@ import { Logger } from "../utils/logger";
 import { PinggyNative, Tunnel as ITunnel } from "../types";
 import { PinggyError } from "./exception";
 
+/**
+ * Represents a Pinggy tunnel instance, managing its lifecycle and forwarding.
+ * Handles authentication, forwarding, and additional tunnel operations via the native addon.
+ * Implements the Tunnel interface.
+ *
+ * @group Classes
+ * @public
+ */
 export class Tunnel implements ITunnel {
+  /** Reference to the native tunnel object. */
   public tunnelRef: number;
+  /** Whether the tunnel is authenticated. */
   public authenticated: boolean;
+  /** Whether primary forwarding is complete. */
   public primaryForwardingDone: boolean;
+  /** Current status of the tunnel. */
   public status: "starting" | "live" | "closed";
   private addon: PinggyNative;
   private authPromise: Promise<void>;
@@ -20,6 +32,11 @@ export class Tunnel implements ITunnel {
   private _urls: string[] = [];
   private intentionallyStopped: boolean = false; // Track intentional stops
 
+  /**
+   * Creates a new Tunnel instance and initializes it with the provided config reference.
+   * @param {PinggyNative} addon - The native addon instance.
+   * @param {number} configRef - The reference to the native config object.
+   */
   constructor(addon: PinggyNative, configRef: number) {
     this.addon = addon;
     this.tunnelRef = this.initialize(configRef);
@@ -62,6 +79,11 @@ export class Tunnel implements ITunnel {
     }
   }
 
+  /**
+   * Starts the tunnel, handles authentication and forwarding, and returns the public URLs.
+   * @returns {Promise<string[]>} Resolves with the list of public tunnel URLs.
+   * @throws {PinggyError|Error} If tunnel connection or forwarding fails.
+   */
   public async start(): Promise<string[]> {
     if (!this.tunnelRef) {
       throw new Error("Tunnel not initialized.");
@@ -247,6 +269,12 @@ export class Tunnel implements ITunnel {
     poll();
   }
 
+  /**
+   * Starts web debugging for the tunnel on the specified local port.
+   * @param {number} listeningPort - The local port to start web debugging on.
+   * @returns {Promise<void>} Resolves when web debugging is started.
+   * @throws {PinggyError|Error} If web debugging fails to start.
+   */
   public async startWebDebugging(listeningPort: number): Promise<void> {
     if (!this.tunnelRef) {
       Logger.error("Tunnel not initialized.");
@@ -271,6 +299,13 @@ export class Tunnel implements ITunnel {
     }
   }
 
+  /**
+   * Requests additional forwarding for the tunnel.
+   * @param {string} remoteAddress - The remote address to forward from.
+   * @param {string} localAddress - The local address to forward to.
+   * @returns {Promise<void>} Resolves when additional forwarding is set up.
+   * @throws {PinggyError|Error} If additional forwarding fails.
+   */
   public async tunnelRequestAdditionalForwarding(
     remoteAddress: string,
     localAddress: string
@@ -302,6 +337,11 @@ export class Tunnel implements ITunnel {
     }
   }
 
+  /**
+   * Stops the tunnel and cleans up resources.
+   * @returns {boolean} True if the tunnel was stopped successfully, false otherwise.
+   * @throws {PinggyError|Error} If stopping the tunnel fails.
+   */
   public tunnelStop(): boolean {
     if (!this.tunnelRef) {
       Logger.error("Tunnel not initialized.");
@@ -332,6 +372,10 @@ export class Tunnel implements ITunnel {
     }
   }
 
+  /**
+   * Checks if the tunnel is currently active.
+   * @returns {boolean} True if the tunnel is active, false otherwise.
+   */
   public tunnelIsActive(): boolean {
     if (!this.tunnelRef) {
       Logger.error("Tunnel not initialized.");
@@ -347,6 +391,10 @@ export class Tunnel implements ITunnel {
     }
   }
 
+  /**
+   * Gets the list of public URLs for the tunnel.
+   * @returns {string[]} The list of public tunnel URLs.
+   */
   public getUrls(): string[] {
     return this._urls;
   }

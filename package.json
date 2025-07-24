@@ -12,7 +12,8 @@
     "package": "node-pre-gyp package",
     "publish-binary": "node-pre-gyp publish",
     "test": "jest",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "docs": "typedoc --options typedoc.config.json"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,8 @@
     "tar": "^7.4.3",
     "ts-jest": "^29.3.1",
     "tsup": "^8.5.0",
+    "typedoc": "^0.28.7",
+    "typedoc-github-theme": "^0.3.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {

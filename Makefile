@@ -17,3 +17,12 @@ install:
 	npm install
 
 clean-install: clean install
+
+build:
+	node-gyp clean configure build
+	node ./copy.js
+	npm run build
+	npm pack
+
+clean-lib:
+	rm -rf build lib dist pinggy-*.tgz

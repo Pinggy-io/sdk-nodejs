@@ -4,15 +4,35 @@ import { Logger } from "../utils/logger";
 import { PinggyNative, PinggyOptions, Config as IConfig } from "../types";
 import { PinggyError } from "./exception";
 
+/**
+ * Represents the configuration for a Pinggy tunnel.
+ * Handles setting up and managing tunnel options and arguments for the native addon.
+ *
+ * @group Classes
+ * @public
+ */
 export class Config implements IConfig {
+  /** Reference to the native config object. */
   public configRef: number;
+  /** Native addon instance. */
   private addon: PinggyNative;
 
+  /**
+   * Creates a new Config instance and initializes it with the provided options.
+   * @param addon - The native addon instance.
+   * @param {PinggyOptions} [options={}] - The tunnel configuration options.
+   */
   constructor(addon: PinggyNative, options: PinggyOptions = {}) {
     this.addon = addon;
     this.configRef = this.initialize(options);
   }
 
+  /**
+   * Initializes the configuration in the native addon and applies all options.
+   * @private
+   * @param {PinggyOptions} options - The tunnel configuration options.
+   * @returns {number} The reference to the native config object.
+   */
   private initialize(options: PinggyOptions): number {
     try {
       const configRef = this.addon.createConfig();
@@ -82,6 +102,31 @@ export class Config implements IConfig {
         }
       }
 
+      // Set force configuration if provided
+      if (options.force !== undefined) {
+        try {
+          this.addon.configSetForce(configRef, options.force);
+          Logger.info(`Force configuration set to: ${options.force}`);
+        } catch (e) {
+          const lastEx = this.addon.getLastException();
+          if (lastEx) {
+            const pinggyError = new PinggyError(lastEx);
+            Logger.error("Error setting force configuration:", pinggyError);
+            throw pinggyError;
+          } else {
+            if (e instanceof Error) {
+              Logger.error("Error setting force configuration:", e);
+            } else {
+              Logger.error(
+                "Error setting force configuration:",
+                new Error(String(e))
+              );
+            }
+            throw e;
+          }
+        }
+      }
+
       if (type === "udp") {
         try {
           this.addon.configSetUdpForwardTo(configRef, forwardTo);
@@ -141,6 +186,11 @@ export class Config implements IConfig {
     }
   }
 
+  /**
+   * Prepares and sets the argument string for the native config, based on options.
+   * @param {number} configRef - The native config reference.
+   * @param {PinggyOptions} options - The tunnel configuration options.
+   */
   public prepareAndSetArgument(configRef: number, options: PinggyOptions) {
     const val: string[] = [];
 
@@ -222,6 +272,10 @@ export class Config implements IConfig {
     this.addon.configSetArgument(configRef, argument);
   }
 
+  /**
+   * Sets the authentication token for the tunnel.
+   * @param {string} token - The authentication token.
+   */
   public setToken(token: string): void {
     try {
       if (this.configRef) this.addon.configSetToken(this.configRef, token);
@@ -230,6 +284,10 @@ export class Config implements IConfig {
     }
   }
 
+  /**
+   * Sets the server address for the tunnel.
+   * @param {string} [address="a.pinggy.io:443"] - The server address.
+   */
   public setServerAddress(address: string = "a.pinggy.io:443"): void {
     try {
       if (this.configRef)
@@ -239,6 +297,10 @@ export class Config implements IConfig {
     }
   }
 
+  /**
+   * Gets the current server address.
+   * @returns {string | null} The server address, or null if unavailable.
+   */
   public getServerAddress(): string | null {
     try {
       return this.configRef
@@ -250,6 +312,10 @@ export class Config implements IConfig {
     }
   }
 
+  /**
+   * Gets the current SNI server name.
+   * @returns {string | null} The SNI server name, or null if unavailable.
+   */
   public getSniServerName(): string | null {
     try {
       return this.configRef
@@ -261,6 +327,10 @@ export class Config implements IConfig {
     }
   }
 
+  /**
+   * Gets the current authentication token.
+   * @returns {string | null} The authentication token, or null if unavailable.
+   */
   public getToken(): string | null {
     try {
       return this.configRef ? this.addon.configGetToken(this.configRef) : null;
@@ -270,6 +340,10 @@ export class Config implements IConfig {
     }
   }
 
+  /**
+   * Gets the current argument string for the tunnel configuration.
+   * @returns {string | null} The argument string, or null if unavailable.
+   */
   public getArgument(): string | null {
     try {
       return this.configRef
@@ -277,6 +351,50 @@ export class Config implements IConfig {
         : null;
     } catch (e) {
       Logger.error("Error getting argument:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Sets the force configuration for the tunnel.
+   * When enabled, forces the tunnel to use specific settings or bypass certain restrictions.
+   * @param {boolean} force - Whether to enable force mode.
+   */
+  public setForce(force: boolean): void {
+    try {
+      if (this.configRef) {
+        this.addon.configSetForce(this.configRef, force);
+        Logger.info(`Force configuration set to: ${force}`);
+      }
+    } catch (e) {
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error setting force configuration:", pinggyError);
+        throw pinggyError;
+      } else {
+        if (e instanceof Error) {
+          Logger.error("Error setting force configuration:", e);
+        } else {
+          Logger.error(
+            "Error setting force configuration:",
+            new Error(String(e))
+          );
+        }
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Gets the current force configuration setting.
+   * @returns {boolean | null} The force setting, or null if unavailable.
+   */
+  public getForce(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetForce(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting force configuration:", e as Error);
       return null;
     }
   }

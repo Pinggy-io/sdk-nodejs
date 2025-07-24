@@ -2,9 +2,31 @@ import { pinggy, PinggyOptions, TunnelInstance } from "../index";
 import * as http from "http";
 
 /**
- * listen overloads:
- * - listen(app: Express, options?: PinggyOptions): Promise<http.Server & { tunnel: TunnelInstance }>
- * - listen(server: http.Server, options?: PinggyOptions): Promise<http.Server & { tunnel: TunnelInstance }>
+ * Starts an HTTP server (or uses an existing one) and exposes it via a Pinggy tunnel.
+ *
+ * @group Functions
+ * @public
+ *
+ * @remarks
+ * This function provides a utility to expose an Express app or http.Server via a Pinggy tunnel.
+ * It supports both Express applications and native Node.js http.Server instances.
+ *
+ * @param app - The Express app or http.Server to expose.
+ * @param options - Optional tunnel configuration options.
+ * @returns Promise that resolves with the HTTP server instance, with an added `tunnel` property of type {@link TunnelInstance}.
+ * @throws Error if the input is not an Express app or http.Server, or if tunnel setup fails.
+ *
+ * @example
+ * ```typescript
+ * import express from 'express';
+ * import { listen } from '@pinggy/pinggy';
+ *
+ * const app = express();
+ * app.get('/', (req, res) => res.send('Hello World!'));
+ *
+ * const server = await listen(app, { token: 'your-token' });
+ * console.log('Tunnel URLs:', server.tunnel.urls());
+ * ```
  */
 export async function listen(
   app: http.Server | any,
