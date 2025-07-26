@@ -275,7 +275,7 @@ export interface PinggyNative {
   /** Enable or disable debug logging. */
   setDebugLogging(enabled: boolean): void;
   /** Get the Pinggy SDK version. */
-  getVersion(): string;
+  getPinggyVersion(): string;
 }
 
 /**
