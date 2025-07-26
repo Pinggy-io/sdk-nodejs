@@ -1,5 +1,8 @@
 import { pinggy, PinggyOptions } from "./src/index";
 
+const version = pinggy.getPinggyVersion();
+console.log("Pinggy version:", version);
+
 (async () => {
   const options: PinggyOptions = {
     forwardTo: "localhost:5173",
@@ -17,11 +20,13 @@ import { pinggy, PinggyOptions } from "./src/index";
     // headerModification: ["x-custom-header: value"],
   };
   const tunnel = pinggy.createTunnel(options);
+
   await tunnel.start();
 
   console.log("Tunnel addresses:", tunnel.urls());
 
   tunnel.startWebDebugging(3001);
+  pinggy.setDebugLogging(true);
 
   // console.log("about to stop tunnel");
   // setTimeout(async () => {

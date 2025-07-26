@@ -101,7 +101,10 @@ export class Pinggy {
    * @returns {void}
    * @see {@link pinggy}
    */
-  public setDebugLogging(enabled: boolean): void {
+  public setDebugLogging(enabled: boolean = false): void {
+    // enable libpinggy logs
+    Pinggy.addon.setLogEnable(enabled);
+
     // Set debug state for native C code
     Pinggy.addon.setDebugLogging(enabled);
 
@@ -120,7 +123,7 @@ export class Pinggy {
    */
   public getPinggyVersion(): string {
     try {
-      return Pinggy.addon.getVersion?.() || "unknown";
+      return Pinggy.addon.getPinggyVersion();
     } catch (error) {
       console.warn("Failed to get Pinggy version:", error);
       return "unknown";
