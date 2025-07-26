@@ -33,8 +33,10 @@ export class TunnelInstance {
   constructor(addon: PinggyNative, options: PinggyOptions) {
     this.addon = addon;
     initExceptionHandling(this.addon);
-    // Disable logs
-    this.addon.setLogEnable(true);
+
+    // set debug logging to false initially
+    this.addon.setLogEnable(false);
+
     try {
       this.config = new Config(this.addon, options);
       if (!this.config.configRef)
