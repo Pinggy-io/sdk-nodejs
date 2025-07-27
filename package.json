@@ -1,6 +1,6 @@
 {
   "name": "@pinggy/pinggy",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Pinggy SDK for Nodejs",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
