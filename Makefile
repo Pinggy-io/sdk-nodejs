@@ -14,7 +14,7 @@ clean:
 	node-gyp clean
 
 install:
-	npm install
+	npm install --ignore-scripts
 
 clean-install: clean install
 
