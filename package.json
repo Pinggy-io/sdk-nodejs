@@ -53,5 +53,8 @@
     "module_path": "./lib/",
     "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz",
     "host": "https://github.com/Pinggy-io/sdk-nodejs/releases/download/{version}/"
+  },
+  "bin": {
+    "pinggy": "./dist/cli.js"
   }
 }
