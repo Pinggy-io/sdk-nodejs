@@ -1,5 +1,5 @@
 import { Logger } from "../utils/logger";
-import {PinggyNative, Tunnel as ITunnel, TunnelStatus} from "../types";
+import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
 import { PinggyError } from "./exception";
 
 /**
@@ -90,7 +90,7 @@ export class Tunnel implements ITunnel {
     }
 
     try {
-        this.status = TunnelStatus.STARTING;
+      this.status = TunnelStatus.STARTING;
       this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
         Logger.info("Tunnel authenticated, requesting primary forwarding...");
         this.authenticated = true;
