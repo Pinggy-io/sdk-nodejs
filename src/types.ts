@@ -332,3 +332,15 @@ export interface Tunnel {
   /** Check if the tunnel is active. */
   tunnelIsActive(): boolean;
 }
+/**
+ * Tunnel lifecycle statuses.
+ *
+ * @group Enums
+ * @public
+ */
+export enum TunnelStatus {
+    IDLE = "idle",
+    STARTING = "starting",
+    LIVE = "live",
+    CLOSED = "closed",
+}
