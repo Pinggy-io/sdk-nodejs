@@ -78,7 +78,7 @@ describe("Tunnel Clean Stop", () => {
     jest.clearAllMocks();
 
     // Create tunnel instance
-    tunnel = new Tunnel(mockAddon, 1);
+    tunnel = new Tunnel(mockAddon as any, 1);
   });
 
   afterEach(() => {

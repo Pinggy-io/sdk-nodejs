@@ -11,7 +11,7 @@ clean:
 	rm -f pinggy.dylib
 	rm -f ../.prebuild-step-done
 	rm -f .prebuild-step-done
-	node-gyp clean
+	npx node-gyp clean
 
 install:
 	npm install --ignore-scripts
@@ -19,7 +19,7 @@ install:
 clean-install: clean install
 
 build:
-	node-gyp clean configure build
+	npx node-gyp clean configure build
 	node ./copy.js
 	npm run build
 	npm pack
