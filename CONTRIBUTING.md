@@ -117,3 +117,11 @@ We welcome pull requests! Before submitting a pull request, please ensure the fo
     git push origin my-feature-branch
     ```
 9.  **Submit a pull request:** Open a pull request to the `main` branch of the original repository.
+
+
+## Architecture
+
+Core functionality is derived from `libpinggy` (https://github.com/Pinggy-io/libpinggy).
+
+We use [Node-API](https://nodejs.org/api/n-api.html#node-api) to call functions for `.so` files or `.dll` files. The headers of the functions are available in `pinggy.h`. Note that we may need to replace this `pinggy.h` file periodically with an updated version from `libpinggy` repo (https://github.com/Pinggy-io/libpinggy/blob/main/src/sdk/pinggy.h).
+
