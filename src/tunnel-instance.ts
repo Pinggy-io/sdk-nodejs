@@ -1,4 +1,4 @@
-import { PinggyNative, PinggyOptions } from "./types";
+import { PinggyNative, PinggyOptions, TunnelStatus } from "./types";
 import { Config } from "./bindings/config";
 import { Tunnel } from "./bindings/tunnel";
 import { Logger } from "./utils/logger";
@@ -110,8 +110,8 @@ export class TunnelInstance {
    *
    * @returns {"starting" | "live" | "closed"} The tunnel status.
    */
-  public getStatus(): "starting" | "live" | "closed" {
-    return this.tunnel?.status ?? "closed";
+  public getStatus(): TunnelStatus {
+    return this.tunnel?.status ?? TunnelStatus.CLOSED;
   }
 
   /**

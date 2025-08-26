@@ -1,5 +1,5 @@
 import { Logger } from "../utils/logger";
-import { PinggyNative, Tunnel as ITunnel } from "../types";
+import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
 import { PinggyError } from "./exception";
 
 /**
@@ -18,7 +18,7 @@ export class Tunnel implements ITunnel {
   /** Whether primary forwarding is complete. */
   public primaryForwardingDone: boolean;
   /** Current status of the tunnel. */
-  public status: "starting" | "live" | "closed";
+  public status: TunnelStatus;
   private addon: PinggyNative;
   private authPromise: Promise<void>;
   private forwardingPromise: Promise<string[]>;
@@ -42,7 +42,7 @@ export class Tunnel implements ITunnel {
     this.tunnelRef = this.initialize(configRef);
     this.authenticated = false;
     this.primaryForwardingDone = false;
-    this.status = "starting";
+    this.status = TunnelStatus.IDLE;
 
     // Create promises that will be resolved when authentication and forwarding complete
     this.authPromise = new Promise((resolve, reject) => {
@@ -90,6 +90,7 @@ export class Tunnel implements ITunnel {
     }
 
     try {
+      this.status = TunnelStatus.STARTING;
       this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
         Logger.info("Tunnel authenticated, requesting primary forwarding...");
         this.authenticated = true;
@@ -205,7 +206,7 @@ export class Tunnel implements ITunnel {
       // Wait for forwarding to complete and return the addresses
       return await this.forwardingPromise;
     } catch (error) {
-      this.status = "closed";
+      this.status = TunnelStatus.CLOSED;
       const lastEx = this.addon.getLastException();
       if (lastEx) {
         const pinggyError = new PinggyError(lastEx);
@@ -235,15 +236,15 @@ export class Tunnel implements ITunnel {
           if (!this.intentionallyStopped) {
             Logger.error("Tunnel error detected, stopping polling.");
           }
-          this.status = "closed";
+          this.status = TunnelStatus.CLOSED;
           return; // STOP polling
         }
-        if (this.status === "starting") {
-          this.status = "live";
+        if (this.status === TunnelStatus.STARTING) {
+          this.status = TunnelStatus.LIVE;
         }
         shouldContinue = true;
       } catch (e) {
-        this.status = "closed";
+        this.status = TunnelStatus.CLOSED;
 
         // Only log errors if tunnel was not intentionally stopped
         if (!this.intentionallyStopped) {
@@ -350,7 +351,7 @@ export class Tunnel implements ITunnel {
     try {
       // Mark as intentionally stopped before calling native stop
       this.intentionallyStopped = true;
-      this.status = "closed";
+      this.status = TunnelStatus.CLOSED;
 
       const result = this.addon.tunnelStop(this.tunnelRef);
       if (result) {
