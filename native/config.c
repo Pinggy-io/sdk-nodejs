@@ -732,6 +732,54 @@ napi_value ConfigSetArgument(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value ConfigSetAutoReconnect(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, enable)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: enable (pinggy_bool_t / uint8_t)
+    bool enable;
+    status = napi_get_value_bool(env, args[1], &enable);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid enable argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_auto_reconnect function
+    pinggy_config_set_auto_reconnect(config, (pinggy_bool_t)enable);
+
+    // Return undefined (since the function returns void)
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
 napi_value ConfigSetSSL(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
@@ -1336,6 +1384,45 @@ napi_value ConfigGetArgument(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value ConfigGetAutoReconnect(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_get_auto_reconnect function
+    pinggy_bool_t auto_reconnect_enabled = pinggy_config_get_auto_reconnect(config);
+
+    // Return the boolean value (auto_reconnect_enabled) as a JavaScript boolean
+    napi_value result;
+    napi_get_boolean(env, auto_reconnect_enabled, &result);
+    return result;
+}
+
 napi_value ConfigGetSsl(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
@@ -1453,6 +1540,7 @@ napi_value Init1(napi_env env, napi_value exports)
         set_type_fn,
         set_force_fn,
         set_argument_fn,
+        set_auto_reconnect_fn,
         set_ssl_fn,
         set_udp_type_fn,
         set_tcp_forward_to_fn,
@@ -1470,6 +1558,7 @@ napi_value Init1(napi_env env, napi_value exports)
         get_force_fn,
         get_argument_fn,
         get_ssl_fn,
+        get_auto_reconnect_fn,
         get_insecure_fn,
         get_pinggy_version_fn;
 
@@ -1548,6 +1637,9 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigGetArgument, NULL, &get_argument_fn);
     napi_set_named_property(env, exports, "configGetArgument", get_argument_fn);
 
+    napi_create_function(env, NULL, 0, ConfigSetAutoReconnect, NULL, &set_auto_reconnect_fn);
+    napi_set_named_property(env, exports, "configSetAutoReconnect", set_auto_reconnect_fn);
+
     napi_create_function(env, NULL, 0, ConfigSetSSL, NULL, &set_ssl_fn);
     napi_set_named_property(env, exports, "configSetSSL", set_ssl_fn);
 
@@ -1568,6 +1660,9 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetType, NULL, &get_type_fn);
     napi_set_named_property(env, exports, "configGetType", get_type_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetAutoReconnect, NULL, &get_auto_reconnect_fn);
+    napi_set_named_property(env, exports, "configGetAutoReconnect", get_auto_reconnect_fn);
 
     napi_create_function(env, NULL, 0, ConfigGetSsl, NULL, &get_ssl_fn);
     napi_set_named_property(env, exports, "configGetSsl", get_ssl_fn);

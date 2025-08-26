@@ -102,6 +102,36 @@ export class Config implements IConfig {
         }
       }
 
+      // Set auto-reconnect configuration if provided
+      if (options.autoReconnect !== undefined) {
+        try {
+          this.addon.configSetAutoReconnect(configRef, options.autoReconnect);
+          Logger.info(
+            `Auto-reconnect configuration set to: ${options.autoReconnect}`
+          );
+        } catch (e) {
+          const lastEx = this.addon.getLastException();
+          if (lastEx) {
+            const pinggyError = new PinggyError(lastEx);
+            Logger.error(
+              "Error setting auto-reconnect configuration:",
+              pinggyError
+            );
+            throw pinggyError;
+          } else {
+            if (e instanceof Error) {
+              Logger.error("Error setting auto-reconnect configuration:", e);
+            } else {
+              Logger.error(
+                "Error setting auto-reconnect configuration:",
+                new Error(String(e))
+              );
+            }
+            throw e;
+          }
+        }
+      }
+
       // Set force configuration if provided
       if (options.force !== undefined) {
         try {
@@ -395,6 +425,21 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetForce(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting force configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the current auto-reconnect configuration setting.
+   * @returns {boolean | null} The auto-reconnect setting, or null if unavailable.
+   */
+  public getAutoReconnect(): boolean | null {
+    try {
+      return this.configRef
+        ? this.addon.configGetAutoReconnect(this.configRef)
+        : null;
+    } catch (e) {
+      Logger.error("Error getting auto-reconnect configuration:", e as Error);
       return null;
     }
   }

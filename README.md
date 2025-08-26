@@ -208,6 +208,7 @@ interface PinggyOptions {
   noReverseProxy?: boolean; // Disable reverse proxy behavior
   cmd?: string; // Optional command prefix
   ssl?: boolean; // Use SSL for tunnel setup
+  autoReconnect?: boolean; // Enable auto-reconnection on disconnect
 }
 
 interface HeaderModification {
@@ -237,6 +238,7 @@ interface HeaderModification {
 - `noReverseProxy`: Disable reverse proxy features if not needed.
 - `cmd`: Optional command prefix for advanced use.
 - `ssl`: Use SSL for tunnel setup and communication.
+- `autoReconnect`: Enable auto-reconnection if the tunnel disconnects unexpectedly.
 
 ---
 

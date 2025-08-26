@@ -507,7 +507,7 @@ napi_value SetPrimaryForwardingCallback(napi_env env, napi_callback_info info)
     }
 
     // Register callback with Pinggy
-    pinggy_bool_t result = pinggy_tunnel_set_primary_forwarding_succeeded_callback(tunnel, primary_forwarding_succeeded_callback, cb_data);
+    pinggy_bool_t result = pinggy_tunnel_set_on_primary_forwarding_succeeded_callback(tunnel, primary_forwarding_succeeded_callback, cb_data);
     PINGGY_DEBUG_RET(result);
     if (result != pinggy_true)
     {
@@ -617,7 +617,7 @@ napi_value SetAdditionalForwardingCallback(napi_env env, napi_callback_info info
     }
 
     // Register callback with Pinggy
-    pinggy_bool_t result = pinggy_tunnel_set_additional_forwarding_succeeded_callback(tunnel, additional_forwarding_succeeded_callback, cb_data);
+    pinggy_bool_t result = pinggy_tunnel_set_on_additional_forwarding_succeeded_callback(tunnel, additional_forwarding_succeeded_callback, cb_data);
     PINGGY_DEBUG_RET(result);
     if (result != pinggy_true)
     {
@@ -735,7 +735,7 @@ napi_value SetAuthenticatedCallback(napi_env env, napi_callback_info info)
     }
 
     // Register callback with Pinggy
-    pinggy_bool_t result = pinggy_tunnel_set_authenticated_callback(tunnel, authenticated_callback, cb_data);
+    pinggy_bool_t result = pinggy_tunnel_set_on_authenticated_callback(tunnel, authenticated_callback, cb_data);
     PINGGY_DEBUG_RET(result);
 
     // If registration failed, decrease reference count and free memory

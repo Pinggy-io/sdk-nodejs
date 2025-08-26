@@ -147,6 +147,14 @@ export interface PinggyOptions {
    */
   ssl?: boolean;
   /**
+   * Enable or disable auto reconnection.
+   *
+   * @remarks
+   * By default, auto-reconnection is disabled.
+   * @default false
+   */
+  autoReconnect?: boolean;
+  /**
    * Force specific tunnel settings or bypass certain restrictions.
    * @default false
    */
@@ -183,6 +191,10 @@ export interface PinggyNative {
   configSetUdpType(configRef: number, type: string): void;
   /** Set SSL configuration for a config. */
   configSetSsl(configRef: number, ssl: boolean): void;
+  /** Set auto-reconnect configuration for a config. */
+  configSetAutoReconnect(configRef: number, enable: boolean): void;
+  /** Get auto-reconnect configuration for a config. */
+  configGetAutoReconnect(configRef: number): boolean;
   /** Set force configuration for a config. */
   configSetForce(configRef: number, force: boolean): void;
   /** Get force configuration for a config. */
@@ -193,6 +205,8 @@ export interface PinggyNative {
   configGetServerAddress(configRef: number): string;
   /** Get the SNI server name for a config. */
   configGetSniServerName(configRef: number): string;
+  /** Get SSL configuration for a config. */
+  configGetSsl(configRef: number): boolean;
   /** Set the log file path. */
   setLogPath(path: string): void;
   /** Enable or disable logging. */
@@ -302,6 +316,8 @@ export interface Config {
   setForce(force: boolean): void;
   /** Get the force configuration. */
   getForce(): boolean | null;
+  /** Get the auto-reconnect configuration. */
+  getAutoReconnect(): boolean | null;
 }
 
 /**

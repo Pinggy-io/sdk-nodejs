@@ -101,6 +101,7 @@ interface PinggyOptions {
   type?: "http" | "tcp" | "udp";
   ssl?: boolean;
   httpsOnly?: boolean;
+  autoReconnect?: boolean;
   fullRequestUrl?: boolean;
   allowPreflight?: boolean;
   noReverseProxy?: boolean;
@@ -143,6 +144,7 @@ interface TunnelInstance {
 | `sniServerName` | `string`                   | `"a.pinggy.io"`     | SNI server name for SSL                   |
 | `type`          | `"http" \| "tcp" \| "udp"` | `"http"`            | Tunnel type with type safety              |
 | `ssl`           | `boolean`                  | `true`              | Enable/disable SSL                        |
+| `autoReconnect` | `boolean`                  | `false`             | Enable auto-reconnection on disconnect    |
 
 ### Security Options
 
@@ -199,6 +201,7 @@ import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
     token: "your-premium-token",
     type: "http", // TypeScript will ensure this is a valid type
     ssl: true,
+    autoReconnect: true,
     httpsOnly: true,
     xff: true,
     ipWhitelist: ["192.168.1.0/24", "10.0.0.1"],

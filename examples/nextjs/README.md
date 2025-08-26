@@ -42,6 +42,7 @@ if (makeListener) {
       forwardTo: `${host}:${port}`,
       // token: "your-premium-token", // Uncomment to use a premium token
       // ipWhitelist: ["192.168.1.0/24"], // Restrict access
+      // autoReconnect: true, // Automatically reconnect if the tunnel drops
       // basicAuth: { admin: "password123" }, // Add basic auth
     })
     .then((tunnel) => {

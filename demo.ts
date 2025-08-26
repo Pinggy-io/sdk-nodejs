@@ -5,7 +5,7 @@ console.log("Pinggy version:", version);
 
 (async () => {
   const options: PinggyOptions = {
-    forwardTo: "localhost:5173",
+    forwardTo: "localhost:4000",
     // token: "terminateAtUsages",
     // ssl: false,
     // type: "http", // defaults to http if not provided
@@ -18,6 +18,7 @@ console.log("Pinggy version:", version);
     // basicAuth: { username: "password" },
     // ipWhitelist: [""],
     // headerModification: ["x-custom-header: value"],
+    autoReconnect: true
   };
   const tunnel = pinggy.createTunnel(options);
 
