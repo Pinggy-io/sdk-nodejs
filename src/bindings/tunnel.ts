@@ -193,6 +193,37 @@ export class Tunnel implements ITunnel {
         }
       );
 
+      this.addon.tunnelSetOnReconnectingCallback(
+        this.tunnelRef,
+        (tunnelRef: number, retryCount: number) => {
+          Logger.info(
+            `Tunnel reconnecting: ${tunnelRef}, attempt: ${retryCount}`
+          );
+        }
+      );
+
+      this.addon.tunnelSetOnReconnectionCompletedCallback(
+        this.tunnelRef,
+        (tunnelRef: number, urls: string[]) => {
+          Logger.info(
+            `Tunnel reconnection completed: ${tunnelRef}, new URLs: ${urls.join(
+              ", "
+            )}`
+          );
+          // Update the URLs as they might have changed after reconnection
+          this._urls = urls;
+        }
+      );
+
+      this.addon.tunnelSetOnReconnectionFailedCallback(
+        this.tunnelRef,
+        (tunnelRef: number, retryCount: number) => {
+          Logger.error(
+            `Tunnel reconnection failed after ${retryCount} attempts for tunnel: ${tunnelRef}`
+          );
+        }
+      );
+
       this.addon.tunnelSetOnTunnelErrorCallback(
         this.tunnelRef,
         (

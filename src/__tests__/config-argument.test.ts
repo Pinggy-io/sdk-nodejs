@@ -63,6 +63,9 @@ describe("Config.prepareAndSetArgument", () => {
       tunnelSetAdditionalForwardingFailedCallback: jest.fn(),
       tunnelSetOnDisconnectedCallback: jest.fn(),
       tunnelSetOnWillReconnectCallback: jest.fn(),
+      tunnelSetOnReconnectingCallback: jest.fn(),
+      tunnelSetOnReconnectionCompletedCallback: jest.fn(),
+      tunnelSetOnReconnectionFailedCallback: jest.fn(),
       tunnelSetOnTunnelErrorCallback: jest.fn(),
       tunnelSetOnUsageUpdateCallback: jest.fn(),
     };

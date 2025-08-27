@@ -67,6 +67,9 @@ const mockAddon = {
   tunnelSetAdditionalForwardingFailedCallback: jest.fn(),
   tunnelSetOnDisconnectedCallback: jest.fn(),
   tunnelSetOnWillReconnectCallback: jest.fn(),
+  tunnelSetOnReconnectingCallback: jest.fn(),
+  tunnelSetOnReconnectionCompletedCallback: jest.fn(),
+  tunnelSetOnReconnectionFailedCallback: jest.fn(),
   tunnelSetOnTunnelErrorCallback: jest.fn(),
   tunnelSetOnUsageUpdateCallback: jest.fn(),
 };
@@ -246,6 +249,11 @@ describe("Tunnel Clean Stop", () => {
       ).toHaveBeenCalled();
       expect(mockAddon.tunnelSetOnDisconnectedCallback).toHaveBeenCalled();
       expect(mockAddon.tunnelSetOnWillReconnectCallback).toHaveBeenCalled();
+      expect(mockAddon.tunnelSetOnReconnectingCallback).toHaveBeenCalled();
+      expect(
+        mockAddon.tunnelSetOnReconnectionCompletedCallback
+      ).toHaveBeenCalled();
+      expect(mockAddon.tunnelSetOnReconnectionFailedCallback).toHaveBeenCalled();
       expect(mockAddon.tunnelSetOnTunnelErrorCallback).toHaveBeenCalled();
       expect(mockAddon.tunnelSetOnUsageUpdateCallback).toHaveBeenCalled();
     });

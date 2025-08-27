@@ -291,6 +291,21 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (tunnelRef: number, error: string, messages: string[]) => void
   ): void;
+  /** Set the callback for when a tunnel is reconnecting. */
+  tunnelSetOnReconnectingCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, retryCount: number) => void
+  ): void;
+  /** Set the callback for when a tunnel has reconnected. */
+  tunnelSetOnReconnectionCompletedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, urls: string[]) => void
+  ): void;
+  /** Set the callback for when a tunnel reconnection has failed. */
+  tunnelSetOnReconnectionFailedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, retryCount: number) => void
+  ): void;
   /** Set the callback for tunnel usage updates. */
   tunnelSetOnUsageUpdateCallback(
     tunnelRef: number,
