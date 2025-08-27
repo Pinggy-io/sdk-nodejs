@@ -1216,11 +1216,13 @@ napi_value TunnelSetDisconnectedCallback(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
     napi_value args[2];
-    napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    napi_status status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
 
-    if (argc < 2)
+    if (status != napi_ok || argc < 2)
     {
-        napi_throw_error(env, NULL, "Expected tunnelRef and callback");
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected tunnelRef and callback, status: %d, argc: %zu", __FILE__, __LINE__, status, argc);
+        napi_throw_error(env, NULL, error_message);
         return NULL;
     }
 
@@ -1244,6 +1246,87 @@ napi_value TunnelSetDisconnectedCallback(napi_env env, napi_callback_info info)
         on_disconnected_cb,
         cb_data);
 
+    napi_value js_result;
+    napi_get_boolean(env, result, &js_result);
+    return js_result;
+}
+
+typedef struct
+{
+    napi_env env;
+    napi_ref callback_ref;
+} will_reconnect_callback_data;
+
+void on_will_reconnect_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_const_char_p_t error, pinggy_len_t num_msgs, pinggy_char_p_p_t messages)
+{
+    will_reconnect_callback_data *cb_data = (will_reconnect_callback_data *)user_data;
+    napi_handle_scope scope;
+    napi_open_handle_scope(cb_data->env, &scope);
+
+    napi_value global;
+    napi_get_global(cb_data->env, &global);
+
+    napi_value callback;
+    napi_get_reference_value(cb_data->env, cb_data->callback_ref, &callback);
+
+    napi_value argv[3];
+    napi_create_uint32(cb_data->env, (uint32_t)tunnel_ref, &argv[0]);
+    napi_create_string_utf8(cb_data->env, error, NAPI_AUTO_LENGTH, &argv[1]);
+
+    // Create array for messages
+    napi_value msg_array;
+    napi_create_array(cb_data->env, &msg_array);
+    for (pinggy_len_t i = 0; i < num_msgs; i++)
+    {
+        napi_value msg_str;
+        napi_create_string_utf8(cb_data->env, messages[i], NAPI_AUTO_LENGTH, &msg_str);
+        napi_set_element(cb_data->env, msg_array, i, msg_str);
+    }
+    argv[2] = msg_array;
+
+    napi_value undefined;
+    napi_get_undefined(cb_data->env, &undefined);
+
+    napi_call_function(cb_data->env, global, callback, 3, argv, NULL);
+
+    napi_close_handle_scope(cb_data->env, scope);
+}
+
+napi_value TunnelSetOnWillReconnectCallback(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+
+    if (status != napi_ok || argc < 2)
+    {
+        napi_throw_error(env, NULL, "Expected tunnelRef and callback");
+        return NULL;
+    }
+
+    uint32_t tunnelRef;
+    napi_get_value_uint32(env, args[0], &tunnelRef);
+
+    napi_valuetype cb_type;
+    napi_typeof(env, args[1], &cb_type);
+    if (cb_type != napi_function)
+    {
+        napi_throw_type_error(env, NULL, "Callback must be a function");
+        return NULL;
+    }
+
+    will_reconnect_callback_data *cb_data = malloc(sizeof(will_reconnect_callback_data));
+    cb_data->env = env;
+    napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+
+    pinggy_bool_t result = pinggy_tunnel_set_on_will_reconnect_callback((pinggy_ref_t)tunnelRef, on_will_reconnect_cb, cb_data);
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to register on_will_reconnect_callback in Pinggy native layer");
+        return NULL;
+    }
     napi_value js_result;
     napi_get_boolean(env, result, &js_result);
     return js_result;
@@ -1532,6 +1615,7 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_set_primary_forwarding_failed_callback_fn,
         tunnel_set_additional_forwarding_failed_callback_fn,
         tunnel_set_on_disconnected_callback_fn,
+        tunnel_set_on_will_reconnect_callback_fn,
         tunnel_set_on_tunnel_error_callback_fn,
         tunnel_set_on_usage_update_callback_fn,
         tunnel_start_usage_update_fn,
@@ -1590,6 +1674,9 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, TunnelSetDisconnectedCallback, NULL, &tunnel_set_on_disconnected_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetOnDisconnectedCallback", tunnel_set_on_disconnected_callback_fn);
+
+    napi_create_function(env, NULL, 0, TunnelSetOnWillReconnectCallback, NULL, &tunnel_set_on_will_reconnect_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetOnWillReconnectCallback", tunnel_set_on_will_reconnect_callback_fn);
 
     napi_create_function(env, NULL, 0, TunnelSetErrorCallback, NULL, &tunnel_set_on_tunnel_error_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetOnTunnelErrorCallback", tunnel_set_on_tunnel_error_callback_fn);

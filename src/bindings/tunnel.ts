@@ -181,6 +181,18 @@ export class Tunnel implements ITunnel {
         }
       );
 
+      this.addon.tunnelSetOnWillReconnectCallback(
+        this.tunnelRef,
+        (tunnelRef: number, error: string, messages: string[]) => {
+          Logger.info(
+            `Tunnel will reconnect: ${tunnelRef}, reason: ${error}`
+          );
+          if (messages && messages.length > 0) {
+            Logger.info(`Reconnect messages: ${messages.join(", ")}`);
+          }
+        }
+      );
+
       this.addon.tunnelSetOnTunnelErrorCallback(
         this.tunnelRef,
         (

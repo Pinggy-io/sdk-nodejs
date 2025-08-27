@@ -18,13 +18,16 @@ jest.mock("@mapbox/node-pre-gyp", () => ({
 }));
 
 const mockAddon = {
+  // Pinggy management
   setDebugLogging: jest.fn(),
-  createConfig: jest.fn(() => 1),
-  tunnelInitiate: jest.fn(() => 1),
-  initExceptionHandling: jest.fn(),
-  getLastException: jest.fn(() => ""),
   setLogPath: jest.fn(),
   setLogEnable: jest.fn(),
+  initExceptionHandling: jest.fn(),
+  getLastException: jest.fn(() => ""),
+  getPinggyVersion: jest.fn(() => "MOCK_VERSION"),
+
+  // Config setters
+  createConfig: jest.fn(() => 1),
   configSetArgument: jest.fn(),
   configSetToken: jest.fn(),
   configSetServerAddress: jest.fn(),
@@ -34,24 +37,43 @@ const mockAddon = {
   configSetType: jest.fn(),
   configSetUdpType: jest.fn(),
   configSetSsl: jest.fn(),
-  configGetToken: jest.fn(() => ""),
-  configGetServerAddress: jest.fn(() => ""),
-  configGetSniServerName: jest.fn(() => ""),
+  configSetAutoReconnect: jest.fn(),
+  configSetForce: jest.fn(),
+
+  // Config getters
+  configGetArgument: jest.fn(() => "MOCK_ARG"),
+  configGetToken: jest.fn(() => "mock-token"),
+  configGetServerAddress: jest.fn(() => "mock-server"),
+  configGetSniServerName: jest.fn(() => "mock-sni"),
+  configGetSsl: jest.fn(() => true),
+  configGetAutoReconnect: jest.fn(() => false),
+  configGetForce: jest.fn(() => false),
+
+  // Tunnel management
+  tunnelInitiate: jest.fn(() => 1),
   tunnelConnect: jest.fn(() => true),
   tunnelResume: jest.fn(() => true),
+  tunnelStop: jest.fn(() => true),
+  tunnelIsActive: jest.fn(() => false),
+
+  // Tunnel actions
   tunnelStartWebDebugging: jest.fn(),
   tunnelRequestPrimaryForwarding: jest.fn(),
   tunnelRequestAdditionalForwarding: jest.fn(),
-  tunnelGetUrls: jest.fn(() => []),
-  tunnelGetConnectionCount: jest.fn(() => 0),
-  tunnelStop: jest.fn(),
-  tunnelIsActive: jest.fn(() => false),
-  tunnelGetLastKeepAliveTime: jest.fn(() => 0),
-  tunnelClearCallbacks: jest.fn(),
-  tunnelSetOnConnectionCallback: jest.fn(),
-  tunnelSetOnConnectionClosedCallback: jest.fn(),
-  tunnelSetOnUrlsChangedCallback: jest.fn(),
+  tunnelStartUsageUpdate: jest.fn(),
+  tunnelStopUsageUpdate: jest.fn(),
+
+  // Tunnel callbacks
+  tunnelSetAuthenticatedCallback: jest.fn(),
+  tunnelSetAuthenticationFailedCallback: jest.fn(),
+  tunnelSetPrimaryForwardingSucceededCallback: jest.fn(),
+  tunnelSetPrimaryForwardingFailedCallback: jest.fn(),
+  tunnelSetAdditionalForwardingSucceededCallback: jest.fn(),
+  tunnelSetAdditionalForwardingFailedCallback: jest.fn(),
   tunnelSetOnDisconnectedCallback: jest.fn(),
+  tunnelSetOnWillReconnectCallback: jest.fn(),
+  tunnelSetOnTunnelErrorCallback: jest.fn(),
+  tunnelSetOnUsageUpdateCallback: jest.fn(),
 };
 
 jest.mock("mocked-path", () => mockAddon, { virtual: true });

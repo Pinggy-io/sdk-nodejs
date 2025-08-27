@@ -9,6 +9,15 @@ describe("Config.prepareAndSetArgument", () => {
   beforeEach(() => {
     setArgumentValue = null;
     mockAddon = {
+      // Pinggy management
+      setDebugLogging: jest.fn(),
+      setLogPath: jest.fn(),
+      setLogEnable: jest.fn(),
+      initExceptionHandling: jest.fn(),
+      getLastException: jest.fn(() => null),
+      getPinggyVersion: jest.fn(() => "MOCK_VERSION"),
+
+      // Config setters
       createConfig: jest.fn(() => 1),
       configSetArgument: jest.fn((ref: number, arg: string) => {
         setArgumentValue = arg;
@@ -21,7 +30,41 @@ describe("Config.prepareAndSetArgument", () => {
       configSetType: jest.fn(),
       configSetUdpType: jest.fn(),
       configSetSsl: jest.fn(),
-      getLastException: jest.fn(() => null),
+      configSetAutoReconnect: jest.fn(),
+      configSetForce: jest.fn(),
+
+      // Config getters
+      configGetArgument: jest.fn(() => "MOCK_ARG"),
+      configGetToken: jest.fn(() => "mock-token"),
+      configGetServerAddress: jest.fn(() => "mock-server"),
+      configGetSniServerName: jest.fn(() => "mock-sni"),
+      configGetSsl: jest.fn(() => true),
+      configGetAutoReconnect: jest.fn(() => false),
+      configGetForce: jest.fn(() => false),
+
+      // Tunnel management and actions
+      tunnelInitiate: jest.fn(() => 1),
+      tunnelConnect: jest.fn(() => true),
+      tunnelResume: jest.fn(() => true),
+      tunnelStop: jest.fn(() => true),
+      tunnelIsActive: jest.fn(() => false),
+      tunnelStartWebDebugging: jest.fn(),
+      tunnelRequestPrimaryForwarding: jest.fn(),
+      tunnelRequestAdditionalForwarding: jest.fn(),
+      tunnelStartUsageUpdate: jest.fn(),
+      tunnelStopUsageUpdate: jest.fn(),
+
+      // All tunnel callbacks
+      tunnelSetAuthenticatedCallback: jest.fn(),
+      tunnelSetAuthenticationFailedCallback: jest.fn(),
+      tunnelSetPrimaryForwardingSucceededCallback: jest.fn(),
+      tunnelSetPrimaryForwardingFailedCallback: jest.fn(),
+      tunnelSetAdditionalForwardingSucceededCallback: jest.fn(),
+      tunnelSetAdditionalForwardingFailedCallback: jest.fn(),
+      tunnelSetOnDisconnectedCallback: jest.fn(),
+      tunnelSetOnWillReconnectCallback: jest.fn(),
+      tunnelSetOnTunnelErrorCallback: jest.fn(),
+      tunnelSetOnUsageUpdateCallback: jest.fn(),
     };
 
     // Create a minimal config instance for testing
