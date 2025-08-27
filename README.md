@@ -184,7 +184,9 @@ import {
 - `startWebDebugging(port: number): void` — Start web debugging on a local port.
 - `startUsageUpdate(): Promise<void>` — Start receiving continuous usage updates.
 - `stopUsageUpdate(): Promise<void>` — Stop receiving continuous usage updates.
-- `tunnelRequestAdditionalForwarding(hostname: string, target: string): void` — Request additional forwarding.
+- `tunnelRequestAdditionalForwarding(hostname: string, target: string): Promise<void>` — Request additional forwarding.
+- `getGreetingMsgs(): string | null` — Get greeting messages from the tunnel as a JSON string.
+- `getCurrentUsages(): string | null` — Get current usage data from the tunnel as a JSON string.
 
 ### `PinggyOptions`
 

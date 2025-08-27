@@ -217,6 +217,28 @@ export class TunnelInstance {
   }
 
   /**
+   * Gets the greeting messages from the tunnel.
+   *
+   * Delegates to {@link Tunnel#getGreetingMsgs}.
+   *
+   * @returns {string | null} The greeting messages as a JSON string, or null if unavailable.
+   */
+  public getGreetingMsgs(): string | null {
+    return this.tunnel?.getGreetingMsgs() ?? null;
+  }
+
+  /**
+   * Gets the current usage data from the tunnel.
+   *
+   * Delegates to {@link Tunnel#getCurrentUsages}.
+   *
+   * @returns {string | null} The usage data as a JSON string, or null if unavailable.
+   */
+  public getCurrentUsages(): string | null {
+    return this.tunnel?.getCurrentUsages() ?? null;
+  }
+
+  /**
    * Gets the current argument string for the tunnel configuration.
    *
    * Delegates to {@link Config#getArgument}.

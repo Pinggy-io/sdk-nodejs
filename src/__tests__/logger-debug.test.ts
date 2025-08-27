@@ -62,6 +62,8 @@ const mockAddon = {
   tunnelRequestAdditionalForwarding: jest.fn(),
   tunnelStartUsageUpdate: jest.fn(),
   tunnelStopUsageUpdate: jest.fn(),
+  tunnelGetGreetingMsgs: jest.fn(),
+  tunnelGetCurrentUsages: jest.fn(),
 
   // Tunnel callbacks
   tunnelSetAuthenticatedCallback: jest.fn(),

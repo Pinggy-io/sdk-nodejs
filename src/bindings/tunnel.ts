@@ -500,6 +500,40 @@ export class Tunnel implements ITunnel {
   }
 
   /**
+   * Gets the greeting messages from the tunnel.
+   * @returns {string | null} The greeting messages as a JSON string, or null on error.
+   */
+  public getGreetingMsgs(): string | null {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return null;
+    }
+    try {
+      return this.addon.tunnelGetGreetingMsgs(this.tunnelRef);
+    } catch (e) {
+      Logger.error("Error getting greeting messages:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the current usage data from the tunnel.
+   * @returns {string | null} The usage data as a JSON string, or null on error.
+   */
+  public getCurrentUsages(): string | null {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return null;
+    }
+    try {
+      return this.addon.tunnelGetCurrentUsages(this.tunnelRef);
+    } catch (e) {
+      Logger.error("Error getting current usages:", e as Error);
+      return null;
+    }
+  }
+
+  /**
    * Gets the list of public URLs for the tunnel.
    * @returns {string[]} The list of public tunnel URLs.
    */

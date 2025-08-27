@@ -315,6 +315,10 @@ export interface PinggyNative {
   tunnelStartUsageUpdate(tunnelRef: number): void;
   /** Stop continuous usage updates for a tunnel. */
   tunnelStopUsageUpdate(tunnelRef: number): void;
+  /** Get greeting messages for a tunnel. */
+  tunnelGetGreetingMsgs(tunnelRef: number): string;
+  /** Get current usage data for a tunnel. */
+  tunnelGetCurrentUsages(tunnelRef: number): string;
   /** Enable or disable debug logging. */
   setDebugLogging(enabled: boolean): void;
   /** Get the Pinggy SDK version. */
@@ -378,6 +382,10 @@ export interface Tunnel {
   ): Promise<void>;
   /** Stop the tunnel. */
   tunnelStop(): boolean;
+  /** Get greeting messages. */
+  getGreetingMsgs(): string | null;
+  /** Get current usage data. */
+  getCurrentUsages(): string | null;
   /** Check if the tunnel is active. */
   tunnelIsActive(): boolean;
 }

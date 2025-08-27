@@ -1771,6 +1771,78 @@ napi_value TunnelSetOnUsageUpdateCallback(napi_env env, napi_callback_info info)
     return js_result;
 }
 
+napi_value TunnelGetGreetingMsgs(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        napi_throw_error(env, NULL, "Expected one argument (tunnelRef)");
+        return NULL;
+    }
+
+    // Get the tunnel reference
+    uint32_t tunnelRef;
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid tunnelRef argument");
+        return NULL;
+    }
+
+    // Call the native function
+    pinggy_const_char_p_t msgs = pinggy_tunnel_get_greeting_msgs((pinggy_ref_t)tunnelRef);
+    if (msgs == NULL)
+    {
+        return NULL; // Return null/undefined if no message
+    }
+
+    // Return the string
+    napi_value result;
+    napi_create_string_utf8(env, msgs, NAPI_AUTO_LENGTH, &result);
+    return result;
+}
+
+napi_value TunnelGetCurrentUsages(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        napi_throw_error(env, NULL, "Expected one argument (tunnelRef)");
+        return NULL;
+    }
+
+    // Get the tunnel reference
+    uint32_t tunnelRef;
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid tunnelRef argument");
+        return NULL;
+    }
+
+    // Call the native function
+    pinggy_const_char_p_t usages = pinggy_tunnel_get_current_usages((pinggy_ref_t)tunnelRef);
+    if (usages == NULL)
+    {
+        return NULL; // Return null/undefined if no usage data
+    }
+
+    // Return the string
+    napi_value result;
+    napi_create_string_utf8(env, usages, NAPI_AUTO_LENGTH, &result);
+    return result;
+}
+
 // Wrapper for pinggy_config_set_ssl
 napi_value ConfigSetSsl(napi_env env, napi_callback_info info)
 {
@@ -1844,6 +1916,8 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_set_on_usage_update_callback_fn,
         tunnel_start_usage_update_fn,
         tunnel_stop_usage_update_fn,
+        tunnel_get_greeting_msgs_fn,
+        tunnel_get_current_usages_fn,
         config_set_ssl_fn;
 
     napi_create_function(env, NULL, 0, TunnelRequestPrimaryForwarding, NULL, &request_primary_forwarding_fn);
@@ -1922,6 +1996,12 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, TunnelStopUsageUpdate, NULL, &tunnel_stop_usage_update_fn);
     napi_set_named_property(env, exports, "tunnelStopUsageUpdate", tunnel_stop_usage_update_fn);
+
+    napi_create_function(env, NULL, 0, TunnelGetGreetingMsgs, NULL, &tunnel_get_greeting_msgs_fn);
+    napi_set_named_property(env, exports, "tunnelGetGreetingMsgs", tunnel_get_greeting_msgs_fn);
+
+    napi_create_function(env, NULL, 0, TunnelGetCurrentUsages, NULL, &tunnel_get_current_usages_fn);
+    napi_set_named_property(env, exports, "tunnelGetCurrentUsages", tunnel_get_current_usages_fn);
 
     napi_create_function(env, NULL, 0, ConfigSetSsl, NULL, &config_set_ssl_fn);
     napi_set_named_property(env, exports, "configSetSsl", config_set_ssl_fn);

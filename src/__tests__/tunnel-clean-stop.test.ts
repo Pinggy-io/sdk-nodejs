@@ -57,6 +57,8 @@ const mockAddon = {
   tunnelRequestAdditionalForwarding: jest.fn(),
   tunnelStartUsageUpdate: jest.fn(),
   tunnelStopUsageUpdate: jest.fn(),
+  tunnelGetGreetingMsgs: jest.fn(() => '{"msgs": "hello"}'),
+  tunnelGetCurrentUsages: jest.fn(() => '{"usage": "none"}'),
 
   // Tunnel callbacks
   tunnelSetAuthenticatedCallback: jest.fn(),
@@ -256,6 +258,20 @@ describe("Tunnel Clean Stop", () => {
       expect(mockAddon.tunnelSetOnReconnectionFailedCallback).toHaveBeenCalled();
       expect(mockAddon.tunnelSetOnTunnelErrorCallback).toHaveBeenCalled();
       expect(mockAddon.tunnelSetOnUsageUpdateCallback).toHaveBeenCalled();
+    });
+  });
+
+  describe("Tunnel Getters", () => {
+    it("should get greeting messages", () => {
+      const msgs = tunnel.getGreetingMsgs();
+      expect(mockAddon.tunnelGetGreetingMsgs).toHaveBeenCalledWith(1);
+      expect(msgs).toBe('{"msgs": "hello"}');
+    });
+
+    it("should get current usages", () => {
+      const usages = tunnel.getCurrentUsages();
+      expect(mockAddon.tunnelGetCurrentUsages).toHaveBeenCalledWith(1);
+      expect(usages).toBe('{"usage": "none"}');
     });
   });
 });

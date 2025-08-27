@@ -130,7 +130,9 @@ interface TunnelInstance {
   startWebDebugging(port: number): void;
   startUsageUpdate(): Promise<void>;
   stopUsageUpdate(): Promise<void>;
-  tunnelRequestAdditionalForwarding(hostname: string, target: string): void;
+  tunnelRequestAdditionalForwarding(hostname: string, target: string): Promise<void>;
+  getGreetingMsgs(): string | null;
+  getCurrentUsages(): string | null;
 }
 ```
 

@@ -53,6 +53,8 @@ describe("Config.prepareAndSetArgument", () => {
       tunnelRequestAdditionalForwarding: jest.fn(),
       tunnelStartUsageUpdate: jest.fn(),
       tunnelStopUsageUpdate: jest.fn(),
+      tunnelGetGreetingMsgs: jest.fn(),
+      tunnelGetCurrentUsages: jest.fn(),
 
       // All tunnel callbacks
       tunnelSetAuthenticatedCallback: jest.fn(),
