@@ -195,6 +195,15 @@ export class Tunnel implements ITunnel {
         }
       );
 
+      this.addon.tunnelSetOnUsageUpdateCallback(
+        this.tunnelRef,
+        (tunnelRef: number, usages: string) => {
+          Logger.info(`Usage update for tunnel ${tunnelRef}: ${usages}`);
+          // Here we could emit an event for the user to listen to.
+          // For now, just logging.
+        }
+      );
+
       const connected = this.addon.tunnelConnect(this.tunnelRef);
       if (!connected) {
         throw new Error("Tunnel connection failed.");
@@ -301,6 +310,61 @@ export class Tunnel implements ITunnel {
   }
 
   /**
+   * Starts continuous usage updates for the tunnel.
+   * The `onUsageUpdate` callback will be triggered with usage data.
+   * @returns {Promise<void>} Resolves when usage updates are started.
+   * @throws {PinggyError|Error} If starting usage updates fails.
+   */
+  public async startUsageUpdate(): Promise<void> {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return;
+    }
+    try {
+      await this.authPromise; // Wait for authentication
+      this.addon.tunnelStartUsageUpdate(this.tunnelRef);
+      Logger.info("Started continuous usage updates.");
+    } catch (e) {
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error starting usage updates:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error starting usage updates:", e as Error);
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Stops continuous usage updates for the tunnel.
+   * @returns {Promise<void>} Resolves when usage updates are stopped.
+   * @throws {PinggyError|Error} If stopping usage updates fails.
+   */
+  public async stopUsageUpdate(): Promise<void> {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return;
+    }
+    try {
+      await this.authPromise; // Wait for authentication
+      this.addon.tunnelStopUsageUpdate(this.tunnelRef);
+      Logger.info("Stopped continuous usage updates.");
+    } catch (e) {
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error stopping usage updates:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error stopping usage updates:", e as Error);
+        throw e;
+      }
+    }
+  }
+
+  /**
    * Requests additional forwarding for the tunnel.
    * @param {string} remoteAddress - The remote address to forward from.
    * @param {string} localAddress - The local address to forward to.
@@ -317,7 +381,7 @@ export class Tunnel implements ITunnel {
     }
 
     try {
-      await this.forwardingPromise; // Wait for primary forwarding to complete
+      await this.additionalForwardingPromise; // Wait for primary forwarding to complete
       this.addon.tunnelRequestAdditionalForwarding(
         this.tunnelRef,
         remoteAddress,

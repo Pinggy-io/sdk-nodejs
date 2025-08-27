@@ -182,6 +182,8 @@ import {
 - `getServerAddress(): string | null` — **Get the address of the Pinggy backend server this tunnel is connected to.**
 - `getToken(): string | null` — Get the tunnel token.
 - `startWebDebugging(port: number): void` — Start web debugging on a local port.
+- `startUsageUpdate(): Promise<void>` — Start receiving continuous usage updates.
+- `stopUsageUpdate(): Promise<void>` — Stop receiving continuous usage updates.
 - `tunnelRequestAdditionalForwarding(hostname: string, target: string): void` — Request additional forwarding.
 
 ### `PinggyOptions`

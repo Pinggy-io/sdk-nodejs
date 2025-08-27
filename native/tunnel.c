@@ -1318,6 +1318,155 @@ napi_value TunnelSetErrorCallback(napi_env env, napi_callback_info info)
     return js_result;
 }
 
+napi_value TunnelStartUsageUpdate(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnelRef)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Get the tunnel reference
+    uint32_t tunnelRef;
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnelRef argument", __FILE__, __LINE__);
+        napi_throw_type_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the native function
+    pinggy_tunnel_start_usage_update((pinggy_ref_t)tunnelRef);
+    PINGGY_DEBUG_VOID();
+
+    // Return undefined
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value TunnelStopUsageUpdate(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnelRef)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Get the tunnel reference
+    uint32_t tunnelRef;
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnelRef argument", __FILE__, __LINE__);
+        napi_throw_type_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the native function
+    pinggy_tunnel_stop_usage_update((pinggy_ref_t)tunnelRef);
+    PINGGY_DEBUG_VOID();
+
+    // Return undefined
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+typedef struct
+{
+    napi_env env;
+    napi_ref callback_ref;
+} usage_update_callback_data;
+
+void on_usage_update_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_const_char_p_t usages)
+{
+    usage_update_callback_data *cb_data = (usage_update_callback_data *)user_data;
+    napi_handle_scope scope;
+    napi_open_handle_scope(cb_data->env, &scope);
+
+    napi_value global;
+    napi_get_global(cb_data->env, &global);
+
+    napi_value callback;
+    napi_get_reference_value(cb_data->env, cb_data->callback_ref, &callback);
+
+    napi_value argv[2];
+    napi_create_uint32(cb_data->env, (uint32_t)tunnel_ref, &argv[0]);
+    napi_create_string_utf8(cb_data->env, usages, NAPI_AUTO_LENGTH, &argv[1]);
+
+    napi_value undefined;
+    napi_get_undefined(cb_data->env, &undefined);
+
+    napi_call_function(cb_data->env, undefined, callback, 2, argv, NULL);
+
+    napi_close_handle_scope(cb_data->env, scope);
+}
+
+napi_value TunnelSetOnUsageUpdateCallback(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+
+    if (argc < 2)
+    {
+        napi_throw_error(env, NULL, "Expected tunnelRef and callback");
+        return NULL;
+    }
+
+    uint32_t tunnelRef;
+    napi_get_value_uint32(env, args[0], &tunnelRef);
+
+    napi_valuetype cb_type;
+    napi_typeof(env, args[1], &cb_type);
+    if (cb_type != napi_function)
+    {
+        napi_throw_type_error(env, NULL, "Callback must be a function");
+        return NULL;
+    }
+
+    usage_update_callback_data *cb_data = malloc(sizeof(usage_update_callback_data));
+    cb_data->env = env;
+    napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+
+    pinggy_bool_t result = pinggy_tunnel_set_on_usage_update_callback(
+        (pinggy_ref_t)tunnelRef,
+        on_usage_update_cb,
+        cb_data);
+
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to register on_usage_update_callback in Pinggy native layer");
+        return NULL;
+    }
+
+    napi_value js_result;
+    napi_get_boolean(env, result, &js_result);
+    return js_result;
+}
+
 // Wrapper for pinggy_config_set_ssl
 napi_value ConfigSetSsl(napi_env env, napi_callback_info info)
 {
@@ -1384,6 +1533,9 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_set_additional_forwarding_failed_callback_fn,
         tunnel_set_on_disconnected_callback_fn,
         tunnel_set_on_tunnel_error_callback_fn,
+        tunnel_set_on_usage_update_callback_fn,
+        tunnel_start_usage_update_fn,
+        tunnel_stop_usage_update_fn,
         config_set_ssl_fn;
 
     napi_create_function(env, NULL, 0, TunnelRequestPrimaryForwarding, NULL, &request_primary_forwarding_fn);
@@ -1441,6 +1593,15 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, TunnelSetErrorCallback, NULL, &tunnel_set_on_tunnel_error_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetOnTunnelErrorCallback", tunnel_set_on_tunnel_error_callback_fn);
+
+    napi_create_function(env, NULL, 0, TunnelSetOnUsageUpdateCallback, NULL, &tunnel_set_on_usage_update_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetOnUsageUpdateCallback", tunnel_set_on_usage_update_callback_fn);
+
+    napi_create_function(env, NULL, 0, TunnelStartUsageUpdate, NULL, &tunnel_start_usage_update_fn);
+    napi_set_named_property(env, exports, "tunnelStartUsageUpdate", tunnel_start_usage_update_fn);
+
+    napi_create_function(env, NULL, 0, TunnelStopUsageUpdate, NULL, &tunnel_stop_usage_update_fn);
+    napi_set_named_property(env, exports, "tunnelStopUsageUpdate", tunnel_stop_usage_update_fn);
 
     napi_create_function(env, NULL, 0, ConfigSetSsl, NULL, &config_set_ssl_fn);
     napi_set_named_property(env, exports, "configSetSsl", config_set_ssl_fn);

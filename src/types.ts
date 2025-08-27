@@ -286,6 +286,15 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (tunnelRef: number, error: string, messages: string[]) => void
   ): void;
+  /** Set the callback for tunnel usage updates. */
+  tunnelSetOnUsageUpdateCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, usages: string) => void
+  ): void;
+  /** Start continuous usage updates for a tunnel. */
+  tunnelStartUsageUpdate(tunnelRef: number): void;
+  /** Stop continuous usage updates for a tunnel. */
+  tunnelStopUsageUpdate(tunnelRef: number): void;
   /** Enable or disable debug logging. */
   setDebugLogging(enabled: boolean): void;
   /** Get the Pinggy SDK version. */
@@ -335,14 +344,18 @@ export interface Tunnel {
   /** Whether primary forwarding is complete. */
   primaryForwardingDone: boolean;
   /** Start the tunnel. */
-  start(): void;
+  start(): Promise<string[]>;
   /** Start web debugging. */
-  startWebDebugging(listeningPort: number): void;
+  startWebDebugging(listeningPort: number): Promise<void>;
+  /** Start continuous usage updates. */
+  startUsageUpdate(): Promise<void>;
+  /** Stop continuous usage updates. */
+  stopUsageUpdate(): Promise<void>;
   /** Request additional forwarding. */
   tunnelRequestAdditionalForwarding(
     remoteAddress: string,
     localAddress: string
-  ): void;
+  ): Promise<void>;
   /** Stop the tunnel. */
   tunnelStop(): boolean;
   /** Check if the tunnel is active. */

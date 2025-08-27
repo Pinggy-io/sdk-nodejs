@@ -173,6 +173,32 @@ export class TunnelInstance {
   }
 
   /**
+   * Starts continuous usage updates for the tunnel.
+   *
+   * Delegates to {@link Tunnel#startUsageUpdate}.
+   *
+   * @returns {Promise<void>} Resolves when usage updates are started.
+   * @throws {Error} If the tunnel is not initialized.
+   */
+  public async startUsageUpdate(): Promise<void> {
+    if (!this.tunnel) throw new Error("Tunnel not initialized");
+    await this.tunnel.startUsageUpdate();
+  }
+
+  /**
+   * Stops continuous usage updates for the tunnel.
+   *
+   * Delegates to {@link Tunnel#stopUsageUpdate}.
+   *
+   * @returns {Promise<void>} Resolves when usage updates are stopped.
+   * @throws {Error} If the tunnel is not initialized.
+   */
+  public async stopUsageUpdate(): Promise<void> {
+    if (!this.tunnel) throw new Error("Tunnel not initialized");
+    await this.tunnel.stopUsageUpdate();
+  }
+
+  /**
    * Requests additional forwarding for the tunnel.
    *
    * Delegates to {@link Tunnel#tunnelRequestAdditionalForwarding}.

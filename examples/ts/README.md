@@ -128,6 +128,8 @@ interface TunnelInstance {
   getServerAddress(): string | null;
   getToken(): string | null;
   startWebDebugging(port: number): void;
+  startUsageUpdate(): Promise<void>;
+  stopUsageUpdate(): Promise<void>;
   tunnelRequestAdditionalForwarding(hostname: string, target: string): void;
 }
 ```

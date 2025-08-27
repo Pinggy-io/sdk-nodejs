@@ -18,9 +18,10 @@ console.log("Pinggy version:", version);
     // basicAuth: { username: "password" },
     // ipWhitelist: [""],
     // headerModification: ["x-custom-header: value"],
-    autoReconnect: true
+    // autoReconnect: true
   };
   const tunnel = pinggy.createTunnel(options);
+  tunnel.startUsageUpdate()
 
   await tunnel.start();
 
