@@ -267,33 +267,29 @@ export class TunnelInstance {
 
     // Add directly accessible properties
     const serverAddress = this.getServerAddress();
-    options.serverAddress = serverAddress ? serverAddress : "";
+    options.serverAddress = serverAddress || "";
 
     const token = this.getToken();
-    options.token = token ? token : "";
+    options.token = token || "";
 
     const sniServerName = this.getSniServerName()
-    options.sniServerName = sniServerName ? sniServerName : "";
+    options.sniServerName = sniServerName || "";
 
     const force = this.getForce();
-    options.force = force ? force : false;
+    options.force = force || false;
 
-    const udpType = this.getUdpType();
 
-    let type = this.getTunnelType();
-    
-    if (!type && udpType) {
-      type = "udp";
-    }
+
+    let type = this.getTunnelType() || this.getUdpType()
 
     if (type === "tcp" || type === "tls" || type === "http" || type === "udp") {
       options.type = type;
       if (type === "http" || type === "tcp" || type === "tls") {
         const tcpForwardTo = this.getTcpForwardTo();
-        options.forwardTo = tcpForwardTo ? tcpForwardTo : "";
+        options.forwardTo = tcpForwardTo || "";
       } else if (type === "udp") {
         const udpForwardTo = this.getUdpForwardTo();
-        options.forwardTo = udpForwardTo ? udpForwardTo : "";
+        options.forwardTo = udpForwardTo || "";
       }
     } else {
       options.type = "http";
@@ -305,7 +301,13 @@ export class TunnelInstance {
 
 
     const argString = this.getArgument() || "";
-    const argumentInParts = argString.split(" ");
+    const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+    const argumentInParts: string[] = [];
+    let match;
+    while ((match = regex.exec(argString)) !== null) {
+      argumentInParts.push(match[1] || match[2] || match[0]);
+    }
+
     if (argumentInParts.length > 0 && !argumentInParts[0].startsWith("w:") &&
       !argumentInParts[0].startsWith("b:") && !argumentInParts[0].startsWith("k:") &&
       !argumentInParts[0].startsWith("a:") && !argumentInParts[0].startsWith("r:") &&
@@ -343,7 +345,14 @@ export class TunnelInstance {
       } else if (argument.startsWith('u:')) {
         const [_, key, value] = argument.split(':');
         if (key && value) options.headerModification!.push({ action: 'update', key, value });
-      } else if (argument === 'x:xff') {
+      } else if (argument.startsWith('x:localServerTls')) {
+        const parts = argument.split(':');
+        // Expected format: x:localServerTls:localhost
+        if (parts.length === 3) {
+          options.localServerTls = parts[2];
+        }
+      }
+      else if (argument === 'x:xff') {
         options.xff = true;
       } else if (argument === 'x:https') {
         options.httpsOnly = true;
