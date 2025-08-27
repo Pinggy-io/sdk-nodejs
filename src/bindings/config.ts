@@ -194,22 +194,26 @@ export class Config implements IConfig {
   public prepareAndSetArgument(configRef: number, options: PinggyOptions) {
     const val: string[] = [];
 
+    // IP Whitelist
     if (options.ipWhitelist?.length) {
       val.push(`w:${options.ipWhitelist.join(",")}`);
     }
 
+    // Basic Auth
     if (options.basicAuth && Object.keys(options.basicAuth).length > 0) {
       for (const [user, pass] of Object.entries(options.basicAuth)) {
         val.push(`b:${user}:${pass}`);
       }
     }
 
+    // Bearer Auth
     if (options.bearerAuth?.length) {
       for (const token of options.bearerAuth) {
         val.push(`k:${token}`);
       }
     }
 
+    // Header Modification
     if (options.headerModification?.length) {
       for (const header of options.headerModification) {
         switch (header.action) {
@@ -256,11 +260,24 @@ export class Config implements IConfig {
       }
     }
 
+    // X-Forwarded-For
     if (options.xff) val.push("x:xff");
+
+    // Force HTTPS (Redirect to HTTPS)
     if (options.httpsOnly) val.push("x:https");
+
+    // Set X-Pinggy-Url header to original url
     if (options.fullRequestUrl) val.push("x:fullurl");
+
+    // Pass pre-flight request through auth / screening
     if (options.allowPreflight) val.push("x:passpreflight");
+
+    // Disable reverse proxy headers (X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host, and Forwarded)
     if (options.noReverseProxy) val.push("x:noreverseproxy");
+
+    // Local Server TLS (Connect to local https server)
+    if (options.localServerTls) val.push(`x:localServerTls:${options.localServerTls}`);
+
 
     let argument = join(val);
     if (options.cmd && options.cmd.trim()) {

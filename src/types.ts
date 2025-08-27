@@ -122,6 +122,11 @@ export interface PinggyOptions {
    */
   httpsOnly?: boolean;
   /**
+   * Enable localServerTls (connecting to local https server). Specify SNI value.
+   * @example "localhost"
+   */
+  localServerTls?: string;
+  /**
    * Forward the full request URL to the backend service.
    * @default false
    */
