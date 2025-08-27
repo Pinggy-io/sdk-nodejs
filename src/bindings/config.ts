@@ -398,4 +398,79 @@ export class Config implements IConfig {
       return null;
     }
   }
+
+  /**
+   * Gets the current TCP forwarding address.
+   * @returns {string | null} The TCP forwarding address, or null if unavailable.
+   */
+  public getTcpForwardTo(): string | null {
+    try {
+      return this.configRef
+        ? this.addon.configGetTcpForwardTo(this.configRef)
+        : null;
+    } catch (e) {
+      Logger.error("Error getting TCP forward configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the current UDP forwarding address.
+   * @returns {string | null} The UDP forwarding address, or null if unavailable.
+   */
+  public getUdpForwardTo(): string | null {
+    try {
+      return this.configRef
+        ? this.addon.configGetUdpForwardTo(this.configRef)
+        : null;
+    } catch (e) {
+      Logger.error("Error getting UDP forward configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the tunnel type.
+   * @returns {string | null} The tunnel type, or null if unavailable.
+   */
+  public getTunnelType(): string | null {
+    try {
+      return this.configRef
+        ? this.addon.configGetType(this.configRef)
+        : null;
+    } catch (e) {
+      Logger.error("Error getting tunnel type configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the tunnel type.
+   * @returns {string | null} The tunnel type, or null if unavailable.
+   */
+  public getUdpType(): string | null {
+    try {
+      return this.configRef
+        ? this.addon.configGetUdpType(this.configRef)
+        : null;
+    } catch (e) {
+      Logger.error("Error getting tunnel type configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the current SSL configuration for the tunnel.
+   * @returns {boolean | null} The SSL setting, or null if unavailable.
+   */
+  public getTunnelSsl(): boolean | null {
+    try {
+      return this.configRef
+        ? this.addon.configGetSsl(this.configRef)
+        : null;
+    } catch (e) {
+      Logger.error("Error getting tunnel ssl configuration:", e as Error);
+      return null;
+    }
+  }
 }
