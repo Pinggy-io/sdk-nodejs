@@ -122,6 +122,11 @@ export interface PinggyOptions {
    */
   httpsOnly?: boolean;
   /**
+   * Enable localServerTls (connecting to local https server). Specify SNI value.
+   * @example "localhost"
+   */
+  localServerTls?: string;
+  /**
    * Forward the full request URL to the backend service.
    * @default false
    */
@@ -193,6 +198,16 @@ export interface PinggyNative {
   configGetServerAddress(configRef: number): string;
   /** Get the SNI server name for a config. */
   configGetSniServerName(configRef: number): string;
+  /** Get the TCP forwarding address for a config. */
+  configGetTcpForwardTo(configRef: number): string;
+  /** Get the UDP forwarding address for a config. */
+  configGetUdpForwardTo(configRef: number): string;
+  /** Get the tunnel type for a config. */
+  configGetType(configRef: number): string;
+  /** Get the UDP tunnel type for a config. */
+  configGetUdpType(configRef: number): string;
+  /** Get SSL configuration for a config. */
+  configGetSsl(configRef: number): boolean;
   /** Set the log file path. */
   setLogPath(path: string): void;
   /** Enable or disable logging. */
@@ -339,8 +354,8 @@ export interface Tunnel {
  * @public
  */
 export enum TunnelStatus {
-    IDLE = "idle",
-    STARTING = "starting",
-    LIVE = "live",
-    CLOSED = "closed",
+  IDLE = "idle",
+  STARTING = "starting",
+  LIVE = "live",
+  CLOSED = "closed",
 }

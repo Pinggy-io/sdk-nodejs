@@ -200,4 +200,171 @@ export class TunnelInstance {
   public getArgument(): string | null {
     return this.config?.getArgument() ?? null;
   }
+
+  /**
+   * Gets the current tunnel type for the tunnel.
+   *
+   * Delegates to {@link Config#getTunnelType}.
+   *
+   * @returns {string | null} The tunnel type, or null if unavailable.
+   */
+  public getTunnelType(): string | null {
+    return this.config?.getTunnelType() ?? null;
+  }
+
+  /**
+   * Gets the current UDP type for the tunnel.
+   *
+   * Delegates to {@link Config#getUdpType}.
+   *
+   * @returns {string | null} The UDP type, or null if unavailable.
+   */
+  public getUdpType(): string | null {
+    return this.config?.getUdpType() ?? null;
+  }
+
+  /**
+  * Gets the current SSL setting for the tunnel.
+  *
+  * Delegates to {@link Config#getTunnelSsl}.
+  *
+  * @returns {boolean | null} The SSL setting, or null if unavailable.
+  */
+  public getTunnelSsl(): boolean | null {
+    return this.config?.getTunnelSsl() ?? null;
+  }
+
+  /**
+  * Gets the TCP forward-to address for the tunnel.
+  *
+  * Delegates to {@link Config#getTcpForwardTo}.
+  *
+  * @returns {string | null} The TCP forward-to address, or null if unavailable.
+  */
+  public getTcpForwardTo(): string | null {
+    return this.config?.getTcpForwardTo() ?? null;
+  }
+
+  /**
+  * Gets the UDP forward-to address for the tunnel.
+  *
+  * Delegates to {@link Config#getUdpForwardTo}.
+  *
+  * @returns {string | null} The UDP forward-to address, or null if unavailable.
+  */
+  public getUdpForwardTo(): string | null {
+    return this.config?.getUdpForwardTo() ?? null;
+  }
+
+  /**
+  * Returns the current tunnel configuration as a `PinggyOptions` object.
+  * Extracts values from the instance and parses argument strings for advanced options.
+  *
+  * @returns {PinggyOptions | null} The tunnel configuration, or null if unavailable.
+  */
+  public getConfig(): PinggyOptions | null {
+    const options: PinggyOptions = {};
+
+    // Add directly accessible properties
+    const serverAddress = this.getServerAddress();
+    options.serverAddress = serverAddress || "";
+
+    const token = this.getToken();
+    options.token = token || "";
+
+    const sniServerName = this.getSniServerName()
+    options.sniServerName = sniServerName || "";
+
+    const force = this.getForce();
+    options.force = force || false;
+
+
+
+    let type = this.getTunnelType() || this.getUdpType()
+
+    if (type === "tcp" || type === "tls" || type === "http" || type === "udp") {
+      options.type = type;
+      if (type === "http" || type === "tcp" || type === "tls") {
+        const tcpForwardTo = this.getTcpForwardTo();
+        options.forwardTo = tcpForwardTo || "";
+      } else if (type === "udp") {
+        const udpForwardTo = this.getUdpForwardTo();
+        options.forwardTo = udpForwardTo || "";
+      }
+    } else {
+      options.type = "http";
+      options.forwardTo = "";
+    }
+
+    const ssl = this.getTunnelSsl();
+    options.ssl = ssl !== null ? ssl : false;
+
+
+    const argString = this.getArgument() || "";
+    const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+    const argumentInParts: string[] = [];
+    let match;
+    while ((match = regex.exec(argString)) !== null) {
+      argumentInParts.push(match[1] || match[2] || match[0]);
+    }
+
+    if (argumentInParts.length > 0 && !argumentInParts[0].startsWith("w:") &&
+      !argumentInParts[0].startsWith("b:") && !argumentInParts[0].startsWith("k:") &&
+      !argumentInParts[0].startsWith("a:") && !argumentInParts[0].startsWith("r:") &&
+      !argumentInParts[0].startsWith("u:") && !argumentInParts[0].startsWith("x:")
+    ) {
+      options.cmd = argumentInParts[0];
+    }
+
+    // Initialize arrays and objects with empty defaults
+    options.ipWhitelist = [];
+    options.basicAuth = {};
+    options.bearerAuth = [];
+    options.headerModification = [];
+    options.xff = false;
+    options.httpsOnly = false;
+    options.fullRequestUrl = false;
+    options.allowPreflight = false;
+    options.noReverseProxy = false;
+
+
+    // Parse Ip whitelist, auth settings, and other flags
+    for (const argument of argumentInParts) {
+      if (argument.startsWith('w:')) {
+        options.ipWhitelist!.push(...argument.substring(2).split(','));
+      } else if (argument.startsWith('b:')) {
+        const [_, user, pass] = argument.split(':');
+        if (user && pass) options.basicAuth![user] = pass;
+      } else if (argument.startsWith('k:')) {
+        options.bearerAuth!.push(argument.substring(2));
+      } else if (argument.startsWith('a:')) {
+        const [_, key, value] = argument.split(':');
+        if (key && value) options.headerModification!.push({ action: 'add', key, value });
+      } else if (argument.startsWith('r:')) {
+        options.headerModification!.push({ action: 'remove', key: argument.substring(2) });
+      } else if (argument.startsWith('u:')) {
+        const [_, key, value] = argument.split(':');
+        if (key && value) options.headerModification!.push({ action: 'update', key, value });
+      } else if (argument.startsWith('x:localServerTls')) {
+        const parts = argument.split(':');
+        // Expected format: x:localServerTls:localhost
+        if (parts.length === 3) {
+          options.localServerTls = parts[2];
+        }
+      }
+      else if (argument === 'x:xff') {
+        options.xff = true;
+      } else if (argument === 'x:https') {
+        options.httpsOnly = true;
+      } else if (argument === 'x:fullurl') {
+        options.fullRequestUrl = true;
+      } else if (argument === 'x:passpreflight') {
+        options.allowPreflight = true;
+      } else if (argument === 'x:noreverseproxy') {
+        options.noReverseProxy = true;
+      }
+    }
+
+    return options;
+  }
 }
