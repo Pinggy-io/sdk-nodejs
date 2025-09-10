@@ -55,7 +55,7 @@ if (!fileName) {
 }
 
 // Define the version of libpinggy to download
-const version = "0.0.18";
+const version = "0.0.21";
 
 // Build artifact filename and URL based on OS and architecture
 function getArtifactInfo(os, arch) {
