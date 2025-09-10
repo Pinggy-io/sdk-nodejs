@@ -208,6 +208,10 @@ export interface PinggyNative {
   configGetUdpType(configRef: number): string;
   /** Get SSL configuration for a config. */
   configGetSsl(configRef: number): boolean;
+  /** Set HTTPS-only configuration for a config. */
+  configSetHttpsOnly(configRef: number, httpsOnly: boolean): void;
+  /** Get HTTPS-only configuration for a config. */
+  configGetHttpsOnly(configRef: number): boolean;
   /** Set the log file path. */
   setLogPath(path: string): void;
   /** Enable or disable logging. */

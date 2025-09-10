@@ -257,6 +257,15 @@ export class TunnelInstance {
   }
 
   /**
+   * Returns whether HTTPS-only mode is enabled for the tunnel instance.
+   *
+   * @returns {boolean | null} `true` if HTTPS-only mode is enabled, `false` if disabled, or `null` if the configuration is unavailable.
+   */
+  public getHttpsOnly(): boolean | null {
+    return this.config?.getHttpsOnly() ?? null;
+  }
+
+  /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
@@ -278,6 +287,8 @@ export class TunnelInstance {
     const force = this.getForce();
     options.force = force || false;
 
+    const httpsOnly = this.getHttpsOnly();
+    options.httpsOnly = httpsOnly !== null ? httpsOnly : false
 
 
     let type = this.getTunnelType() || this.getUdpType()
@@ -322,7 +333,6 @@ export class TunnelInstance {
     options.bearerAuth = [];
     options.headerModification = [];
     options.xff = false;
-    options.httpsOnly = false;
     options.fullRequestUrl = false;
     options.allowPreflight = false;
     options.noReverseProxy = false;
@@ -354,8 +364,6 @@ export class TunnelInstance {
       }
       else if (argument === 'x:xff') {
         options.xff = true;
-      } else if (argument === 'x:https') {
-        options.httpsOnly = true;
       } else if (argument === 'x:fullurl') {
         options.fullRequestUrl = true;
       } else if (argument === 'x:passpreflight') {

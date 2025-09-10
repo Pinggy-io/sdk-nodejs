@@ -79,6 +79,30 @@ export class Config implements IConfig {
         }
       }
 
+      try {
+        if (configRef) {
+          this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
+          Logger.info(`HTTPS-only configuration set to: ${options.httpsOnly}`);
+        }
+      } catch (e) {
+        const lastEx = this.addon.getLastException();
+        if (lastEx) {
+          const pinggyError = new PinggyError(lastEx);
+          Logger.error("Error setting HTTPS-only configuration:", pinggyError);
+          throw pinggyError;
+        } else {
+          if (e instanceof Error) {
+            Logger.error("Error setting HTTPS-only configuration:", e);
+          } else {
+            Logger.error(
+              "Error setting HTTPS-only configuration:",
+              new Error(String(e))
+            );
+          }
+          throw e;
+        }
+      }
+
       // Set SSL configuration
       try {
         this.addon.configSetSsl(configRef, ssl);
@@ -262,9 +286,6 @@ export class Config implements IConfig {
 
     // X-Forwarded-For
     if (options.xff) val.push("x:xff");
-
-    // Force HTTPS (Redirect to HTTPS)
-    if (options.httpsOnly) val.push("x:https");
 
     // Set X-Pinggy-Url header to original url
     if (options.fullRequestUrl) val.push("x:fullurl");
@@ -487,6 +508,19 @@ export class Config implements IConfig {
         : null;
     } catch (e) {
       Logger.error("Error getting tunnel ssl configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the current HTTPS-only configuration setting.
+   * @returns {boolean | null} The HTTPS-only setting, or null if unavailable.
+   */
+  public getHttpsOnly(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetHttpsOnly(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting HTTPS-only configuration:", e as Error);
       return null;
     }
   }

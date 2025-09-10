@@ -1439,6 +1439,94 @@ napi_value GetPinggyVersion(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value ConfigSetHttpsOnly(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, https_only)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: https_only (pinggy_bool_t / bool)
+    bool https_only;
+    status = napi_get_value_bool(env, args[1], &https_only);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid https_only argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_https_only function
+    pinggy_config_set_https_only(config, (pinggy_bool_t)https_only);
+
+    // Return undefined
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_https_only
+napi_value ConfigGetHttpsOnly(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_get_https_only function
+    pinggy_bool_t https_only = pinggy_config_get_https_only(config);
+
+    // Return the boolean value as a JavaScript boolean
+    napi_value result;
+    napi_get_boolean(env, https_only, &result);
+    return result;
+}
+
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
@@ -1457,7 +1545,8 @@ napi_value Init1(napi_env env, napi_value exports)
         set_udp_type_fn,
         set_tcp_forward_to_fn,
         set_udp_forward_to_fn,
-        set_insecure_fn;
+        set_insecure_fn,
+        set_https_only_fn;
 
     napi_value get_server_address_fn,
         get_sni_server_name_fn,
@@ -1471,6 +1560,7 @@ napi_value Init1(napi_env env, napi_value exports)
         get_argument_fn,
         get_ssl_fn,
         get_insecure_fn,
+        get_https_only_fn,
         get_pinggy_version_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
@@ -1577,6 +1667,12 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, GetPinggyVersion, NULL, &get_pinggy_version_fn);
     napi_set_named_property(env, exports, "getPinggyVersion", get_pinggy_version_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetHttpsOnly, NULL, &set_https_only_fn);
+    napi_set_named_property(env, exports, "configSetHttpsOnly", set_https_only_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetHttpsOnly, NULL, &get_https_only_fn);
+    napi_set_named_property(env, exports, "configGetHttpsOnly", get_https_only_fn);
 
     return exports;
 }
