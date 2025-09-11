@@ -1527,6 +1527,128 @@ napi_value ConfigGetHttpsOnly(napi_env env, napi_callback_info info)
     return result;
 }
 
+// Wrapper for pinggy_config_set_ip_white_list
+napi_value ConfigSetIpWhiteList(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, ip_white_list)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+    // determines the length of the ip_white_list string
+    size_t ip_len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &ip_len);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid ip_white_list argument");
+        return NULL;
+    }
+
+    pinggy_char_p_t ip_white_list = malloc(ip_len + 1); // +1 for null terminator
+    if (ip_white_list == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    status = napi_get_value_string_utf8(env, args[1], ip_white_list, ip_len + 1, &ip_len);
+    if (status != napi_ok)
+    {
+        free(ip_white_list);
+        napi_throw_type_error(env, NULL, "Failed to get ip_white_list string");
+        return NULL;
+    }
+    pinggy_config_set_ip_white_list(config, ip_white_list);
+    free(ip_white_list);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_ip_white_list
+napi_value ConfigGetIpWhiteList(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // First call the _len variant to get required buffer size
+    pinggy_capa_t required_len = 0;
+    pinggy_const_int_t rc = pinggy_config_get_ip_white_list_len(config, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to determine ip_white_list length");
+        return NULL;
+    }
+
+    pinggy_char_p_t ip_white_list = malloc(required_len + 1);
+    if (ip_white_list == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    pinggy_const_int_t copied = pinggy_config_get_ip_white_list(config, required_len + 1, ip_white_list);
+    if (copied < 0)
+    {
+        free(ip_white_list);
+        napi_throw_error(env, NULL, "Failed to get ip_white_list");
+        return NULL;
+    }
+
+    napi_value result;
+    status = napi_create_string_utf8(env, ip_white_list, copied, &result);
+    free(ip_white_list);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create JS string from ip_white_list");
+        return NULL;
+    }
+
+    return result;
+}
+
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
@@ -1546,6 +1668,7 @@ napi_value Init1(napi_env env, napi_value exports)
         set_tcp_forward_to_fn,
         set_udp_forward_to_fn,
         set_insecure_fn,
+        set_ip_white_list_fn,
         set_https_only_fn;
 
     napi_value get_server_address_fn,
@@ -1559,6 +1682,7 @@ napi_value Init1(napi_env env, napi_value exports)
         get_force_fn,
         get_argument_fn,
         get_ssl_fn,
+        get_ip_white_list_fn,
         get_insecure_fn,
         get_https_only_fn,
         get_pinggy_version_fn;
@@ -1673,6 +1797,12 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetHttpsOnly, NULL, &get_https_only_fn);
     napi_set_named_property(env, exports, "configGetHttpsOnly", get_https_only_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetIpWhiteList, NULL, &set_ip_white_list_fn);
+    napi_set_named_property(env, exports, "configSetIpWhiteList", set_ip_white_list_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetIpWhiteList, NULL, &get_ip_white_list_fn);
+    napi_set_named_property(env, exports, "configGetIpWhiteList", get_ip_white_list_fn);
 
     return exports;
 }

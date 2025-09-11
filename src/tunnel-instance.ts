@@ -266,6 +266,15 @@ export class TunnelInstance {
   }
 
   /**
+   * Retrieves IP whitelist for this tunnel instance.
+   *
+   * @returns {string[] | null} An array of whitelisted IP addresses, or `null` if no whitelist is configured.
+   */
+  public getIpWhiteList(): string[] | null {
+    return this.config?.getIpWhiteList() ?? null;
+  }
+
+  /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
@@ -288,7 +297,10 @@ export class TunnelInstance {
     options.force = force || false;
 
     const httpsOnly = this.getHttpsOnly();
-    options.httpsOnly = httpsOnly !== null ? httpsOnly : false
+    options.httpsOnly = httpsOnly !== null ? httpsOnly : false;
+
+    const ipWhiteList = this.getIpWhiteList();
+    options.ipWhitelist = ipWhiteList ? ipWhiteList as string[] : [];
 
 
     let type = this.getTunnelType() || this.getUdpType()
@@ -340,9 +352,7 @@ export class TunnelInstance {
 
     // Parse Ip whitelist, auth settings, and other flags
     for (const argument of argumentInParts) {
-      if (argument.startsWith('w:')) {
-        options.ipWhitelist!.push(...argument.substring(2).split(','));
-      } else if (argument.startsWith('b:')) {
+      if (argument.startsWith('b:')) {
         const [_, user, pass] = argument.split(':');
         if (user && pass) options.basicAuth![user] = pass;
       } else if (argument.startsWith('k:')) {

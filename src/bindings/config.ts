@@ -103,6 +103,31 @@ export class Config implements IConfig {
         }
       }
 
+      try {
+        if (configRef && options.ipWhitelist && options.ipWhitelist.length > 0) {
+          const ipWhitelist = JSON.stringify(options.ipWhitelist);
+          this.addon.configSetIpWhiteList(configRef, ipWhitelist);
+          Logger.info(`IP whitelist set to: ${ipWhitelist}`);
+        }
+      } catch (e) {
+        const lastEx = this.addon.getLastException();
+        if (lastEx) {
+          const pinggyError = new PinggyError(lastEx);
+          Logger.error("Error setting IP whitelist:", pinggyError);
+          throw pinggyError;
+        } else {
+          if (e instanceof Error) {
+            Logger.error("Error setting IP whitelist:", e);
+          } else {
+            Logger.error(
+              "Error setting IP whitelist:",
+              new Error(String(e))
+            );
+          }
+          throw e;
+        }
+      }
+
       // Set SSL configuration
       try {
         this.addon.configSetSsl(configRef, ssl);
@@ -521,6 +546,15 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetHttpsOnly(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting HTTPS-only configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getIpWhiteList(): string[] | null {
+    try {
+      return this.configRef ? this.addon.configGetIpWhiteList(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting IP whitelist configuration:", e as Error);
       return null;
     }
   }

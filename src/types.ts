@@ -210,6 +210,10 @@ export interface PinggyNative {
   configGetSsl(configRef: number): boolean;
   /** Set HTTPS-only configuration for a config. */
   configSetHttpsOnly(configRef: number, httpsOnly: boolean): void;
+  /** Set IP whitelist configuration for a config. */
+  configSetIpWhiteList(configRef: number, ipWhiteList: string): void;
+  /** Get the IP whitelist for a config. */
+  configGetIpWhiteList(configRef: number): string[];
   /** Get HTTPS-only configuration for a config. */
   configGetHttpsOnly(configRef: number): boolean;
   /** Set the log file path. */
