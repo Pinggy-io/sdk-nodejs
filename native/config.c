@@ -1983,6 +1983,130 @@ napi_value ConfigGetIpWhiteList(napi_env env, napi_callback_info info)
     return result;
 }
 
+// Wrapper for pinggy_config_set_basic_auths
+napi_value ConfigSetBasicAuths(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, basic_auths)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // determine length of the basic_auths string
+    size_t auth_len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &auth_len);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid basic_auths argument");
+        return NULL;
+    }
+
+    pinggy_char_p_t basic_auths = malloc(auth_len + 1);
+    if (basic_auths == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    status = napi_get_value_string_utf8(env, args[1], basic_auths, auth_len + 1, &auth_len);
+    if (status != napi_ok)
+    {
+        free(basic_auths);
+        napi_throw_type_error(env, NULL, "Failed to get basic_auths string");
+        return NULL;
+    }
+
+    pinggy_config_set_basic_auths(config, basic_auths);
+    free(basic_auths);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_basic_auths
+napi_value ConfigGetBasicAuths(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the _len variant to get the required buffer size
+    pinggy_capa_t required_len = 0;
+    pinggy_const_int_t rc = pinggy_config_get_basic_auths_len(config, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to determine basic_auths length");
+        return NULL;
+    }
+
+    pinggy_char_p_t basic_auths = malloc(required_len + 1);
+    if (basic_auths == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    pinggy_const_int_t copied = pinggy_config_get_basic_auths(config, required_len + 1, basic_auths);
+    if (copied < 0)
+    {
+        free(basic_auths);
+        napi_throw_error(env, NULL, "Failed to get basic_auths");
+        return NULL;
+    }
+
+    napi_value result;
+    status = napi_create_string_utf8(env, basic_auths, copied, &result);
+    free(basic_auths);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create JS string from basic_auths");
+        return NULL;
+    }
+
+    return result;
+}
+
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
@@ -2003,6 +2127,7 @@ napi_value Init1(napi_env env, napi_value exports)
         set_udp_forward_to_fn,
         set_insecure_fn,
         set_ip_white_list_fn,
+        set_basic_auths_fn,
         set_allow_preflight_fn,
         set_https_only_fn,
         set_x_forwarded_for_fn,
@@ -2021,6 +2146,7 @@ napi_value Init1(napi_env env, napi_value exports)
         get_argument_fn,
         get_ssl_fn,
         get_ip_white_list_fn,
+        get_basic_auths_fn,
         get_insecure_fn,
         get_https_only_fn,
         get_allow_preflight_fn,
@@ -2169,6 +2295,12 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetOriginalRequestUrl, NULL, &get_original_request_url_fn);
     napi_set_named_property(env, exports, "configGetOriginalRequestUrl", get_original_request_url_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetBasicAuths, NULL, &get_basic_auths_fn);
+    napi_set_named_property(env, exports, "configGetBasicAuths", get_basic_auths_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetBasicAuths, NULL, &set_basic_auths_fn);
+    napi_set_named_property(env, exports, "configSetBasicAuths", set_basic_auths_fn);
 
     return exports;
 }

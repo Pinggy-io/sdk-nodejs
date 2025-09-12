@@ -220,6 +220,10 @@ export interface PinggyNative {
   configSetAllowPreflight(configRef: number, allowPreflight: boolean): void;
   /** Set the no-reverse-proxy configuration for a config. */
   configSetReverseProxy(configRef: number, noReverseProxy: boolean): void;
+  /** Set the basic authentication configuration for a config. */
+  configSetBasicAuths(configRef: number, auths: string): void;
+  /** Get the basic authentication configuration for a config. */
+  configGetBasicAuths(configRef: number): string[];
   /** Get the X-Forwarded-For header configuration for a config. */
   configGetXForwardedFor(configRef: number): boolean;
   /** Get the Original-Request-URL header configuration for a config. */

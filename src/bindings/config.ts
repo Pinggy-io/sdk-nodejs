@@ -78,7 +78,7 @@ export class Config implements IConfig {
           throw e;
         }
       }
-    
+
       this.safeSet(
         () => {
           if (configRef) this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
@@ -126,13 +126,30 @@ export class Config implements IConfig {
       this.safeSet(
         () => {
           if (configRef && options.ipWhitelist && options.ipWhitelist.length > 0) {
-        const ipWhitelist = JSON.stringify(options.ipWhitelist);
-        this.addon.configSetIpWhiteList(configRef, ipWhitelist);
+            const ipWhitelist = JSON.stringify(options.ipWhitelist);
+            this.addon.configSetIpWhiteList(configRef, ipWhitelist);
           }
         },
         "IP whitelist configuration",
         options.ipWhitelist && options.ipWhitelist.length > 0
           ? `IP whitelist set to: ${JSON.stringify(options.ipWhitelist)}`
+          : undefined
+      );
+
+      // Set basic auth if provided
+      this.safeSet(
+        () => {
+          if (configRef && options.basicAuth && Object.keys(options.basicAuth).length > 0) {
+            const authArray = Object.entries(options.basicAuth).map(([username, password]) => ({
+              username,
+              password,
+            }));
+            this.addon.configSetBasicAuths(configRef, JSON.stringify(authArray));
+          }
+        },
+        "Basic auth configuration",
+        options.basicAuth && Object.keys(options.basicAuth).length > 0
+          ? `Basic auth set to: ${JSON.stringify(options.basicAuth)}`
           : undefined
       );
 
@@ -230,7 +247,7 @@ export class Config implements IConfig {
   }
 
   /**
-   * Run a setter action with uniform error handling.
+   * Run a setter action with uniform error handling .
    * @param action - zero-arg function that performs the native call
    * @param label - label used in logs/errors
    * @param successMsg - optional success log message
@@ -263,18 +280,6 @@ export class Config implements IConfig {
    */
   public prepareAndSetArgument(configRef: number, options: PinggyOptions) {
     const val: string[] = [];
-
-    // IP Whitelist
-    if (options.ipWhitelist?.length) {
-      val.push(`w:${options.ipWhitelist.join(",")}`);
-    }
-
-    // Basic Auth
-    if (options.basicAuth && Object.keys(options.basicAuth).length > 0) {
-      for (const [user, pass] of Object.entries(options.basicAuth)) {
-        val.push(`b:${user}:${pass}`);
-      }
-    }
 
     // Bearer Auth
     if (options.bearerAuth?.length) {
@@ -329,19 +334,6 @@ export class Config implements IConfig {
         }
       }
     }
-
-    // X-Forwarded-For
-    if (options.xff) val.push("x:xff");
-
-    // Set X-Pinggy-Url header to original url
-    if (options.fullRequestUrl) val.push("x:fullurl");
-
-    // Pass pre-flight request through auth / screening
-    if (options.allowPreflight) val.push("x:passpreflight");
-
-    // Disable reverse proxy headers (X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host, and Forwarded)
-    if (options.noReverseProxy) val.push("x:noreverseproxy");
-
     // Local Server TLS (Connect to local https server)
     if (options.localServerTls) val.push(`x:localServerTls:${options.localServerTls}`);
 
@@ -612,6 +604,14 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetReverseProxy(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting No-Reverse-Proxy configuration:", e as Error);
+      return null;
+    }
+  }
+  public getBasicAuth(): string[] | null {
+    try {
+      return this.configRef ? this.addon.configGetBasicAuths(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Basic Auth configuration:", e as Error);
       return null;
     }
   }

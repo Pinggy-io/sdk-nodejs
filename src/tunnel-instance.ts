@@ -310,6 +310,9 @@ export class TunnelInstance {
     return this.config?.getOriginalRequestUrl() ?? null;
   }
 
+  public getBasicAuth(): string[] | null {
+    return this.config?.getBasicAuth() ?? null;
+  }
   /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
@@ -350,6 +353,16 @@ export class TunnelInstance {
     const fullRequestUrl = this.getOriginalRequestUrl();
     options.fullRequestUrl = fullRequestUrl !== null ? fullRequestUrl : false;
 
+    const basicAuth = this.getBasicAuth() as unknown as { username: string; password: string }[];
+
+    options.basicAuth = {};
+
+    if (basicAuth && basicAuth.length > 0) {
+      for (const cred of basicAuth) {
+        options.basicAuth[cred.username] = cred.password;
+      }
+    }
+
 
     let type = this.getTunnelType() || this.getUdpType()
 
@@ -388,22 +401,12 @@ export class TunnelInstance {
     }
 
     // Initialize arrays and objects with empty defaults
-    options.ipWhitelist = [];
-    options.basicAuth = {};
     options.bearerAuth = [];
     options.headerModification = [];
-    options.xff = false;
-    options.fullRequestUrl = false;
-    options.allowPreflight = false;
-    options.noReverseProxy = false;
-
 
     // Parse Ip whitelist, auth settings, and other flags
     for (const argument of argumentInParts) {
-      if (argument.startsWith('b:')) {
-        const [_, user, pass] = argument.split(':');
-        if (user && pass) options.basicAuth![user] = pass;
-      } else if (argument.startsWith('k:')) {
+      if (argument.startsWith('k:')) {
         options.bearerAuth!.push(argument.substring(2));
       } else if (argument.startsWith('a:')) {
         const [_, key, value] = argument.split(':');
