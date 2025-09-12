@@ -1527,6 +1527,340 @@ napi_value ConfigGetHttpsOnly(napi_env env, napi_callback_info info)
     return result;
 }
 
+// Wrapper for pinggy_config_set_allow_preflight
+napi_value ConfigSetAllowPreflight(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, allow_preflight)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: allow_preflight (pinggy_bool_t / bool)
+    bool allow_preflight;
+    status = napi_get_value_bool(env, args[1], &allow_preflight);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid allow_preflight argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_allow_preflight function
+    pinggy_config_set_allow_preflight(config, (pinggy_bool_t)allow_preflight);
+
+    // Return undefined
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_allow_preflight
+napi_value ConfigGetAllowPreflight(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_get_allow_preflight function
+    pinggy_bool_t allow_preflight = pinggy_config_get_allow_preflight(config);
+
+    // Return the boolean value as a JavaScript boolean
+    napi_value result;
+    napi_get_boolean(env, allow_preflight, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_set_x_forwarded_for
+napi_value ConfigSetXForwardedFor(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, x_forwarded_for)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    bool x_forwarded_for;
+    status = napi_get_value_bool(env, args[1], &x_forwarded_for);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid x_forwarded_for argument");
+        return NULL;
+    }
+
+    pinggy_config_set_x_forwarded_for(config, (pinggy_bool_t)x_forwarded_for);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_x_forwarded_for
+napi_value ConfigGetXForwardedFor(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    pinggy_bool_t x_forwarded_for = pinggy_config_get_x_forwarded_for(config);
+
+    napi_value result;
+    napi_get_boolean(env, x_forwarded_for, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_set_reverse_proxy
+napi_value ConfigSetReverseProxy(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, reverse_proxy)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: reverse_proxy (pinggy_bool_t / bool)
+    bool reverse_proxy;
+    status = napi_get_value_bool(env, args[1], &reverse_proxy);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid reverse_proxy argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_reverse_proxy function
+    pinggy_config_set_reverse_proxy(config, (pinggy_bool_t)reverse_proxy);
+
+    // Return undefined
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_reverse_proxy
+napi_value ConfigGetReverseProxy(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_get_reverse_proxy function
+    pinggy_bool_t reverse_proxy = pinggy_config_get_reverse_proxy(config);
+
+    // Return the boolean value as a JavaScript boolean
+    napi_value result;
+    napi_get_boolean(env, reverse_proxy, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_set_original_request_url
+napi_value ConfigSetOriginalRequestUrl(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, original_request_url)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    bool original_request_url;
+    status = napi_get_value_bool(env, args[1], &original_request_url);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid original_request_url argument");
+        return NULL;
+    }
+
+    pinggy_config_set_original_request_url(config, (pinggy_bool_t)original_request_url);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_original_request_url
+napi_value ConfigGetOriginalRequestUrl(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    pinggy_bool_t original_request_url = pinggy_config_get_original_request_url(config);
+
+    napi_value result;
+    napi_get_boolean(env, original_request_url, &result);
+    return result;
+}
+
 // Wrapper for pinggy_config_set_ip_white_list
 napi_value ConfigSetIpWhiteList(napi_env env, napi_callback_info info)
 {
@@ -1669,7 +2003,11 @@ napi_value Init1(napi_env env, napi_value exports)
         set_udp_forward_to_fn,
         set_insecure_fn,
         set_ip_white_list_fn,
-        set_https_only_fn;
+        set_allow_preflight_fn,
+        set_https_only_fn,
+        set_x_forwarded_for_fn,
+        set_original_request_url_fn,
+        set_reverse_proxy_fn;
 
     napi_value get_server_address_fn,
         get_sni_server_name_fn,
@@ -1685,6 +2023,10 @@ napi_value Init1(napi_env env, napi_value exports)
         get_ip_white_list_fn,
         get_insecure_fn,
         get_https_only_fn,
+        get_allow_preflight_fn,
+        get_reverse_proxy_fn,
+        get_x_forwarded_for_fn,
+        get_original_request_url_fn,
         get_pinggy_version_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
@@ -1803,6 +2145,30 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetIpWhiteList, NULL, &get_ip_white_list_fn);
     napi_set_named_property(env, exports, "configGetIpWhiteList", get_ip_white_list_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetAllowPreflight, NULL, &set_allow_preflight_fn);
+    napi_set_named_property(env, exports, "configSetAllowPreflight", set_allow_preflight_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetAllowPreflight, NULL, &get_allow_preflight_fn);
+    napi_set_named_property(env, exports, "configGetAllowPreflight", get_allow_preflight_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetXForwardedFor, NULL, &set_x_forwarded_for_fn);
+    napi_set_named_property(env, exports, "configSetXForwardedFor", set_x_forwarded_for_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetXForwardedFor, NULL, &get_x_forwarded_for_fn);
+    napi_set_named_property(env, exports, "configGetXForwardedFor", get_x_forwarded_for_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetReverseProxy, NULL, &set_reverse_proxy_fn);
+    napi_set_named_property(env, exports, "configSetReverseProxy", set_reverse_proxy_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetReverseProxy, NULL, &get_reverse_proxy_fn);
+    napi_set_named_property(env, exports, "configGetReverseProxy", get_reverse_proxy_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetOriginalRequestUrl, NULL, &set_original_request_url_fn);
+    napi_set_named_property(env, exports, "configSetOriginalRequestUrl", set_original_request_url_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetOriginalRequestUrl, NULL, &get_original_request_url_fn);
+    napi_set_named_property(env, exports, "configGetOriginalRequestUrl", get_original_request_url_fn);
 
     return exports;
 }

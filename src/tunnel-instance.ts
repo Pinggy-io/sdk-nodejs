@@ -275,6 +275,42 @@ export class TunnelInstance {
   }
 
   /**
+ * Retrieves Allow-Preflight configuration for this tunnel instance.
+ *
+ * @returns {boolean | null} The Allow-Preflight setting, or `null` if not configured.
+ */
+  public getAllowPreflight(): boolean | null {
+    return this.config?.getAllowPreflight() ?? null;
+  }
+
+  /**
+ * Retrieves No-Reverse-Proxy configuration for this tunnel instance.
+ *
+ * @returns {boolean | null} The No-Reverse-Proxy setting, or `null` if not configured.
+ */
+  public getNoReverseProxy(): boolean | null {
+    return this.config?.getNoReverseProxy() ?? null;
+  }
+
+  /**
+ * Retrieves X-Forwarded-For configuration for this tunnel instance.
+ *
+ * @returns {boolean | null} The X-Forwarded-For setting, or `null` if not configured.
+ */
+  public getXForwardedFor(): boolean | null {
+    return this.config?.getXForwardedFor() ?? null;
+  }
+
+  /**
+ * Retrieves Original-Request-URL configuration for this tunnel instance.
+ *
+ * @returns {boolean | null} The Original-Request-URL setting, or `null` if not configured.
+ */
+  public getOriginalRequestUrl(): boolean | null {
+    return this.config?.getOriginalRequestUrl() ?? null;
+  }
+
+  /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
@@ -301,6 +337,18 @@ export class TunnelInstance {
 
     const ipWhiteList = this.getIpWhiteList();
     options.ipWhitelist = ipWhiteList ? ipWhiteList as string[] : [];
+
+    const allowPreflight = this.getAllowPreflight();
+    options.allowPreflight = allowPreflight !== null ? allowPreflight : false;
+
+    const noReverseProxy = this.getNoReverseProxy();
+    options.noReverseProxy = noReverseProxy !== null ? noReverseProxy : false;
+
+    const xff = this.getXForwardedFor();
+    options.xff = xff !== null ? xff : false;
+
+    const fullRequestUrl = this.getOriginalRequestUrl();
+    options.fullRequestUrl = fullRequestUrl !== null ? fullRequestUrl : false;
 
 
     let type = this.getTunnelType() || this.getUdpType()
@@ -371,15 +419,6 @@ export class TunnelInstance {
         if (parts.length === 3) {
           options.localServerTls = parts[2];
         }
-      }
-      else if (argument === 'x:xff') {
-        options.xff = true;
-      } else if (argument === 'x:fullurl') {
-        options.fullRequestUrl = true;
-      } else if (argument === 'x:passpreflight') {
-        options.allowPreflight = true;
-      } else if (argument === 'x:noreverseproxy') {
-        options.noReverseProxy = true;
       }
     }
 

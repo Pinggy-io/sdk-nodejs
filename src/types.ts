@@ -212,6 +212,22 @@ export interface PinggyNative {
   configSetHttpsOnly(configRef: number, httpsOnly: boolean): void;
   /** Set IP whitelist configuration for a config. */
   configSetIpWhiteList(configRef: number, ipWhiteList: string): void;
+  /** Set the X-Forwarded-For header for a config. */
+  configSetXForwardedFor(configRef: number, xForwardedFor: boolean): void;
+  /** Set the Original-Request-URL header for a config. */
+  configSetOriginalRequestUrl(configRef: number, originalRequestUrl: boolean): void;
+  /** Set the Allow-Preflight configuration for a config. */
+  configSetAllowPreflight(configRef: number, allowPreflight: boolean): void;
+  /** Set the no-reverse-proxy configuration for a config. */
+  configSetReverseProxy(configRef: number, noReverseProxy: boolean): void;
+  /** Get the X-Forwarded-For header configuration for a config. */
+  configGetXForwardedFor(configRef: number): boolean;
+  /** Get the Original-Request-URL header configuration for a config. */
+  configGetOriginalRequestUrl(configRef: number): boolean;
+  /** Get the Allow-Preflight configuration for a config. */
+  configGetAllowPreflight(configRef: number): boolean;
+  /** Get the reverse-proxy configuration for a config. */
+  configGetReverseProxy(configRef: number): boolean;
   /** Get the IP whitelist for a config. */
   configGetIpWhiteList(configRef: number): string[];
   /** Get HTTPS-only configuration for a config. */

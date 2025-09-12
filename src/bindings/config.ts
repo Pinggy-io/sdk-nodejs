@@ -78,78 +78,72 @@ export class Config implements IConfig {
           throw e;
         }
       }
+    
+      this.safeSet(
+        () => {
+          if (configRef) this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
+        },
+        "HTTPS-only configuration",
+        `HTTPS-only configuration set to: ${options.httpsOnly}`
+      );
 
-      try {
-        if (configRef) {
-          this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
-          Logger.info(`HTTPS-only configuration set to: ${options.httpsOnly}`);
-        }
-      } catch (e) {
-        const lastEx = this.addon.getLastException();
-        if (lastEx) {
-          const pinggyError = new PinggyError(lastEx);
-          Logger.error("Error setting HTTPS-only configuration:", pinggyError);
-          throw pinggyError;
-        } else {
-          if (e instanceof Error) {
-            Logger.error("Error setting HTTPS-only configuration:", e);
-          } else {
-            Logger.error(
-              "Error setting HTTPS-only configuration:",
-              new Error(String(e))
-            );
-          }
-          throw e;
-        }
-      }
+      //set allow preflight
+      this.safeSet(
+        () => {
+          if (configRef) this.addon.configSetAllowPreflight(configRef, options.allowPreflight as boolean);
+        },
+        "Allow-Preflight configuration",
+        `Allow-Preflight configuration set to: ${options.allowPreflight}`
+      );
+      //set xff
+      this.safeSet(
+        () => {
+          if (configRef) this.addon.configSetXForwardedFor(configRef, options.xff as boolean);
+        },
+        "X-Forwarded-For configuration",
+        `X-Forwarded-For configuration set to: ${options.xff}`
+      );
 
-      try {
-        if (configRef && options.ipWhitelist && options.ipWhitelist.length > 0) {
-          const ipWhitelist = JSON.stringify(options.ipWhitelist);
-          this.addon.configSetIpWhiteList(configRef, ipWhitelist);
-          Logger.info(`IP whitelist set to: ${ipWhitelist}`);
-        }
-      } catch (e) {
-        const lastEx = this.addon.getLastException();
-        if (lastEx) {
-          const pinggyError = new PinggyError(lastEx);
-          Logger.error("Error setting IP whitelist:", pinggyError);
-          throw pinggyError;
-        } else {
-          if (e instanceof Error) {
-            Logger.error("Error setting IP whitelist:", e);
-          } else {
-            Logger.error(
-              "Error setting IP whitelist:",
-              new Error(String(e))
-            );
+      // set original request urc
+      this.safeSet(
+        () => {
+          if (configRef) this.addon.configSetOriginalRequestUrl(configRef, options.fullRequestUrl as boolean);
+        },
+        "Original-Request-URL configuration",
+        `Original-Request-URL configuration set to: ${options.fullRequestUrl}`
+      );
+
+      // set no reverse proxy
+      this.safeSet(
+        () => {
+          if (configRef) this.addon.configSetReverseProxy(configRef, options.noReverseProxy as boolean);
+        },
+        "No-Reverse-Proxy configuration",
+        `No-Reverse-Proxy configuration set to: ${options.noReverseProxy}`
+      );
+
+      // Set IP whitelist if provided
+      this.safeSet(
+        () => {
+          if (configRef && options.ipWhitelist && options.ipWhitelist.length > 0) {
+        const ipWhitelist = JSON.stringify(options.ipWhitelist);
+        this.addon.configSetIpWhiteList(configRef, ipWhitelist);
           }
-          throw e;
-        }
-      }
+        },
+        "IP whitelist configuration",
+        options.ipWhitelist && options.ipWhitelist.length > 0
+          ? `IP whitelist set to: ${JSON.stringify(options.ipWhitelist)}`
+          : undefined
+      );
 
       // Set SSL configuration
-      try {
-        this.addon.configSetSsl(configRef, ssl);
-        Logger.info(`SSL configuration set to: ${ssl}`);
-      } catch (e) {
-        const lastEx = this.addon.getLastException();
-        if (lastEx) {
-          const pinggyError = new PinggyError(lastEx);
-          Logger.error("Error setting SSL configuration:", pinggyError);
-          throw pinggyError;
-        } else {
-          if (e instanceof Error) {
-            Logger.error("Error setting SSL configuration:", e);
-          } else {
-            Logger.error(
-              "Error setting SSL configuration:",
-              new Error(String(e))
-            );
-          }
-          throw e;
-        }
-      }
+      this.safeSet(
+        () => {
+          this.addon.configSetSsl(configRef, ssl);
+        },
+        "SSL configuration",
+        `SSL configuration set to: ${ssl}`
+      );
 
       // Set force configuration if provided
       if (options.force !== undefined) {
@@ -232,6 +226,33 @@ export class Config implements IConfig {
     } catch (e) {
       Logger.error("Error creating configuration:", e as Error);
       return 0;
+    }
+  }
+
+  /**
+   * Run a setter action with uniform error handling.
+   * @param action - zero-arg function that performs the native call
+   * @param label - label used in logs/errors
+   * @param successMsg - optional success log message
+   */
+  private safeSet(action: () => void, label: string, successMsg?: string): void {
+    try {
+      action();
+      if (successMsg) Logger.info(successMsg);
+    } catch (e) {
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error(`Error setting ${label}:`, pinggyError);
+        throw pinggyError;
+      } else {
+        if (e instanceof Error) {
+          Logger.error(`Error setting ${label}:`, e);
+        } else {
+          Logger.error(`Error setting ${label}:`, new Error(String(e)));
+        }
+        throw e;
+      }
     }
   }
 
@@ -555,6 +576,42 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetIpWhiteList(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting IP whitelist configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getAllowPreflight(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetAllowPreflight(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Allow-Preflight configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getXForwardedFor(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetXForwardedFor(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting X-Forwarded-For configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getOriginalRequestUrl(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetOriginalRequestUrl(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Original-Request-URL configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getNoReverseProxy(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetReverseProxy(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting No-Reverse-Proxy configuration:", e as Error);
       return null;
     }
   }
