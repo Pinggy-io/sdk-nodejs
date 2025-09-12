@@ -222,6 +222,10 @@ export interface PinggyNative {
   configSetReverseProxy(configRef: number, noReverseProxy: boolean): void;
   /** Set the basic authentication configuration for a config. */
   configSetBasicAuths(configRef: number, auths: string): void;
+  /** Set the bearer authentication configuration for a config. */
+  configSetBearerTokenAuths(configRef: number, tokens: string): void;
+  /** Get the bearer authentication configuration for a config. */
+  configGetBearerTokenAuths(configRef: number): string[];
   /** Get the basic authentication configuration for a config. */
   configGetBasicAuths(configRef: number): string[];
   /** Get the X-Forwarded-For header configuration for a config. */

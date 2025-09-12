@@ -310,8 +310,22 @@ export class TunnelInstance {
     return this.config?.getOriginalRequestUrl() ?? null;
   }
 
+  /**
+   * Retrieves the basic authentication values from the instance configuration.
+   *
+   * @returns An array of basic auth credentials when configured, or null if none are set.
+   */
   public getBasicAuth(): string[] | null {
     return this.config?.getBasicAuth() ?? null;
+  }
+
+  /**
+   * Returns bearer token authentication values defined in the configuration.
+   *
+   * @returns An array of bearer token strings if present; otherwise null.
+   */
+  public getBearerTokenAuth(): string[] | null {
+    return this.config?.getBearerTokenAuth() ?? null;
   }
   /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
@@ -363,6 +377,9 @@ export class TunnelInstance {
       }
     }
 
+    const bearerAuth = this.getBearerTokenAuth();
+    options.bearerAuth = bearerAuth ? bearerAuth : [];
+
 
     let type = this.getTunnelType() || this.getUdpType()
 
@@ -406,9 +423,7 @@ export class TunnelInstance {
 
     // Parse Ip whitelist, auth settings, and other flags
     for (const argument of argumentInParts) {
-      if (argument.startsWith('k:')) {
-        options.bearerAuth!.push(argument.substring(2));
-      } else if (argument.startsWith('a:')) {
+      if (argument.startsWith('a:')) {
         const [_, key, value] = argument.split(':');
         if (key && value) options.headerModification!.push({ action: 'add', key, value });
       } else if (argument.startsWith('r:')) {

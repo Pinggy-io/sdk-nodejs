@@ -153,6 +153,19 @@ export class Config implements IConfig {
           : undefined
       );
 
+      // Set bearer token if provided
+      this.safeSet(
+        () => {
+          if (configRef && options.bearerAuth && options.bearerAuth.length > 0) {
+            this.addon.configSetBearerTokenAuths(configRef, JSON.stringify(options.bearerAuth));
+          }
+        },
+        "Bearer auth configuration",
+        options.bearerAuth && options.bearerAuth.length > 0
+          ? `Bearer auth set to: ${JSON.stringify(options.bearerAuth)}`
+          : undefined
+      );
+
       // Set SSL configuration
       this.safeSet(
         () => {
@@ -612,6 +625,15 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetBasicAuths(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting Basic Auth configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getBearerTokenAuth(): string[] | null {
+    try {
+      return this.configRef ? this.addon.configGetBearerTokenAuths(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Bearer Token Auth configuration:", e as Error);
       return null;
     }
   }
