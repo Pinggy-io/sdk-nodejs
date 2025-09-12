@@ -327,6 +327,7 @@ export class TunnelInstance {
   public getBearerTokenAuth(): string[] | null {
     return this.config?.getBearerTokenAuth() ?? null;
   }
+
   /**
    * Returns header modification values defined in the configuration.
    *
@@ -334,6 +335,15 @@ export class TunnelInstance {
    */
   public getHeaderModification(): string[] | null {
     return this.config?.getHeaderModification() ?? null;
+  }
+
+  /**
+   * Returns local server TLS configuration for this tunnel instance.
+   *
+   * @returns The local server TLS setting, or `null` if not configured.
+   */
+  public getLocalServerTls(): string | null {
+    return this.config?.getLocalServerTls() ?? null;
   }
   /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
@@ -403,6 +413,9 @@ export class TunnelInstance {
       })
       : [];
 
+    const localServerTls = this.getLocalServerTls();
+    options.localServerTls = localServerTls || "";
+
 
     let type = this.getTunnelType() || this.getUdpType()
 
@@ -440,16 +453,7 @@ export class TunnelInstance {
       options.cmd = argumentInParts[0];
     }
 
-    // Parse Ip whitelist, auth settings, and other flags
-    for (const argument of argumentInParts) {
-      if (argument.startsWith('x:localServerTls')) {
-        const parts = argument.split(':');
-        // Expected format: x:localServerTls:localhost
-        if (parts.length === 3) {
-          options.localServerTls = parts[2];
-        }
-      }
-    }
+
 
     return options;
   }

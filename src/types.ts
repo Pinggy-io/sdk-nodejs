@@ -226,6 +226,10 @@ export interface PinggyNative {
   configSetBearerTokenAuths(configRef: number, tokens: string): void;
   /** Set the header modification configuration for a config. */
   configSetHeaderModification(configRef: number, headers: string): void;
+  /** Set local server TLS configuration for a config. */
+  configSetLocalServerTls(configRef: number, tls: string): void;
+  /** Get local server TLS configuration for a config. */
+  configGetLocalServerTls(configRef: number): string;
   /** Get the header modification configuration for a config. */
   configGetHeaderModification(configRef: number): string[];
   /** Get the bearer authentication configuration for a config. */

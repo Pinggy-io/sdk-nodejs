@@ -2229,7 +2229,6 @@ napi_value ConfigGetBearerTokenAuths(napi_env env, napi_callback_info info)
 
     return result;
 }
-
 // Wrapper for pinggy_config_set_header_modification
 napi_value ConfigSetHeaderModification(napi_env env, napi_callback_info info)
 {
@@ -2353,6 +2352,128 @@ napi_value ConfigGetHeaderModification(napi_env env, napi_callback_info info)
     return result;
 }
 
+// Wrapper for pinggy_config_set_local_server_tls
+napi_value ConfigSetLocalServerTls(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, local_server_tls)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    size_t len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &len);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid local_server_tls argument");
+        return NULL;
+    }
+
+    pinggy_char_p_t local_server_tls = malloc(len + 1);
+    if (local_server_tls == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    status = napi_get_value_string_utf8(env, args[1], local_server_tls, len + 1, &len);
+    if (status != napi_ok)
+    {
+        free(local_server_tls);
+        napi_throw_type_error(env, NULL, "Failed to get local_server_tls string");
+        return NULL;
+    }
+
+    pinggy_config_set_local_server_tls(config, local_server_tls);
+    free(local_server_tls);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_local_server_tls
+napi_value ConfigGetLocalServerTls(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    pinggy_capa_t required_len = 0;
+    pinggy_const_int_t rc = pinggy_config_get_local_server_tls_len(config, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to determine local_server_tls length");
+        return NULL;
+    }
+
+    pinggy_char_p_t local_server_tls = malloc(required_len + 1);
+    if (local_server_tls == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    pinggy_const_int_t copied = pinggy_config_get_local_server_tls(config, required_len + 1, local_server_tls);
+    if (copied < 0)
+    {
+        free(local_server_tls);
+        napi_throw_error(env, NULL, "Failed to get local_server_tls");
+        return NULL;
+    }
+
+    napi_value result;
+    status = napi_create_string_utf8(env, local_server_tls, copied, &result);
+    free(local_server_tls);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create JS string from local_server_tls");
+        return NULL;
+    }
+
+    return result;
+}
+
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
@@ -2380,6 +2501,7 @@ napi_value Init1(napi_env env, napi_value exports)
         set_x_forwarded_for_fn,
         set_original_request_url_fn,
         set_header_manipulations_fn,
+        set_local_server_tls_fn,
         set_reverse_proxy_fn;
 
     napi_value get_server_address_fn,
@@ -2403,6 +2525,7 @@ napi_value Init1(napi_env env, napi_value exports)
         get_x_forwarded_for_fn,
         get_original_request_url_fn,
         get_header_manipulations_fn,
+        get_local_server_tls_fn,
         get_pinggy_version_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
@@ -2563,6 +2686,12 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetHeaderModification, NULL, &get_header_manipulations_fn);
     napi_set_named_property(env, exports, "configGetHeaderModification", get_header_manipulations_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetLocalServerTls, NULL, &set_local_server_tls_fn);
+    napi_set_named_property(env, exports, "configSetLocalServerTls", set_local_server_tls_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetLocalServerTls, NULL, &get_local_server_tls_fn);
+    napi_set_named_property(env, exports, "configGetLocalServerTls", get_local_server_tls_fn);
 
     return exports;
 }

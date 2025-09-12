@@ -188,6 +188,19 @@ export class Config implements IConfig {
         `SSL configuration set to: ${ssl}`
       );
 
+      // Set local server TLS configuration
+      this.safeSet(
+        () => {
+          if (configRef && options.localServerTls) {
+            this.addon.configSetLocalServerTls(configRef, options.localServerTls as string);
+          }
+        },
+        "Local server TLS configuration",
+        options.localServerTls
+          ? `Local server TLS configuration set to: ${options.localServerTls}`
+          : undefined
+      );
+
       // Set force configuration if provided
       if (options.force !== undefined) {
         try {
@@ -306,9 +319,6 @@ export class Config implements IConfig {
    */
   public prepareAndSetArgument(configRef: number, options: PinggyOptions) {
     const val: string[] = [];
-    // Local Server TLS (Connect to local https server)
-    if (options.localServerTls) val.push(`x:localServerTls:${options.localServerTls}`);
-
 
     let argument = join(val);
     if (options.cmd && options.cmd.trim()) {
@@ -602,6 +612,15 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetHeaderModification(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting Header Modification configuration:", e as Error);
+      return null;
+    }
+  }
+  
+  public getLocalServerTls(): string | null {
+    try {
+      return this.configRef ? this.addon.configGetLocalServerTls(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Local Server TLS configuration:", e as Error);
       return null;
     }
   }
