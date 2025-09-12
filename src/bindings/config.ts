@@ -156,13 +156,26 @@ export class Config implements IConfig {
       // Set bearer token if provided
       this.safeSet(
         () => {
-          if (configRef && options.bearerAuth && options.bearerAuth.length > 0) {
+          if (configRef && options.bearerAuth && options.bearerAuth?.length > 0) {
             this.addon.configSetBearerTokenAuths(configRef, JSON.stringify(options.bearerAuth));
           }
         },
         "Bearer auth configuration",
-        options.bearerAuth && options.bearerAuth.length > 0
+        options.bearerAuth && options.bearerAuth?.length > 0
           ? `Bearer auth set to: ${JSON.stringify(options.bearerAuth)}`
+          : undefined
+      );
+
+      // Set header modifications if provided
+      this.safeSet(
+        () => {
+          if (configRef && options.headerModification && options.headerModification?.length > 0) {
+            this.addon.configSetHeaderModification(configRef, JSON.stringify(options.headerModification));
+          }
+        },
+        "Header modification configuration",
+        options.headerModification && options.headerModification?.length > 0
+          ? `Header modification set to: ${JSON.stringify(options.headerModification)}`
           : undefined
       );
 
@@ -293,60 +306,6 @@ export class Config implements IConfig {
    */
   public prepareAndSetArgument(configRef: number, options: PinggyOptions) {
     const val: string[] = [];
-
-    // Bearer Auth
-    if (options.bearerAuth?.length) {
-      for (const token of options.bearerAuth) {
-        val.push(`k:${token}`);
-      }
-    }
-
-    // Header Modification
-    if (options.headerModification?.length) {
-      for (const header of options.headerModification) {
-        switch (header.action) {
-          case "add":
-            if (header.key && header.value) {
-              val.push(`a:${header.key}:${header.value}`);
-            } else {
-              Logger.error(
-                `Invalid add header: missing key or value for ${JSON.stringify(
-                  header
-                )}`
-              );
-            }
-            break;
-          case "remove":
-            if (header.key) {
-              val.push(`r:${header.key}`);
-            } else {
-              Logger.error(
-                `Invalid remove header: missing key for ${JSON.stringify(
-                  header
-                )}`
-              );
-            }
-            break;
-          case "update":
-            if (header.key && header.value) {
-              val.push(`u:${header.key}:${header.value}`);
-            } else {
-              Logger.error(
-                `Invalid update header: missing key or value for ${JSON.stringify(
-                  header
-                )}`
-              );
-            }
-            break;
-          default:
-            Logger.error(
-              `Unknown header action: ${header.action} for ${JSON.stringify(
-                header
-              )}`
-            );
-        }
-      }
-    }
     // Local Server TLS (Connect to local https server)
     if (options.localServerTls) val.push(`x:localServerTls:${options.localServerTls}`);
 
@@ -634,6 +593,15 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetBearerTokenAuths(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting Bearer Token Auth configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getHeaderModification(): string[] | null {
+    try {
+      return this.configRef ? this.addon.configGetHeaderModification(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Header Modification configuration:", e as Error);
       return null;
     }
   }

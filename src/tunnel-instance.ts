@@ -1,4 +1,4 @@
-import { PinggyNative, PinggyOptions, TunnelStatus } from "./types";
+import { HeaderModification, PinggyNative, PinggyOptions, TunnelStatus } from "./types";
 import { Config } from "./bindings/config";
 import { Tunnel } from "./bindings/tunnel";
 import { Logger } from "./utils/logger";
@@ -328,6 +328,14 @@ export class TunnelInstance {
     return this.config?.getBearerTokenAuth() ?? null;
   }
   /**
+   * Returns header modification values defined in the configuration.
+   *
+   * @returns An array of header modification objects if present; otherwise null.
+   */
+  public getHeaderModification(): string[] | null {
+    return this.config?.getHeaderModification() ?? null;
+  }
+  /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
@@ -380,6 +388,21 @@ export class TunnelInstance {
     const bearerAuth = this.getBearerTokenAuth();
     options.bearerAuth = bearerAuth ? bearerAuth : [];
 
+    const headerModificationRaw = this.getHeaderModification() as unknown as HeaderModification[];
+
+    options.headerModification = Array.isArray(headerModificationRaw)
+      ? headerModificationRaw.map(h => {
+        if (h.type === "remove") {
+          return { key: h.key, type: "remove" as const };
+        }
+        return {
+          key: h.key,
+          type: h.type,
+          value: Array.isArray(h.value) ? h.value : [],
+        };
+      })
+      : [];
+
 
     let type = this.getTunnelType() || this.getUdpType()
 
@@ -417,21 +440,9 @@ export class TunnelInstance {
       options.cmd = argumentInParts[0];
     }
 
-    // Initialize arrays and objects with empty defaults
-    options.bearerAuth = [];
-    options.headerModification = [];
-
     // Parse Ip whitelist, auth settings, and other flags
     for (const argument of argumentInParts) {
-      if (argument.startsWith('a:')) {
-        const [_, key, value] = argument.split(':');
-        if (key && value) options.headerModification!.push({ action: 'add', key, value });
-      } else if (argument.startsWith('r:')) {
-        options.headerModification!.push({ action: 'remove', key: argument.substring(2) });
-      } else if (argument.startsWith('u:')) {
-        const [_, key, value] = argument.split(':');
-        if (key && value) options.headerModification!.push({ action: 'update', key, value });
-      } else if (argument.startsWith('x:localServerTls')) {
+      if (argument.startsWith('x:localServerTls')) {
         const parts = argument.split(':');
         // Expected format: x:localServerTls:localhost
         if (parts.length === 3) {

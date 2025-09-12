@@ -2230,6 +2230,129 @@ napi_value ConfigGetBearerTokenAuths(napi_env env, napi_callback_info info)
     return result;
 }
 
+// Wrapper for pinggy_config_set_header_modification
+napi_value ConfigSetHeaderModification(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, header_modification)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // determine length of the header_modification string
+    size_t header_len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &header_len);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid header_modification argument");
+        return NULL;
+    }
+
+    pinggy_char_p_t header_modification = malloc(header_len + 1);
+    if (header_modification == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    status = napi_get_value_string_utf8(env, args[1], header_modification, header_len + 1, &header_len);
+    if (status != napi_ok)
+    {
+        free(header_modification);
+        napi_throw_type_error(env, NULL, "Failed to get header_modification string");
+        return NULL;
+    }
+
+    pinggy_config_set_header_manipulations(config, header_modification);
+    free(header_modification);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_header_modification
+napi_value ConfigGetHeaderModification(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    pinggy_capa_t required_len = 0;
+    pinggy_const_int_t rc = pinggy_config_get_header_manipulations_len(config, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to determine header_modification length");
+        return NULL;
+    }
+
+    pinggy_char_p_t header_modification = malloc(required_len + 1);
+    if (header_modification == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    pinggy_const_int_t copied = pinggy_config_get_header_manipulations(config, required_len + 1, header_modification);
+    if (copied < 0)
+    {
+        free(header_modification);
+        napi_throw_error(env, NULL, "Failed to get header_modification");
+        return NULL;
+    }
+
+    napi_value result;
+    status = napi_create_string_utf8(env, header_modification, copied, &result);
+    free(header_modification);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create JS string from header_modification");
+        return NULL;
+    }
+
+    return result;
+}
+
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
@@ -2256,6 +2379,7 @@ napi_value Init1(napi_env env, napi_value exports)
         set_https_only_fn,
         set_x_forwarded_for_fn,
         set_original_request_url_fn,
+        set_header_manipulations_fn,
         set_reverse_proxy_fn;
 
     napi_value get_server_address_fn,
@@ -2278,6 +2402,7 @@ napi_value Init1(napi_env env, napi_value exports)
         get_reverse_proxy_fn,
         get_x_forwarded_for_fn,
         get_original_request_url_fn,
+        get_header_manipulations_fn,
         get_pinggy_version_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
@@ -2432,6 +2557,12 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigSetBearerTokenAuths, NULL, &set_bearer_token_auths_fn);
     napi_set_named_property(env, exports, "configSetBearerTokenAuths", set_bearer_token_auths_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetHeaderModification, NULL, &set_header_manipulations_fn);
+    napi_set_named_property(env, exports, "configSetHeaderModification", set_header_manipulations_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetHeaderModification, NULL, &get_header_manipulations_fn);
+    napi_set_named_property(env, exports, "configGetHeaderModification", get_header_manipulations_fn);
 
     return exports;
 }

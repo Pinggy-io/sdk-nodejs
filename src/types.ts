@@ -32,12 +32,12 @@ export interface HeaderModification {
   /**
    * The header value (optional, required for add/update).
    */
-  value?: string;
+  value?: string[];
 
   /**
    * The action to perform: add, remove, or update.
    */
-  action: "add" | "remove" | "update";
+  type: "add" | "remove" | "update";
 }
 
 /**
@@ -224,6 +224,10 @@ export interface PinggyNative {
   configSetBasicAuths(configRef: number, auths: string): void;
   /** Set the bearer authentication configuration for a config. */
   configSetBearerTokenAuths(configRef: number, tokens: string): void;
+  /** Set the header modification configuration for a config. */
+  configSetHeaderModification(configRef: number, headers: string): void;
+  /** Get the header modification configuration for a config. */
+  configGetHeaderModification(configRef: number): string[];
   /** Get the bearer authentication configuration for a config. */
   configGetBearerTokenAuths(configRef: number): string[];
   /** Get the basic authentication configuration for a config. */
