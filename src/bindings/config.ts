@@ -1,4 +1,4 @@
-import { join } from "shlex";
+// shlex.join was previously used to build argument strings; logic is now in initialize
 
 import { Logger } from "../utils/logger";
 import { PinggyNative, PinggyOptions, Config as IConfig } from "../types";
@@ -38,12 +38,33 @@ export class Config implements IConfig {
       const configRef = this.addon.createConfig();
       Logger.info(`Created config with reference: ${configRef}`);
 
+      if (!configRef) {
+        const lastEx = this.addon.getLastException();
+        if (lastEx) {
+          const pinggyError = new PinggyError(lastEx);
+          Logger.error("Failed to create native config:", pinggyError);
+          throw pinggyError;
+        } else {
+          const err = new Error("Failed to create native config: received invalid reference");
+          Logger.error(err.message);
+          throw err;
+        }
+      }
+
       if (options.token) {
         try {
           this.addon.configSetToken(configRef, options.token);
           Logger.info("Token set successfully");
         } catch (e) {
-          Logger.error("Error setting token:", e as Error);
+          const lastEx = this.addon.getLastException();
+          if (lastEx) {
+            const pinggyError = new PinggyError(lastEx);
+            Logger.error("Error setting token:", pinggyError);
+            throw pinggyError;
+          } else {
+            Logger.error("Error setting token:", e instanceof Error ? e : new Error(String(e)));
+            throw e;
+          }
         }
       }
 
@@ -54,7 +75,14 @@ export class Config implements IConfig {
       const type = options.type || ""; // Default to empty string if not provided
       const ssl = options.ssl !== undefined ? options.ssl : true; // Default to true if not specified
 
-      this.prepareAndSetArgument(configRef, options);
+      // Set argument if provided
+
+      if (options.additionalArguments?.trim()) {
+        const argument = options.additionalArguments.trim();
+        Logger.info(`Setting config argument: ${argument}`);
+        this.addon.configSetArgument(configRef, argument);
+      }
+
 
       this.addon.configSetServerAddress(configRef, serverAddress);
 
@@ -81,7 +109,7 @@ export class Config implements IConfig {
 
       this.safeSet(
         () => {
-          if (configRef) this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
+          this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
         },
         "HTTPS-only configuration",
         `HTTPS-only configuration set to: ${options.httpsOnly}`
@@ -90,24 +118,25 @@ export class Config implements IConfig {
       //set allow preflight
       this.safeSet(
         () => {
-          if (configRef) this.addon.configSetAllowPreflight(configRef, options.allowPreflight as boolean);
+          this.addon.configSetAllowPreflight(configRef, options.allowPreflight as boolean);
         },
         "Allow-Preflight configuration",
         `Allow-Preflight configuration set to: ${options.allowPreflight}`
       );
+
       //set xff
       this.safeSet(
         () => {
-          if (configRef) this.addon.configSetXForwardedFor(configRef, options.xff as boolean);
+          this.addon.configSetXForwardedFor(configRef, options.xff as boolean);
         },
         "X-Forwarded-For configuration",
         `X-Forwarded-For configuration set to: ${options.xff}`
       );
 
-      // set original request urc
+      // set original request url
       this.safeSet(
         () => {
-          if (configRef) this.addon.configSetOriginalRequestUrl(configRef, options.fullRequestUrl as boolean);
+          this.addon.configSetOriginalRequestUrl(configRef, options.fullRequestUrl as boolean);
         },
         "Original-Request-URL configuration",
         `Original-Request-URL configuration set to: ${options.fullRequestUrl}`
@@ -116,7 +145,7 @@ export class Config implements IConfig {
       // set no reverse proxy
       this.safeSet(
         () => {
-          if (configRef) this.addon.configSetReverseProxy(configRef, options.noReverseProxy as boolean);
+          this.addon.configSetReverseProxy(configRef, options.noReverseProxy as boolean);
         },
         "No-Reverse-Proxy configuration",
         `No-Reverse-Proxy configuration set to: ${options.noReverseProxy}`
@@ -125,7 +154,7 @@ export class Config implements IConfig {
       // Set IP whitelist if provided
       this.safeSet(
         () => {
-          if (configRef && options.ipWhitelist && options.ipWhitelist.length > 0) {
+          if (options.ipWhitelist && options.ipWhitelist.length > 0) {
             const ipWhitelist = JSON.stringify(options.ipWhitelist);
             this.addon.configSetIpWhiteList(configRef, ipWhitelist);
           }
@@ -139,7 +168,7 @@ export class Config implements IConfig {
       // Set basic auth if provided
       this.safeSet(
         () => {
-          if (configRef && options.basicAuth && Object.keys(options.basicAuth).length > 0) {
+          if (options.basicAuth && Object.keys(options.basicAuth).length > 0) {
             const authArray = Object.entries(options.basicAuth).map(([username, password]) => ({
               username,
               password,
@@ -156,7 +185,7 @@ export class Config implements IConfig {
       // Set bearer token if provided
       this.safeSet(
         () => {
-          if (configRef && options.bearerAuth && options.bearerAuth?.length > 0) {
+          if (options.bearerAuth && options.bearerAuth?.length > 0) {
             this.addon.configSetBearerTokenAuths(configRef, JSON.stringify(options.bearerAuth));
           }
         },
@@ -169,7 +198,7 @@ export class Config implements IConfig {
       // Set header modifications if provided
       this.safeSet(
         () => {
-          if (configRef && options.headerModification && options.headerModification?.length > 0) {
+          if (options.headerModification && options.headerModification?.length > 0) {
             this.addon.configSetHeaderModification(configRef, JSON.stringify(options.headerModification));
           }
         },
@@ -191,7 +220,7 @@ export class Config implements IConfig {
       // Set local server TLS configuration
       this.safeSet(
         () => {
-          if (configRef && options.localServerTls) {
+          if (options.localServerTls) {
             this.addon.configSetLocalServerTls(configRef, options.localServerTls as string);
           }
         },
@@ -310,24 +339,6 @@ export class Config implements IConfig {
         throw e;
       }
     }
-  }
-
-  /**
-   * Prepares and sets the argument string for the native config, based on options.
-   * @param {number} configRef - The native config reference.
-   * @param {PinggyOptions} options - The tunnel configuration options.
-   */
-  public prepareAndSetArgument(configRef: number, options: PinggyOptions) {
-    const val: string[] = [];
-
-    let argument = join(val);
-    if (options.cmd && options.cmd.trim()) {
-      argument = `${options.cmd.trim()} ${argument}`;
-    }
-
-    Logger.info(`Setting config argument: ${argument}`);
-
-    this.addon.configSetArgument(configRef, argument);
   }
 
   /**
@@ -615,7 +626,7 @@ export class Config implements IConfig {
       return null;
     }
   }
-  
+
   public getLocalServerTls(): string | null {
     try {
       return this.configRef ? this.addon.configGetLocalServerTls(this.configRef) : null;

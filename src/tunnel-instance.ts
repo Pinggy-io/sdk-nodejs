@@ -385,15 +385,9 @@ export class TunnelInstance {
     const fullRequestUrl = this.getOriginalRequestUrl();
     options.fullRequestUrl = fullRequestUrl !== null ? fullRequestUrl : false;
 
-    const basicAuth = this.getBasicAuth() as unknown as { username: string; password: string }[];
+    const rawAuthValue = this.getBasicAuth();
 
-    options.basicAuth = {};
-
-    if (basicAuth && basicAuth.length > 0) {
-      for (const cred of basicAuth) {
-        options.basicAuth[cred.username] = cred.password;
-      }
-    }
+    options.basicAuth = normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
 
     const bearerAuth = this.getBearerTokenAuth();
     options.bearerAuth = bearerAuth ? bearerAuth : [];
@@ -450,11 +444,35 @@ export class TunnelInstance {
       !argumentInParts[0].startsWith("a:") && !argumentInParts[0].startsWith("r:") &&
       !argumentInParts[0].startsWith("u:") && !argumentInParts[0].startsWith("x:")
     ) {
-      options.cmd = argumentInParts[0];
+      options.additionalArguments = argumentInParts[0];
     }
-
-
-
     return options;
   }
+}
+
+type BasicAuthItem = { username: string; password: string };
+
+function normalizeBasicAuth(input: string | BasicAuthItem[] | null): Record<string, string> {
+  let parsed: BasicAuthItem[] | null = null;
+
+  if (typeof input === "string") {
+    try {
+      parsed = JSON.parse(input);
+    } catch {
+      parsed = null;
+    }
+  } else {
+    parsed = input ?? null;
+  }
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    return {};
+  }
+
+  return parsed.reduce<Record<string, string>>((acc, { username, password }) => {
+    if (username && password) {
+      acc[username] = password;
+    }
+    return acc;
+  }, {});
 }

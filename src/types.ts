@@ -145,7 +145,7 @@ export interface PinggyOptions {
    * Optional command prefix for the tunnel.
    * @example "--tcp"
    */
-  cmd?: string;
+  additionalArguments?: string;
   /**
    * Whether to use SSL for tunnel setup.
    * @default false
