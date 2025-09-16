@@ -345,6 +345,33 @@ export class TunnelInstance {
   public getLocalServerTls(): string | null {
     return this.config?.getLocalServerTls() ?? null;
   }
+
+  /**
+ * Returns reconnect interval configuration for this tunnel instance.
+ *
+ * @returns The reconnect interval setting, or `null` if not configured.
+ */
+  public getReconnectInterval(): number | null {
+    return this.config?.getReconnectInterval() ?? null;
+  }
+
+  /**
+ * Returns auto-reconnect configuration for this tunnel instance.
+ *
+ * @returns The auto-reconnect setting, or `null` if not configured.
+ */
+  public getAutoReconnect(): boolean | null {
+    return this.config?.getAutoReconnect() ?? null;
+  }
+
+  /**
+ * Returns MaxReconnectAttempts configuration for this tunnel instance.
+ *
+ * @returns The MaxReconnectAttempts setting, or `null` if not configured.
+ */
+  public getMaxReconnectAttempts(): number | null {
+    return this.config?.getMaxReconnectAttempts() ?? null;
+  }
   /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.

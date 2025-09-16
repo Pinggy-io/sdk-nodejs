@@ -2639,6 +2639,290 @@ napi_value ConfigGetLocalServerTls(napi_env env, napi_callback_info info)
 
     return result;
 }
+// Wrapper for pinggy_config_set_auto_reconnect
+napi_value ConfigSetAutoReconnect(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, autoReconnect)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: autoReconnect (pinggy_bool_t / uint8_t)
+    bool autoReconnect;
+    status = napi_get_value_bool(env, args[1], &autoReconnect);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid autoReconnect argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_auto_reconnect function
+    pinggy_config_set_auto_reconnect(config, (pinggy_bool_t)autoReconnect);
+
+    // Return undefined (as the C function returns void)
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_auto_reconnect
+napi_value ConfigGetAutoReconnect(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the pinggy function to get the autoReconnect status
+    pinggy_const_bool_t autoReconnect = pinggy_config_get_auto_reconnect(config);
+
+    // Return the autoReconnect status as a JavaScript boolean
+    napi_value result;
+    status = napi_get_boolean(env, autoReconnect, &result);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create boolean from autoReconnect status");
+        return NULL;
+    }
+
+    return result;
+}
+
+// Wrapper for pinggy_config_set_reconnect_interval
+napi_value ConfigSetReconnectInterval(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, reconnectInterval)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: reconnectInterval (pinggy_uint32_t / uint32_t)
+    uint32_t reconnectInterval;
+    status = napi_get_value_uint32(env, args[1], &reconnectInterval);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid reconnectInterval argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_reconnect_interval function
+    pinggy_config_set_reconnect_interval(config, (pinggy_uint16_t)reconnectInterval);
+
+    // Return undefined (as the C function returns void)
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_reconnect_interval
+napi_value ConfigGetReconnectInterval(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the pinggy function to get the reconnect interval
+    pinggy_uint16_t interval = pinggy_config_get_reconnect_interval(config);
+
+    // Return the interval as a JavaScript number
+    napi_value result;
+    status = napi_create_uint32(env, (uint32_t)interval, &result);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create result");
+        return NULL;
+    }
+
+    return result;
+}
+
+// Wrapper for pinggy_config_set_max_reconnect_attempts
+napi_value ConfigSetMaxReconnectAttempts(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, maxReconnectAttempts)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: MaxReconnectAttempts (pinggy_uint32_t / uint32_t)
+    uint32_t maxReconnectAttempts;
+    status = napi_get_value_uint32(env, args[1], &maxReconnectAttempts);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid maxReconnectAttempts argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_max_reconnect_attempts function
+    pinggy_config_set_max_reconnect_attempts(config, (pinggy_uint32_t)maxReconnectAttempts);
+
+    // Return undefined (as the C function returns void)
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_max_reconnect_attempts
+napi_value ConfigGetMaxReconnectAttempts(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the pinggy function to get the max reconnect attempts
+    pinggy_uint32_t maxReconnectAttempts = pinggy_config_get_max_reconnect_attempts(config);
+
+    // Return the maxReconnectAttempts as a JavaScript number
+    napi_value result;
+    status = napi_create_uint32(env, (uint32_t)maxReconnectAttempts, &result);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create result");
+        return NULL;
+    }
+
+    return result;
+}
 
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
@@ -2668,6 +2952,9 @@ napi_value Init1(napi_env env, napi_value exports)
         set_original_request_url_fn,
         set_header_manipulations_fn,
         set_local_server_tls_fn,
+        set_reconnect_interval_fn,
+        set_auto_reconnect_fn,
+        set_max_reconnect_attempts_fn,
         set_reverse_proxy_fn;
 
     napi_value get_server_address_fn,
@@ -2692,6 +2979,9 @@ napi_value Init1(napi_env env, napi_value exports)
         get_original_request_url_fn,
         get_header_manipulations_fn,
         get_local_server_tls_fn,
+        get_reconnect_interval_fn,
+        get_auto_reconnect_fn,
+        get_max_reconnect_attempts_fn,
         get_pinggy_version_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
@@ -2858,6 +3148,24 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetLocalServerTls, NULL, &get_local_server_tls_fn);
     napi_set_named_property(env, exports, "configGetLocalServerTls", get_local_server_tls_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetAutoReconnect, NULL, &set_auto_reconnect_fn);
+    napi_set_named_property(env, exports, "configSetAutoReconnect", set_auto_reconnect_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetAutoReconnect, NULL, &get_auto_reconnect_fn);
+    napi_set_named_property(env, exports, "configGetAutoReconnect", get_auto_reconnect_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetMaxReconnectAttempts, NULL, &set_max_reconnect_attempts_fn);
+    napi_set_named_property(env, exports, "configSetMaxReconnectAttempts", set_max_reconnect_attempts_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetMaxReconnectAttempts, NULL, &get_max_reconnect_attempts_fn);
+    napi_set_named_property(env, exports, "configGetMaxReconnectAttempts", get_max_reconnect_attempts_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetReconnectInterval, NULL, &set_reconnect_interval_fn);
+    napi_set_named_property(env, exports, "configSetReconnectInterval", set_reconnect_interval_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetReconnectInterval, NULL, &get_reconnect_interval_fn);
+    napi_set_named_property(env, exports, "configGetReconnectInterval", get_reconnect_interval_fn);
 
     return exports;
 }

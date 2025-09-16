@@ -1,5 +1,3 @@
-// shlex.join was previously used to build argument strings; logic is now in initialize
-
 import { Logger } from "../utils/logger";
 import { PinggyNative, PinggyOptions, Config as IConfig } from "../types";
 import { PinggyError } from "./exception";
@@ -230,6 +228,45 @@ export class Config implements IConfig {
           : undefined
       );
 
+      // Set auto-reconnect options
+      this.safeSet(
+        () => {
+          if (options.autoReconnect !== undefined) {
+            this.addon.configSetAutoReconnect(configRef, options.autoReconnect as boolean);
+          }
+        },
+        "Auto-reconnect configuration",
+        options.autoReconnect !== undefined
+          ? `Auto-reconnect set to: ${options.autoReconnect}`
+          : undefined
+      );
+
+      // Set reconnect interval if provided
+      this.safeSet(
+        () => {
+          if (options.reconnectInterval !== undefined) {
+            this.addon.configSetReconnectInterval(configRef, options.reconnectInterval as number);
+          }
+        },
+        "Reconnect interval configuration",
+        options.reconnectInterval !== undefined
+          ? `Reconnect interval set to: ${options.reconnectInterval}`
+          : undefined
+      );
+
+      // Set max reconnect attempts if provided
+      this.safeSet(
+        () => {
+          if (options.maxReconnectAttempts !== undefined) {
+            this.addon.configSetMaxReconnectAttempts(configRef, options.maxReconnectAttempts as number);
+          }
+        },
+        "Max reconnect attempts configuration",
+        options.maxReconnectAttempts !== undefined
+          ? `Max reconnect attempts set to: ${options.maxReconnectAttempts}`
+          : undefined
+      );
+
       // Set force configuration if provided
       if (options.force !== undefined) {
         try {
@@ -321,23 +358,23 @@ export class Config implements IConfig {
    * @param successMsg - optional success log message
    */
   private safeSet(action: () => void, label: string, successMsg?: string): void {
-    try {
-      action();
-      if (successMsg) Logger.info(successMsg);
-    } catch (e) {
-      const lastEx = this.addon.getLastException();
-      if (lastEx) {
-        const pinggyError = new PinggyError(lastEx);
-        Logger.error(`Error setting ${label}:`, pinggyError);
-        throw pinggyError;
-      } else {
-        if (e instanceof Error) {
-          Logger.error(`Error setting ${label}:`, e);
-        } else {
-          Logger.error(`Error setting ${label}:`, new Error(String(e)));
-        }
-        throw e;
-      }
+    // Call the native action (it won't throw)
+    action();
+
+    // Always check addon’s last exception after the call
+    const lastEx = this.addon.getLastException();
+    if (
+      lastEx !== null &&
+      lastEx !== undefined &&
+      !(typeof lastEx === "string" && lastEx.trim().length === 0)
+    ) {
+      const pinggyError = new PinggyError(lastEx as any);
+      Logger.error(`Error setting ${label}:`, pinggyError);
+      throw pinggyError;
+    }
+
+    if (successMsg) {
+      Logger.info(successMsg);
     }
   }
 
@@ -632,6 +669,32 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetLocalServerTls(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting Local Server TLS configuration:", e as Error);
+      return null;
+    }
+  }
+  public getAutoReconnect(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetAutoReconnect(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Auto-Reconnect configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getReconnectInterval(): number | null {
+    try {
+      return this.configRef ? this.addon.configGetReconnectInterval(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Reconnect Interval configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getMaxReconnectAttempts(): number | null {
+    try {
+      return this.configRef ? this.addon.configGetMaxReconnectAttempts(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Max Reconnect Attempts configuration:", e as Error);
       return null;
     }
   }

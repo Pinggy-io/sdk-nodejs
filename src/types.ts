@@ -156,6 +156,19 @@ export interface PinggyOptions {
    * @default false
    */
   force?: boolean;
+  /**
+   * Auto-reconnect configuration for the tunnel.
+   * @default false
+   */
+  autoReconnect?: boolean;
+  /** Time interval (in seconds) between reconnection attempts.
+   * @default 5
+   */
+  reconnectInterval?: number;
+  /** Maximum number of reconnection attempts before giving up.
+   * @default 20
+   */
+  maxReconnectAttempts?: number;
 }
 
 /**
@@ -190,6 +203,18 @@ export interface PinggyNative {
   configSetSsl(configRef: number, ssl: boolean): void;
   /** Set force configuration for a config. */
   configSetForce(configRef: number, force: boolean): void;
+  /** Set auto-reconnect configuration for a config. */
+  configSetAutoReconnect(configRef: number, autoReconnect: boolean): void;
+  /** Set max reconnect attempts configuration for a config. */
+  configSetMaxReconnectAttempts(configRef: number, maxReconnectAttempts: number): void;
+  /** Set reconnect interval configuration for a config. */
+  configSetReconnectInterval(configRef: number, reconnectInterval: number): void;
+  /** Get auto-reconnect configuration for a config. */
+  configGetAutoReconnect(configRef: number): boolean;
+  /** Get max reconnect attempts configuration for a config. */
+  configGetMaxReconnectAttempts(configRef: number): number;
+  /** Get reconnect interval configuration for a config. */
+  configGetReconnectInterval(configRef: number): number;
   /** Get force configuration for a config. */
   configGetForce(configRef: number): boolean;
   /** Get the authentication token for a config. */
