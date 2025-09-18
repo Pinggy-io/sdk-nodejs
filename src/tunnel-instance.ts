@@ -95,6 +95,21 @@ export class TunnelInstance {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     return this.tunnel.getTunnelGreetMessage();
   }
+
+  public startUsageUpdate(): void {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    this.tunnel.startTunnelUsageUpdate();
+  }
+
+  public stopUsageUpdate(): void {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    this.tunnel.stopTunnelUsageUpdate();
+  }
+
+  public getUsages(): string | null {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    return this.tunnel.getTunnelUsages();
+  }
   /**
    * Checks if the tunnel is currently active.
    *

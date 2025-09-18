@@ -443,4 +443,65 @@ export class Tunnel implements ITunnel {
       return null;
     }
   }
+  public startTunnelUsageUpdate(): void {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return;
+    }
+    try {
+      this.addon.startTunnelUsageUpdate(this.tunnelRef);
+      Logger.info(`Started tunnel usage update for tunnel ${this.tunnelRef}`);
+    } catch (e) {
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error starting tunnel usage update:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error starting tunnel usage update:", e as Error);
+      }
+    }
+  }
+
+  public stopTunnelUsageUpdate(): void {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return;
+    }
+    try {
+      this.addon.stopTunnelUsageUpdate(this.tunnelRef);
+      Logger.info(`Stopped tunnel usage update for tunnel ${this.tunnelRef}`);
+    } catch (e) {
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error stopping tunnel usage update:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error stopping tunnel usage update:", e as Error);
+      }
+    }
+  }
+
+  public getTunnelUsages(): string {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return "";
+    }
+    try {
+      const usages = this.addon.getTunnelUsages(this.tunnelRef);
+      Logger.info(`Tunnel usages for ${this.tunnelRef}: ${usages}`);
+      return usages;
+    } catch (e) {
+      const lastEx = this.addon.getLastException();
+      if (lastEx) {
+        const pinggyError = new PinggyError(lastEx);
+        Logger.error("Error getting tunnel usages:", pinggyError);
+        throw pinggyError;
+      } else {
+        Logger.error("Error getting tunnel usages:", e as Error);
+        return "";
+      }
+    }
+  }
 }

@@ -358,6 +358,12 @@ export interface PinggyNative {
   getPinggyVersion(): string;
   /** Get the tunnel greet message. */
   getTunnelGreetMessage(tunnelRef: number): string;
+  /** start the tunnel usage update. */
+  startTunnelUsageUpdate(tunnelRef: number): void;
+  /** stop the tunnel usage update. */
+  stopTunnelUsageUpdate(tunnelRef: number): void;
+  /** get the tunnel usages. */
+  getTunnelUsages(tunnelRef: number): string;
 }
 
 /**
