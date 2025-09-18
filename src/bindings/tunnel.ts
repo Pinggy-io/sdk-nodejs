@@ -2,6 +2,30 @@ import { Logger } from "../utils/logger";
 import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
 import { PinggyError } from "./exception";
 
+type Task = () => void;
+class FunctionQueue {
+  private queue: Task[] = [];
+
+  enqueue(task: Task): void {
+    this.queue.push(task);
+  }
+
+  dequeueAndRun(): void {
+    if (this.queue.length === 0) {
+      return;
+    }
+    const nextTask = this.queue.shift();
+    if (nextTask) {
+      nextTask();
+    }
+  }
+
+  isEmpty(): boolean {
+    return this.queue.length === 0;
+  }
+}
+
+
 /**
  * Represents a Pinggy tunnel instance, managing its lifecycle and forwarding.
  * Handles authentication, forwarding, and additional tunnel operations via the native addon.
@@ -31,6 +55,7 @@ export class Tunnel implements ITunnel {
   private rejectAdditionalForwarding: ((reason?: any) => void) | null = null;
   private _urls: string[] = [];
   private intentionallyStopped: boolean = false; // Track intentional stops
+  private functionQueue: FunctionQueue;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -43,6 +68,7 @@ export class Tunnel implements ITunnel {
     this.authenticated = false;
     this.primaryForwardingDone = false;
     this.status = TunnelStatus.IDLE;
+    this.functionQueue = new FunctionQueue();
 
     // Create promises that will be resolved when authentication and forwarding complete
     this.authPromise = new Promise((resolve, reject) => {
@@ -97,7 +123,9 @@ export class Tunnel implements ITunnel {
         if (this.resolveAuth) {
           this.resolveAuth();
         }
-        this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
+        this.functionQueue.enqueue(() => {
+          this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
+        });
       });
 
       this.addon.tunnelSetAuthenticationFailedCallback(
@@ -242,6 +270,7 @@ export class Tunnel implements ITunnel {
         if (this.status === TunnelStatus.STARTING) {
           this.status = TunnelStatus.LIVE;
         }
+        this.functionQueue.dequeueAndRun();
         shouldContinue = true;
       } catch (e) {
         this.status = TunnelStatus.CLOSED;
