@@ -1364,6 +1364,206 @@ napi_value ConfigSetSsl(napi_env env, napi_callback_info info)
     return NULL;
 }
 
+napi_value GetTunnelGreetMessage(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_value result;
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to parse arguments", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel)", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Get the first argument: tunnel (pinggy_ref_t)
+    uint32_t tunnel;
+    status = napi_get_value_uint32(env, args[0], &tunnel);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnel reference", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+    pinggy_capa_p_t required_len = 0;
+    // Call the native function to get the greet message length
+    pinggy_const_int_t rc = pinggy_tunnel_get_greeting_msgs_len(tunnel, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get greeting message length");
+        return NULL;
+    }
+    printf("Required length: %d\n", required_len);
+    pinggy_char_p_t greet_msg = malloc(required_len + 1);
+    if (greet_msg == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+    // Call the native function to get the greet message
+    pinggy_const_int_t copied_len = pinggy_tunnel_get_greeting_msgs(tunnel, required_len, greet_msg);
+    if (copied_len < 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get greeting message");
+        free(greet_msg);
+        return NULL;
+    }
+    status = napi_create_string_utf8(env, greet_msg, copied_len, &result);
+    free(greet_msg);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create result string");
+        return NULL;
+    }
+    return result;
+}
+
+napi_value startTunnelUsageUpdate(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Convert the first argument to uint32_t (tunnel ref)
+    uint32_t tunnel_ref;
+    status = napi_get_value_uint32(env, args[0], &tunnel_ref);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the pinggy_tunnel_start_usage_update function
+    pinggy_tunnel_start_usage_update(tunnel_ref);
+}
+
+napi_value stopTunnelUsageUpdate(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Convert the first argument to uint32_t (tunnel ref)
+    uint32_t tunnel_ref;
+    status = napi_get_value_uint32(env, args[0], &tunnel_ref);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the pinggy_tunnel_stop_usage_update function
+    pinggy_tunnel_stop_usage_update(tunnel_ref);
+}
+
+napi_value GetTunnelUsages(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_value result;
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to parse arguments", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel)", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Get the first argument: tunnel (pinggy_ref_t)
+    uint32_t tunnel;
+    status = napi_get_value_uint32(env, args[0], &tunnel);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnel reference", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    pinggy_capa_p_t required_len = 0;
+    // Call the native function to get the usages length
+    pinggy_const_int_t rc = pinggy_tunnel_get_current_usages_len(tunnel, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get usages length");
+        return NULL;
+    }
+    pinggy_char_p_t usages = malloc(required_len + 1);
+    if (usages == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+    // Call the native function to get the usages
+    pinggy_const_int_t copied_len = pinggy_tunnel_get_current_usages(tunnel, required_len, usages);
+    if (copied_len < 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get usages");
+        free(usages);
+        return NULL;
+    }
+    status = napi_create_string_utf8(env, usages, copied_len, &result);
+    free(usages);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create result string");
+        return NULL;
+    }
+    return result;
+}
+
 // ================================= INITIALIZATION =================================
 
 // Initialize the module and export the function
@@ -1384,7 +1584,11 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_set_additional_forwarding_failed_callback_fn,
         tunnel_set_on_disconnected_callback_fn,
         tunnel_set_on_tunnel_error_callback_fn,
-        config_set_ssl_fn;
+        config_set_ssl_fn,
+        tunnel_get_greet_message_fn,
+        tunnel_start_usage_update_fn,
+        tunnel_stop_usage_update_fn,
+        tunnel_get_usages_fn;
 
     napi_create_function(env, NULL, 0, TunnelRequestPrimaryForwarding, NULL, &request_primary_forwarding_fn);
     napi_set_named_property(env, exports, "tunnelRequestPrimaryForwarding", request_primary_forwarding_fn);
@@ -1444,6 +1648,18 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigSetSsl, NULL, &config_set_ssl_fn);
     napi_set_named_property(env, exports, "configSetSsl", config_set_ssl_fn);
+
+    napi_create_function(env, NULL, 0, GetTunnelGreetMessage, NULL, &tunnel_get_greet_message_fn);
+    napi_set_named_property(env, exports, "getTunnelGreetMessage", tunnel_get_greet_message_fn);
+
+    napi_create_function(env, NULL, 0, startTunnelUsageUpdate, NULL, &tunnel_start_usage_update_fn);
+    napi_set_named_property(env, exports, "startTunnelUsageUpdate", tunnel_start_usage_update_fn);
+
+    napi_create_function(env, NULL, 0, stopTunnelUsageUpdate, NULL, &tunnel_stop_usage_update_fn);
+    napi_set_named_property(env, exports, "stopTunnelUsageUpdate", tunnel_stop_usage_update_fn);
+
+    napi_create_function(env, NULL, 0, GetTunnelUsages, NULL, &tunnel_get_usages_fn);
+    napi_set_named_property(env, exports, "getTunnelUsages", tunnel_get_usages_fn);
 
     return exports;
 }

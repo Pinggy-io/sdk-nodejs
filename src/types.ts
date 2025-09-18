@@ -356,6 +356,8 @@ export interface PinggyNative {
   setDebugLogging(enabled: boolean): void;
   /** Get the Pinggy SDK version. */
   getPinggyVersion(): string;
+  /** Get the tunnel greet message. */
+  getTunnelGreetMessage(tunnelRef: number): string;
 }
 
 /**

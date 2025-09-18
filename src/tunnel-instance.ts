@@ -91,6 +91,10 @@ export class TunnelInstance {
     this.config = null;
   }
 
+  public getGreetMessage(): string | null {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    return this.tunnel.getTunnelGreetMessage();
+  }
   /**
    * Checks if the tunnel is currently active.
    *

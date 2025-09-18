@@ -107,46 +107,56 @@ export class Config implements IConfig {
 
       this.safeSet(
         () => {
-          this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
+          if (options.httpsOnly !== undefined) {
+            this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
+          }
         },
         "HTTPS-only configuration",
-        `HTTPS-only configuration set to: ${options.httpsOnly}`
+        options.httpsOnly !== undefined ? `HTTPS-only configuration set to: ${options.httpsOnly}` : undefined
       );
 
-      //set allow preflight
+      // set allow preflight
       this.safeSet(
         () => {
-          this.addon.configSetAllowPreflight(configRef, options.allowPreflight as boolean);
+          if (options.allowPreflight !== undefined) {
+            this.addon.configSetAllowPreflight(configRef, options.allowPreflight as boolean);
+          }
         },
         "Allow-Preflight configuration",
-        `Allow-Preflight configuration set to: ${options.allowPreflight}`
+        options.allowPreflight !== undefined ? `Allow-Preflight configuration set to: ${options.allowPreflight}` : undefined
       );
 
-      //set xff
+      // set xff
       this.safeSet(
         () => {
-          this.addon.configSetXForwardedFor(configRef, options.xff as boolean);
+          if (options.xff !== undefined) {
+            this.addon.configSetXForwardedFor(configRef, options.xff as boolean);
+          }
         },
         "X-Forwarded-For configuration",
-        `X-Forwarded-For configuration set to: ${options.xff}`
+        options.xff !== undefined ? `X-Forwarded-For configuration set to: ${options.xff}` : undefined
       );
 
       // set original request url
       this.safeSet(
         () => {
-          this.addon.configSetOriginalRequestUrl(configRef, options.fullRequestUrl as boolean);
+          if (options.fullRequestUrl !== undefined) {
+            this.addon.configSetOriginalRequestUrl(configRef, options.fullRequestUrl as boolean);
+          }
         },
         "Original-Request-URL configuration",
-        `Original-Request-URL configuration set to: ${options.fullRequestUrl}`
+        options.fullRequestUrl !== undefined ? `Original-Request-URL configuration set to: ${options.fullRequestUrl}` : undefined
       );
 
       // set no reverse proxy
       this.safeSet(
         () => {
-          this.addon.configSetReverseProxy(configRef, options.noReverseProxy as boolean);
+          if (options.noReverseProxy !== undefined) {
+            this.addon.configSetReverseProxy(configRef, options.noReverseProxy as boolean);
+          }
         },
         "No-Reverse-Proxy configuration",
-        `No-Reverse-Proxy configuration set to: ${options.noReverseProxy}`
+        options.noReverseProxy !== undefined ? `No-Reverse-Proxy configuration set to: ${options.noReverseProxy}` : undefined
       );
 
       // Set IP whitelist if provided

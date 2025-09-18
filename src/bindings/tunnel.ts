@@ -399,6 +399,19 @@ export class Tunnel implements ITunnel {
   public getUrls(): string[] {
     return this._urls;
   }
-}
 
-// upto tunnel on error callback done
+  public getTunnelGreetMessage(): string | null {
+    if (!this.tunnelRef) {
+      Logger.error("Tunnel not initialized.");
+      return null;
+    }
+    try {
+      const message = this.addon.getTunnelGreetMessage(this.tunnelRef);
+      Logger.info(`Tunnel greet message: ${message}`);
+      return message;
+    } catch (e) {
+      Logger.error("Error getting tunnel greet message:", e as Error);
+      return null;
+    }
+  }
+}
