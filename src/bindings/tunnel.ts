@@ -1,6 +1,7 @@
 import { Logger } from "../utils/logger";
 import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
 import { PinggyError } from "./exception";
+import { TunnelUsage } from "./tunnel-usage";
 
 type Task = () => void;
 class FunctionQueue {
@@ -24,26 +25,6 @@ class FunctionQueue {
     return this.queue.length === 0;
   }
 }
-
-type TunnelUsage = {
-  elapsedTime: number;
-  numLiveConnections: number;
-  numTotalConnections: number;
-  numTotalReqBytes: number;
-  numTotalResBytes: number;
-  numTotalTxBytes: number;
-  lastError?: string | null;
-};
-
-const DEFAULT_USAGE: TunnelUsage = {
-  elapsedTime: 0,
-  numLiveConnections: 0,
-  numTotalConnections: 0,
-  numTotalReqBytes: 0,
-  numTotalResBytes: 0,
-  numTotalTxBytes: 0,
-  lastError: null,
-};
 
 interface TunnelOperationConfig<T> {
   operation: () => T;
@@ -84,7 +65,7 @@ export class Tunnel implements ITunnel {
   private _urls: string[] = [];
   private intentionallyStopped: boolean = false; // Track intentional stops
   private functionQueue: FunctionQueue;
-  private _latestUsage: TunnelUsage = DEFAULT_USAGE;
+  private _latestUsage: TunnelUsage = new TunnelUsage();
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -248,23 +229,15 @@ export class Tunnel implements ITunnel {
 
   private handleUsageUpdate(usageJson: string): void {
     if (!usageJson) {
-      this._latestUsage.lastError = 'empty payload';
+      // Debug log
       return;
     }
 
     try {
-      const parsed = JSON.parse(usageJson);
-      this._latestUsage = {
-        elapsedTime: parsed.elapsedTime ?? 0,
-        numLiveConnections: parsed.numLiveConnections ?? 0,
-        numTotalConnections: parsed.numTotalConnections ?? 0,
-        numTotalReqBytes: parsed.numTotalReqBytes ?? 0,
-        numTotalResBytes: parsed.numTotalResBytes ?? 0,
-        numTotalTxBytes: parsed.numTotalTxBytes ?? 0,
-        lastError: null,
-      };
+      this._latestUsage.updateFromJSON(usageJson);
+      // Todo Callback
     } catch (err) {
-      this._latestUsage.lastError = String((err && (err as Error).message) || 'parse error');
+      // Todo Debug log
     }
   }
 

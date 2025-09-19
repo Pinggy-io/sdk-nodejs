@@ -151,6 +151,8 @@ function extractArchive(archivePath, outDir, innerLibName, destLibPath) {
     console.log(
       `[Pinggy Prebuild] Downloading ${artifactName} from ${artifactUrl}...`
     );
+
+    // Todo: If environment variable LIBPINGGY_PATH is set, then copy it instead of downloading.
     await download(artifactUrl, destArchivePath);
 
     // Step 2: Extract the library from the downloaded archive
