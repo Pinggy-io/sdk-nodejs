@@ -25,6 +25,26 @@ class FunctionQueue {
   }
 }
 
+type TunnelUsage = {
+  elapsedTime: number;
+  numLiveConnections: number;
+  numTotalConnections: number;
+  numTotalReqBytes: number;
+  numTotalResBytes: number;
+  numTotalTxBytes: number;
+  lastError?: string | null;
+};
+
+const DEFAULT_USAGE: TunnelUsage = {
+  elapsedTime: 0,
+  numLiveConnections: 0,
+  numTotalConnections: 0,
+  numTotalReqBytes: 0,
+  numTotalResBytes: 0,
+  numTotalTxBytes: 0,
+  lastError: null,
+};
+
 
 /**
  * Represents a Pinggy tunnel instance, managing its lifecycle and forwarding.
@@ -56,6 +76,7 @@ export class Tunnel implements ITunnel {
   private _urls: string[] = [];
   private intentionallyStopped: boolean = false; // Track intentional stops
   private functionQueue: FunctionQueue;
+  private _latestUsage: TunnelUsage = DEFAULT_USAGE;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -222,11 +243,36 @@ export class Tunnel implements ITunnel {
           );
         }
       );
+      this.addon.tunnelSetOnUsageUpdateCallback(this.tunnelRef, (_tref, usageJson) => {
+        if (!usageJson) {
+          this._latestUsage.lastError = 'empty payload';
+          return;
+        }
+        try {
+
+          const p = JSON.parse(usageJson);
+          this._latestUsage = {
+            elapsedTime: p.elapsedTime ?? 0,
+            numLiveConnections: p.numLiveConnections ?? 0,
+            numTotalConnections: p.numTotalConnections ?? 0,
+            numTotalReqBytes: p.numTotalReqBytes ?? 0,
+            numTotalResBytes: p.numTotalResBytes ?? 0,
+            numTotalTxBytes: p.numTotalTxBytes ?? 0,
+            lastError: null,
+          };
+        } catch (err) {
+          this._latestUsage.lastError = String((err && (err as Error).message) || 'parse error');
+          // keep previous _latestUsage so caller still has last known sample
+        }
+      });
+
 
       const connected = this.addon.tunnelConnect(this.tunnelRef);
       if (!connected) {
         throw new Error("Tunnel connection failed.");
       }
+      this.startTunnelUsageUpdate();
+
       Logger.info("Tunnel connected, starting authentication monitoring...");
 
       this.pollStart();
@@ -444,6 +490,7 @@ export class Tunnel implements ITunnel {
     }
   }
   public startTunnelUsageUpdate(): void {
+    console.log("function called", this.status);
     if (!this.tunnelRef) {
       Logger.error("Tunnel not initialized.");
       return;
@@ -503,5 +550,9 @@ export class Tunnel implements ITunnel {
         return "";
       }
     }
+  }
+  public getLatestUsage(): TunnelUsage | null {
+    if (!this.tunnelRef) return null;
+    return this._latestUsage;
   }
 }

@@ -364,6 +364,31 @@ export interface PinggyNative {
   stopTunnelUsageUpdate(tunnelRef: number): void;
   /** get the tunnel usages. */
   getTunnelUsages(tunnelRef: number): string;
+  /** Set the callback for forwarding changes. */
+  tunnelSetOnForwardingChangedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, forwardToAddr: string) => void
+  ): void;
+  /** Set the callback for usage updates. */
+  tunnelSetOnUsageUpdateCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, usageJson: string) => void
+  ): void;
+  /** Set the callback for reconnection failed. */
+  tunnelSetOnReconnectionFailedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number) => void
+  ): void;
+  /** Set the callback for reconnection completed. */
+  tunnelSetOnReconnectionCompletedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, urls: string[]) => void
+  ): void;
+  /** Set the callback for will reconnect event. */
+  tunnelSetOnWillReconnectCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, error: string, numMsgs: number, messages: string[]) => void
+  ): void;
 }
 
 /**

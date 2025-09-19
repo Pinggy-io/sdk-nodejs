@@ -91,6 +91,14 @@ export class TunnelInstance {
     this.config = null;
   }
 
+  /**
+ * Get greeting message for the tunnel.
+ *
+ * Delegates to {@link Tunnel#getTunnelGreetMessage}.
+ *
+ * @returns {string | null} The greeting message, or null if unavailable.
+ * @throws {Error} If the tunnel is not initialized.
+ */
   public getGreetMessage(): string | null {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     return this.tunnel.getTunnelGreetMessage();
@@ -110,6 +118,20 @@ export class TunnelInstance {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     return this.tunnel.getTunnelUsages();
   }
+
+  /**
+   * Get the latest usage statistics for the tunnel.
+   *
+   * Delegates to {@link Tunnel#getLatestUsage}.
+   *
+   * @returns {Record<string, any> | null} The latest usage statistics, or null if unavailable.
+   * @throws {Error} If the tunnel is not initialized.
+   */
+  public getLatestUsage(): Record<string, any> | null {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    return this.tunnel.getLatestUsage();
+  }
+  
   /**
    * Checks if the tunnel is currently active.
    *

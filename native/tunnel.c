@@ -2134,7 +2134,6 @@ void on_will_reconnect_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pi
     }
     argv[2] = msgs_array;
 
-    napi_value undefined;
     napi_get_undefined(env, &undefined);
 
     status = napi_call_function(env, undefined, js_callback, 3, argv, &js_result);
