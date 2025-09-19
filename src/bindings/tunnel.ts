@@ -45,6 +45,14 @@ const DEFAULT_USAGE: TunnelUsage = {
   lastError: null,
 };
 
+interface TunnelOperationConfig<T> {
+  operation: () => T;
+  operationName: string;
+  successMessage?: string;
+  defaultValue?: T;
+  logResult?: (result: T) => void;
+}
+
 
 /**
  * Represents a Pinggy tunnel instance, managing its lifecycle and forwarding.
@@ -108,6 +116,35 @@ export class Tunnel implements ITunnel {
     });
   }
 
+
+  // Generic operation executor
+  private executeTunnelOperation<T>(config: TunnelOperationConfig<T>): T {
+    this.ensureTunnelInitialized();
+
+    const result = config.operation();
+
+    // Always check addon’s last exception after the call
+    const lastEx = this.addon.getLastException();
+    if (
+      lastEx !== null &&
+      lastEx !== undefined &&
+      !(typeof lastEx === "string" && lastEx.trim().length === 0)
+    ) {
+      const pinggyError = new PinggyError(lastEx as any);
+      Logger.error(`Error ${config.operationName}:`, pinggyError);
+      throw pinggyError;
+    }
+
+    if (config.successMessage) {
+      Logger.info(config.successMessage);
+    }
+
+    if (config.logResult) {
+      config.logResult(result);
+    }
+    return result;
+  }
+
   private initialize(configRef: number): number {
     try {
       const tunnelRef = this.addon.tunnelInitiate(configRef);
@@ -125,6 +162,111 @@ export class Tunnel implements ITunnel {
       }
     }
   }
+  private ensureTunnelInitialized(): void {
+    if (!this.tunnelRef) {
+      throw new Error("Tunnel not initialized.");
+    }
+  }
+
+  private setupCallbacks(): void {
+    const callbackConfigs = [
+      {
+        setter: 'tunnelSetAuthenticatedCallback',
+        callback: () => {
+          Logger.info("Tunnel authenticated, requesting primary forwarding...");
+          this.authenticated = true;
+          if (this.resolveAuth) this.resolveAuth();
+          this.functionQueue.enqueue(() => {
+            this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
+          });
+        }
+      },
+      {
+        setter: 'tunnelSetAuthenticationFailedCallback',
+        callback: (tunnelRef: number, errorMessage: string) => {
+          Logger.error(`Authentication failed for tunnel ${tunnelRef}: ${errorMessage}`);
+          if (this.rejectAuth) this.rejectAuth(new PinggyError("Authentication failed: " + errorMessage));
+        }
+      },
+      {
+        setter: 'tunnelSetPrimaryForwardingSucceededCallback',
+        callback: (addresses: string[]) => {
+          this.primaryForwardingDone = true;
+          this._urls = addresses;
+          if (this.resolveForwarding) this.resolveForwarding(addresses);
+        }
+      },
+      {
+        setter: 'tunnelSetPrimaryForwardingFailedCallback',
+        callback: (tunnelRef: number, errorMessage: string) => {
+          Logger.error(`Primary forwarding failed for tunnel ${tunnelRef}: ${errorMessage}`);
+          if (this.rejectForwarding) this.rejectForwarding(new PinggyError("Primary forwarding failed: " + errorMessage));
+        }
+      },
+      {
+        setter: 'tunnelSetAdditionalForwardingSucceededCallback',
+        callback: (tunnelRef: number, bindAddr: string, forwardToAddr: string, protocol: string) => {
+          Logger.info(`Additional forwarding succeeded for tunnel ${tunnelRef}: ${bindAddr} -> ${forwardToAddr} (${protocol})`);
+          if (this.resolveAdditionalForwarding) this.resolveAdditionalForwarding();
+        }
+      },
+      {
+        setter: 'tunnelSetAdditionalForwardingFailedCallback',
+        callback: (tunnelRef: number, remoteAddress: string, errorMessage: string) => {
+          Logger.error(`Additional forwarding failed for ${remoteAddress} on tunnel ${tunnelRef}: ${errorMessage}`);
+          if (this.rejectAdditionalForwarding) this.rejectAdditionalForwarding(new PinggyError(`Additional forwarding failed: ${remoteAddress} - ${errorMessage}`));
+        }
+      },
+      {
+        setter: 'tunnelSetOnDisconnectedCallback',
+        callback: (tunnelRef: number, error: string, messages: string[]) => {
+          Logger.info(`Tunnel disconnected: ${tunnelRef}, error: ${error}`);
+          if (messages && messages.length > 0) {
+            Logger.info(`Disconnection messages: ${messages.join(", ")}`);
+          }
+        }
+      },
+      {
+        setter: 'tunnelSetOnTunnelErrorCallback',
+        callback: (tunnelRef: number, errorNo: number, error: string, recoverable: boolean) => {
+          Logger.error(`Tunnel error on ${tunnelRef} (${errorNo}): ${error} (recoverable: ${recoverable})`);
+        }
+      },
+      {
+        setter: 'tunnelSetOnUsageUpdateCallback',
+        callback: (tunnelRef: number, usageJson: string) => {
+          this.handleUsageUpdate(usageJson);
+        }
+      }
+    ];
+
+    // Set all callbacks
+    callbackConfigs.forEach(({ setter, callback }) => {
+      (this.addon as any)[setter](this.tunnelRef, callback);
+    });
+  }
+
+  private handleUsageUpdate(usageJson: string): void {
+    if (!usageJson) {
+      this._latestUsage.lastError = 'empty payload';
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(usageJson);
+      this._latestUsage = {
+        elapsedTime: parsed.elapsedTime ?? 0,
+        numLiveConnections: parsed.numLiveConnections ?? 0,
+        numTotalConnections: parsed.numTotalConnections ?? 0,
+        numTotalReqBytes: parsed.numTotalReqBytes ?? 0,
+        numTotalResBytes: parsed.numTotalResBytes ?? 0,
+        numTotalTxBytes: parsed.numTotalTxBytes ?? 0,
+        lastError: null,
+      };
+    } catch (err) {
+      this._latestUsage.lastError = String((err && (err as Error).message) || 'parse error');
+    }
+  }
 
   /**
    * Starts the tunnel, handles authentication and forwarding, and returns the public URLs.
@@ -132,165 +274,28 @@ export class Tunnel implements ITunnel {
    * @throws {PinggyError|Error} If tunnel connection or forwarding fails.
    */
   public async start(): Promise<string[]> {
-    if (!this.tunnelRef) {
-      throw new Error("Tunnel not initialized.");
-    }
+    return this.executeTunnelOperation({
+      operation: async () => {
+        this.status = TunnelStatus.STARTING;
 
-    try {
-      this.status = TunnelStatus.STARTING;
-      this.addon.tunnelSetAuthenticatedCallback(this.tunnelRef, () => {
-        Logger.info("Tunnel authenticated, requesting primary forwarding...");
-        this.authenticated = true;
-        if (this.resolveAuth) {
-          this.resolveAuth();
+        // Setup all callbacks
+        this.setupCallbacks();
+
+        const connected = this.addon.tunnelConnect(this.tunnelRef);
+        if (!connected) {
+          throw new Error("Tunnel connection failed.");
         }
-        this.functionQueue.enqueue(() => {
-          this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
-        });
-      });
 
-      this.addon.tunnelSetAuthenticationFailedCallback(
-        this.tunnelRef,
-        (tunnelRef, errorMessage) => {
-          Logger.error(
-            `Authentication failed for tunnel ${tunnelRef}: ${errorMessage}`
-          );
-          if (this.rejectAuth)
-            this.rejectAuth(
-              new PinggyError("Authentication failed: " + errorMessage)
-            );
-        }
-      );
+        this.startTunnelUsageUpdate();
+        Logger.info("Tunnel connected, starting authentication monitoring...");
+        this.pollStart();
 
-      this.addon.tunnelSetPrimaryForwardingSucceededCallback(
-        this.tunnelRef,
-        (addresses) => {
-          this.primaryForwardingDone = true;
-          this._urls = addresses;
-          if (this.resolveForwarding) {
-            this.resolveForwarding(addresses);
-          }
-        }
-      );
+        // Wait for forwarding to complete and return the addresses
+        return await this.forwardingPromise;
+      },
+      operationName: "starting tunnel",
 
-      this.addon.tunnelSetPrimaryForwardingFailedCallback(
-        this.tunnelRef,
-        (tunnelRef: number, errorMessage: string) => {
-          Logger.error(
-            `Primary forwarding failed for tunnel ${tunnelRef}: ${errorMessage}`
-          );
-          if (this.rejectForwarding) {
-            this.rejectForwarding(
-              new PinggyError("Primary forwarding failed: " + errorMessage)
-            );
-          }
-        }
-      );
-
-      this.addon.tunnelSetAdditionalForwardingSucceededCallback(
-        this.tunnelRef,
-        (
-          tunnelRef: number,
-          bindAddr: string,
-          forwardToAddr: string,
-          protocol: string
-        ) => {
-          Logger.info(
-            `Additional forwarding succeeded for tunnel ${tunnelRef}: ${bindAddr} -> ${forwardToAddr} (${protocol})`
-          );
-          if (this.resolveAdditionalForwarding) {
-            this.resolveAdditionalForwarding();
-          }
-        }
-      );
-
-      this.addon.tunnelSetAdditionalForwardingFailedCallback(
-        this.tunnelRef,
-        (tunnelRef: number, remoteAddress: string, errorMessage: string) => {
-          Logger.error(
-            `Additional forwarding failed for ${remoteAddress} on tunnel ${tunnelRef}: ${errorMessage}`
-          );
-          if (this.rejectAdditionalForwarding) {
-            this.rejectAdditionalForwarding(
-              new PinggyError(
-                `Additional forwarding failed: ${remoteAddress} - ${errorMessage}`
-              )
-            );
-          }
-        }
-      );
-
-      this.addon.tunnelSetOnDisconnectedCallback(
-        this.tunnelRef,
-        (tunnelRef: number, error: string, messages: string[]) => {
-          Logger.info(`Tunnel disconnected: ${tunnelRef}, error: ${error}`);
-          if (messages && messages.length > 0) {
-            Logger.info(`Disconnection messages: ${messages.join(", ")}`);
-          }
-        }
-      );
-
-      this.addon.tunnelSetOnTunnelErrorCallback(
-        this.tunnelRef,
-        (
-          tunnelRef: number,
-          errorNo: number,
-          error: string,
-          recoverable: boolean
-        ) => {
-          Logger.error(
-            `Tunnel error on ${tunnelRef} (${errorNo}): ${error} (recoverable: ${recoverable})`
-          );
-        }
-      );
-      this.addon.tunnelSetOnUsageUpdateCallback(this.tunnelRef, (_tref, usageJson) => {
-        if (!usageJson) {
-          this._latestUsage.lastError = 'empty payload';
-          return;
-        }
-        try {
-
-          const p = JSON.parse(usageJson);
-          this._latestUsage = {
-            elapsedTime: p.elapsedTime ?? 0,
-            numLiveConnections: p.numLiveConnections ?? 0,
-            numTotalConnections: p.numTotalConnections ?? 0,
-            numTotalReqBytes: p.numTotalReqBytes ?? 0,
-            numTotalResBytes: p.numTotalResBytes ?? 0,
-            numTotalTxBytes: p.numTotalTxBytes ?? 0,
-            lastError: null,
-          };
-        } catch (err) {
-          this._latestUsage.lastError = String((err && (err as Error).message) || 'parse error');
-          // keep previous _latestUsage so caller still has last known sample
-        }
-      });
-
-
-      const connected = this.addon.tunnelConnect(this.tunnelRef);
-      if (!connected) {
-        throw new Error("Tunnel connection failed.");
-      }
-      this.startTunnelUsageUpdate();
-
-      Logger.info("Tunnel connected, starting authentication monitoring...");
-
-      this.pollStart();
-
-      // Wait for forwarding to complete and return the addresses
-      return await this.forwardingPromise;
-    } catch (error) {
-      this.status = TunnelStatus.CLOSED;
-      const lastEx = this.addon.getLastException();
-      if (lastEx) {
-        const pinggyError = new PinggyError(lastEx);
-        Logger.error("Error in startTunnel:", pinggyError);
-        throw pinggyError;
-      } else {
-        Logger.error("Error in startTunnel:", error as Error);
-        throw error;
-      }
-    }
+    });
   }
 
   private pollStart(): void {
@@ -352,27 +357,13 @@ export class Tunnel implements ITunnel {
    * @throws {PinggyError|Error} If web debugging fails to start.
    */
   public async startWebDebugging(listeningPort: number): Promise<void> {
-    if (!this.tunnelRef) {
-      Logger.error("Tunnel not initialized.");
-      return;
-    }
+    await this.authPromise; // Wait for authentication
 
-    try {
-      await this.authPromise; // Wait for authentication
-      this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort);
-      Logger.info(
-        `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
-      );
-    } catch (e) {
-      const lastEx = this.addon.getLastException();
-      if (lastEx) {
-        const pinggyError = new PinggyError(lastEx);
-        Logger.error("Error starting web debugging:", pinggyError);
-        throw pinggyError;
-      } else {
-        Logger.error("Error starting web debugging:", e as Error);
-      }
-    }
+    this.executeTunnelOperation({
+      operation: () => this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort),
+      operationName: "starting web debugging",
+      successMessage: `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
+    });
   }
 
   /**
@@ -386,31 +377,13 @@ export class Tunnel implements ITunnel {
     remoteAddress: string,
     localAddress: string
   ): Promise<void> {
-    if (!this.tunnelRef) {
-      Logger.error("Tunnel not initialized.");
-      return;
-    }
+    await this.forwardingPromise; // Wait for primary forwarding to complete
 
-    try {
-      await this.forwardingPromise; // Wait for primary forwarding to complete
-      this.addon.tunnelRequestAdditionalForwarding(
-        this.tunnelRef,
-        remoteAddress,
-        localAddress
-      );
-      Logger.info(
-        `Requested additional forwarding from ${remoteAddress} to ${localAddress}`
-      );
-    } catch (e) {
-      const lastEx = this.addon.getLastException();
-      if (lastEx) {
-        const pinggyError = new PinggyError(lastEx);
-        Logger.error("Error requesting additional forwarding:", pinggyError);
-        throw pinggyError;
-      } else {
-        Logger.error("Error requesting additional forwarding:", e as Error);
-      }
-    }
+    this.executeTunnelOperation({
+      operation: () => this.addon.tunnelRequestAdditionalForwarding(this.tunnelRef, remoteAddress, localAddress),
+      operationName: "requesting additional forwarding",
+      successMessage: `Requested additional forwarding from ${remoteAddress} to ${localAddress}`
+    });
   }
 
   /**
@@ -419,10 +392,7 @@ export class Tunnel implements ITunnel {
    * @throws {PinggyError|Error} If stopping the tunnel fails.
    */
   public tunnelStop(): boolean {
-    if (!this.tunnelRef) {
-      Logger.error("Tunnel not initialized.");
-      return false;
-    }
+    this.ensureTunnelInitialized();
     try {
       // Mark as intentionally stopped before calling native stop
       this.intentionallyStopped = true;
@@ -453,18 +423,12 @@ export class Tunnel implements ITunnel {
    * @returns {boolean} True if the tunnel is active, false otherwise.
    */
   public tunnelIsActive(): boolean {
-    if (!this.tunnelRef) {
-      Logger.error("Tunnel not initialized.");
-      return false;
-    }
-    try {
-      const result = this.addon.tunnelIsActive(this.tunnelRef);
-      Logger.info(`Tunnel active status: ${result}`);
-      return result;
-    } catch (e) {
-      Logger.error("Error checking tunnel active status:", e as Error);
-      return false;
-    }
+    return this.executeTunnelOperation({
+      operation: () => this.addon.tunnelIsActive(this.tunnelRef),
+      operationName: "checking tunnel active status",
+      logResult: (result) => Logger.info(`Tunnel active status: ${result}`),
+      defaultValue: false,
+    });
   }
 
   /**
@@ -476,81 +440,38 @@ export class Tunnel implements ITunnel {
   }
 
   public getTunnelGreetMessage(): string | null {
-    if (!this.tunnelRef) {
-      Logger.error("Tunnel not initialized.");
-      return null;
-    }
-    try {
-      const message = this.addon.getTunnelGreetMessage(this.tunnelRef);
-      Logger.info(`Tunnel greet message: ${message}`);
-      return message;
-    } catch (e) {
-      Logger.error("Error getting tunnel greet message:", e as Error);
-      return null;
-    }
+    return this.executeTunnelOperation({
+      operation: () => this.addon.getTunnelGreetMessage(this.tunnelRef),
+      operationName: "getting tunnel greet message",
+      logResult: (message) => Logger.info(`Tunnel greet message: ${message}`),
+
+    });
   }
   public startTunnelUsageUpdate(): void {
-    console.log("function called", this.status);
-    if (!this.tunnelRef) {
-      Logger.error("Tunnel not initialized.");
-      return;
-    }
-    try {
-      this.addon.startTunnelUsageUpdate(this.tunnelRef);
-      Logger.info(`Started tunnel usage update for tunnel ${this.tunnelRef}`);
-    } catch (e) {
-      const lastEx = this.addon.getLastException();
-      if (lastEx) {
-        const pinggyError = new PinggyError(lastEx);
-        Logger.error("Error starting tunnel usage update:", pinggyError);
-        throw pinggyError;
-      } else {
-        Logger.error("Error starting tunnel usage update:", e as Error);
-      }
-    }
+    this.executeTunnelOperation({
+      operation: () => this.addon.startTunnelUsageUpdate(this.tunnelRef),
+      operationName: "starting tunnel usage update",
+      successMessage: `Started tunnel usage update for tunnel ${this.tunnelRef}`
+    });
   }
 
   public stopTunnelUsageUpdate(): void {
-    if (!this.tunnelRef) {
-      Logger.error("Tunnel not initialized.");
-      return;
-    }
-    try {
-      this.addon.stopTunnelUsageUpdate(this.tunnelRef);
-      Logger.info(`Stopped tunnel usage update for tunnel ${this.tunnelRef}`);
-    } catch (e) {
-      const lastEx = this.addon.getLastException();
-      if (lastEx) {
-        const pinggyError = new PinggyError(lastEx);
-        Logger.error("Error stopping tunnel usage update:", pinggyError);
-        throw pinggyError;
-      } else {
-        Logger.error("Error stopping tunnel usage update:", e as Error);
-      }
-    }
+    this.executeTunnelOperation({
+      operation: () => this.addon.stopTunnelUsageUpdate(this.tunnelRef),
+      operationName: "stopping tunnel usage update",
+      successMessage: `Stopped tunnel usage update for tunnel ${this.tunnelRef}`
+    });
   }
 
   public getTunnelUsages(): string {
-    if (!this.tunnelRef) {
-      Logger.error("Tunnel not initialized.");
-      return "";
-    }
-    try {
-      const usages = this.addon.getTunnelUsages(this.tunnelRef);
-      Logger.info(`Tunnel usages for ${this.tunnelRef}: ${usages}`);
-      return usages;
-    } catch (e) {
-      const lastEx = this.addon.getLastException();
-      if (lastEx) {
-        const pinggyError = new PinggyError(lastEx);
-        Logger.error("Error getting tunnel usages:", pinggyError);
-        throw pinggyError;
-      } else {
-        Logger.error("Error getting tunnel usages:", e as Error);
-        return "";
-      }
-    }
+    return this.executeTunnelOperation({
+      operation: () => this.addon.getTunnelUsages(this.tunnelRef),
+      operationName: "getting tunnel usages",
+      logResult: (usages) => Logger.info(`Tunnel usages for ${this.tunnelRef}: ${usages}`),
+      defaultValue: "",
+    });
   }
+
   public getLatestUsage(): TunnelUsage | null {
     if (!this.tunnelRef) return null;
     return this._latestUsage;
