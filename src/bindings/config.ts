@@ -1,5 +1,6 @@
 import { Logger } from "../utils/logger";
-import { PinggyNative, PinggyOptions, Config as IConfig } from "../types";
+import { PinggyNative, Config as IConfig } from "../types";
+import { PinggyOptionsBuilder } from "../pinggyOptions";
 import { PinggyError } from "./exception";
 
 /**
@@ -20,7 +21,7 @@ export class Config implements IConfig {
    * @param addon - The native addon instance.
    * @param {PinggyOptions} [options={}] - The tunnel configuration options.
    */
-  constructor(addon: PinggyNative, options: PinggyOptions = {}) {
+  constructor(addon: PinggyNative, options: PinggyOptionsBuilder) {
     this.addon = addon;
     this.configRef = this.initialize(options);
   }
@@ -31,7 +32,7 @@ export class Config implements IConfig {
    * @param {PinggyOptions} options - The tunnel configuration options.
    * @returns {number} The reference to the native config object.
    */
-  private initialize(options: PinggyOptions): number {
+  private initialize(options: PinggyOptionsBuilder): number {
     try {
       const configRef = this.addon.createConfig();
       Logger.info(`Created config with reference: ${configRef}`);
@@ -47,6 +48,13 @@ export class Config implements IConfig {
           Logger.error(err.message);
           throw err;
         }
+      }
+
+      // Handle validation errors
+      try {
+        options.validate();
+      } catch (validationError) {
+        throw validationError instanceof PinggyError ? validationError : new Error(String(validationError));
       }
 
       if (options.token) {
@@ -68,15 +76,14 @@ export class Config implements IConfig {
 
       // Apply user-defined values or set defaults
       const serverAddress = options.serverAddress || "a.pinggy.io:443";
-      const sniServerName = options.sniServerName || "a.pinggy.io";
-      const forwardTo = options.forwardTo || "localhost:4000";
-      const type = options.type || ""; // Default to empty string if not provided
-      const ssl = options.ssl !== undefined ? options.ssl : true; // Default to true if not specified
+      const sniServerName = options.getSniServerName() || "a.pinggy.io";
+      let forwardTo = options.getForwardingPrimary() || "localhost:80";
+      const ssl = options.getSsl() ?? true; // Default to true if not specified
+      const type = options.tunnelType?.[0] || "http"; // Default to "http" if not specified
 
       // Set argument if provided
-
-      if (options.additionalArguments?.trim()) {
-        const argument = options.additionalArguments.trim();
+      if (options.getAdditionalArguments()?.trim()) {
+        const argument = options.getAdditionalArguments()!.trim();
         Logger.info(`Setting config argument: ${argument}`);
         this.addon.configSetArgument(configRef, argument);
       }
@@ -84,26 +91,15 @@ export class Config implements IConfig {
 
       this.addon.configSetServerAddress(configRef, serverAddress);
 
-      try {
-        this.addon.configSetSniServerName(configRef, sniServerName);
-      } catch (e) {
-        const lastEx = this.addon.getLastException();
-        if (lastEx) {
-          const pinggyError = new PinggyError(lastEx);
-          Logger.error("Error setting SNI server name:", pinggyError);
-          throw pinggyError;
-        } else {
-          if (e instanceof Error) {
-            Logger.error("Error setting SNI server name:", e);
-          } else {
-            Logger.error(
-              "Error setting SNI server name:",
-              new Error(String(e))
-            );
+      this.safeSet(
+        () => {
+          if (sniServerName) {
+            this.addon.configSetSniServerName(configRef, sniServerName);
           }
-          throw e;
-        }
-      }
+        },
+        "SNI server name configuration",
+        sniServerName ? `SNI server name set to: ${sniServerName}` : undefined
+      );
 
       this.safeSet(
         () => {
@@ -129,34 +125,34 @@ export class Config implements IConfig {
       // set xff
       this.safeSet(
         () => {
-          if (options.xff !== undefined) {
-            this.addon.configSetXForwardedFor(configRef, options.xff as boolean);
+          if (options.xForwarderFor !== undefined) {
+            this.addon.configSetXForwardedFor(configRef, options.xForwarderFor as boolean);
           }
         },
         "X-Forwarded-For configuration",
-        options.xff !== undefined ? `X-Forwarded-For configuration set to: ${options.xff}` : undefined
+        options.xForwarderFor !== undefined ? `X-Forwarded-For configuration set to: ${options.xForwarderFor}` : undefined
       );
 
       // set original request url
       this.safeSet(
         () => {
-          if (options.fullRequestUrl !== undefined) {
-            this.addon.configSetOriginalRequestUrl(configRef, options.fullRequestUrl as boolean);
+          if (options.originalRequestUrl !== undefined) {
+            this.addon.configSetOriginalRequestUrl(configRef, options.originalRequestUrl as boolean);
           }
         },
         "Original-Request-URL configuration",
-        options.fullRequestUrl !== undefined ? `Original-Request-URL configuration set to: ${options.fullRequestUrl}` : undefined
+        options.originalRequestUrl !== undefined ? `Original-Request-URL configuration set to: ${options.originalRequestUrl}` : undefined
       );
 
       // set no reverse proxy
       this.safeSet(
         () => {
-          if (options.noReverseProxy !== undefined) {
-            this.addon.configSetReverseProxy(configRef, options.noReverseProxy as boolean);
+          if (options.reverseProxy !== undefined) {
+            this.addon.configSetReverseProxy(configRef, options.reverseProxy as boolean);
           }
         },
         "No-Reverse-Proxy configuration",
-        options.noReverseProxy !== undefined ? `No-Reverse-Proxy configuration set to: ${options.noReverseProxy}` : undefined
+        options.reverseProxy !== undefined ? `No-Reverse-Proxy configuration set to: ${options.reverseProxy}` : undefined
       );
 
       // Set IP whitelist if provided
@@ -173,19 +169,15 @@ export class Config implements IConfig {
           : undefined
       );
 
-      // Set basic auth if provided
+      // Set basic auth if provided (array of {username,password})
       this.safeSet(
         () => {
-          if (options.basicAuth && Object.keys(options.basicAuth).length > 0) {
-            const authArray = Object.entries(options.basicAuth).map(([username, password]) => ({
-              username,
-              password,
-            }));
-            this.addon.configSetBasicAuths(configRef, JSON.stringify(authArray));
+          if (options.basicAuth && options.basicAuth.length > 0) {
+            this.addon.configSetBasicAuths(configRef, JSON.stringify(options.basicAuth));
           }
         },
         "Basic auth configuration",
-        options.basicAuth && Object.keys(options.basicAuth).length > 0
+        options.basicAuth && options.basicAuth.length > 0
           ? `Basic auth set to: ${JSON.stringify(options.basicAuth)}`
           : undefined
       );
@@ -193,13 +185,13 @@ export class Config implements IConfig {
       // Set bearer token if provided
       this.safeSet(
         () => {
-          if (options.bearerAuth && options.bearerAuth?.length > 0) {
-            this.addon.configSetBearerTokenAuths(configRef, JSON.stringify(options.bearerAuth));
+          if (options.bearerTokenAuth && options.bearerTokenAuth?.length > 0) {
+            this.addon.configSetBearerTokenAuths(configRef, JSON.stringify(options.bearerTokenAuth));
           }
         },
         "Bearer auth configuration",
-        options.bearerAuth && options.bearerAuth?.length > 0
-          ? `Bearer auth set to: ${JSON.stringify(options.bearerAuth)}`
+        options.bearerTokenAuth && options.bearerTokenAuth?.length > 0
+          ? `Bearer auth set to: ${JSON.stringify(options.bearerTokenAuth)}`
           : undefined
       );
 
@@ -225,16 +217,16 @@ export class Config implements IConfig {
         `SSL configuration set to: ${ssl}`
       );
 
-      // Set local server TLS configuration
+      // Set local server TLS configuration (may be derived)
       this.safeSet(
         () => {
-          if (options.localServerTls) {
-            this.addon.configSetLocalServerTls(configRef, options.localServerTls as string);
+          if (options.getLocalServerTls()) {
+            this.addon.configSetLocalServerTls(configRef, options.getLocalServerTls() as string);
           }
         },
         "Local server TLS configuration",
-        options.localServerTls
-          ? `Local server TLS configuration set to: ${options.localServerTls}`
+        options.getLocalServerTls()
+          ? `Local server TLS configuration set to: ${options.getLocalServerTls()}`
           : undefined
       );
 
@@ -356,8 +348,7 @@ export class Config implements IConfig {
       Logger.info("Configurations applied successfully.");
       return configRef;
     } catch (e) {
-      Logger.error("Error creating configuration:", e as Error);
-      return 0;
+      throw e;
     }
   }
 

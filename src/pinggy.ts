@@ -1,4 +1,5 @@
-import { PinggyNative, PinggyOptions } from "./types";
+import { PinggyNative } from "./types";
+import { PinggyOptions, PinggyOptionsBuilder } from "./pinggyOptions";
 import { TunnelInstance } from "./tunnel-instance";
 import { Logger } from "./utils/logger";
 const binary = require("@mapbox/node-pre-gyp");
@@ -26,7 +27,7 @@ export class Pinggy {
    * Private constructor for singleton pattern. Use {@link pinggy} to get the instance.
    * @internal
    */
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Returns the singleton instance of {@link Pinggy}.
@@ -49,7 +50,8 @@ export class Pinggy {
    * @see {@link pinggy}
    */
   public createTunnel(options: PinggyOptions): TunnelInstance {
-    const tunnel = new TunnelInstance(Pinggy.addon, options);
+    const pinggyOptions = new PinggyOptionsBuilder(options);
+    const tunnel = new TunnelInstance(Pinggy.addon, pinggyOptions);
     this.tunnels.add(tunnel);
     return tunnel;
   }

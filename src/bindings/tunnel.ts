@@ -66,6 +66,7 @@ export class Tunnel implements ITunnel {
   private intentionallyStopped: boolean = false; // Track intentional stops
   private functionQueue: FunctionQueue;
   private _latestUsage: TunnelUsage = new TunnelUsage();
+  private onUsageUpdateCallback: ((usage: TunnelUsage) => void) | null = null;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -235,7 +236,9 @@ export class Tunnel implements ITunnel {
 
     try {
       this._latestUsage.updateFromJSON(usageJson);
-      // Todo Callback
+      if (this.onUsageUpdateCallback) {
+        this.onUsageUpdateCallback(this._latestUsage);
+      }
     } catch (err) {
       // Todo Debug log
     }
@@ -259,7 +262,6 @@ export class Tunnel implements ITunnel {
           throw new Error("Tunnel connection failed.");
         }
 
-        this.startTunnelUsageUpdate();
         Logger.info("Tunnel connected, starting authentication monitoring...");
         this.pollStart();
 
@@ -448,5 +450,10 @@ export class Tunnel implements ITunnel {
   public getLatestUsage(): TunnelUsage | null {
     if (!this.tunnelRef) return null;
     return this._latestUsage;
+  }
+
+  public setUsageUpdateCallback(callback: (usage: TunnelUsage) => void): void {
+    this.onUsageUpdateCallback = callback;
+    this.startTunnelUsageUpdate();
   }
 }
