@@ -92,7 +92,7 @@ export async function listen(
   // Merge options with detected port
   const tunnelOptions: PinggyOptions = {
     ...options,
-    forwardTo: `localhost:${port}`,
+    forwarding: `localhost:${port}`,
   };
 
   // Start the tunnel

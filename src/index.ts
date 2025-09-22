@@ -6,12 +6,12 @@
  *
  * @see {@link Pinggy} for the main tunnel manager singleton (exported as `pinggy`).
  * @see {@link TunnelInstance} for individual tunnel instances.
- * @see {@link PinggyOptions} for tunnel configuration options.
+ * @see {@link PinggyOptionsType} for tunnel configuration options.
  * @see {@link HeaderModification} for header modification configuration.
  * @see {@link listen} for the utility to expose servers via tunnels.
  */
 import { Pinggy } from "./pinggy";
-import { PinggyOptions, HeaderModification } from "./types";
+import { PinggyOptionsType, HeaderModification } from "./pinggyOptions";
 import { TunnelInstance } from "./tunnel-instance";
 import { Config } from "./bindings/config";
 import { Tunnel } from "./bindings/tunnel";
@@ -30,9 +30,9 @@ export { pinggy, TunnelInstance, Config, Tunnel };
 /**
  * Re-export of tunnel configuration option types and interfaces.
  *
- * @see {@link PinggyOptions}
+ * @see {@link PinggyOptionsType}
  * @see {@link HeaderModification}
  */
-export type { PinggyOptions, HeaderModification } from "./types";
+export type { PinggyOptionsType as PinggyOptions, HeaderModification } from "./pinggyOptions";
 
 export { listen } from "./utils/listen";

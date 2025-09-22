@@ -1,4 +1,5 @@
-import { PinggyNative, PinggyOptions, TunnelStatus } from "./types";
+import { PinggyNative, TunnelStatus } from "./types";
+import { HeaderModification, PinggyOptionsType, PinggyOptions } from "./pinggyOptions"
 import { Config } from "./bindings/config";
 import { Tunnel } from "./bindings/tunnel";
 import { Logger } from "./utils/logger";
@@ -43,6 +44,14 @@ export class TunnelInstance {
         throw new Error("Failed to initialize config.");
       this.tunnel = new Tunnel(this.addon, this.config.configRef);
     } catch (e) {
+      // If the error is already a proper Error object (like validation errors),
+      // preserve it instead of trying to convert it to PinggyError
+      if (e instanceof PinggyError) {
+        Logger.error("Tunnel init error:", e);
+        throw e;
+      }
+
+      // For other types of errors, check if there's a native exception
       const lastEx = getLastException(this.addon);
       const pinggyError = lastEx
         ? new PinggyError(lastEx)
@@ -89,6 +98,61 @@ export class TunnelInstance {
     this.tunnel.tunnelStop();
     this.tunnel = null;
     this.config = null;
+  }
+
+  /**
+ * Get greeting message for the tunnel.
+ *
+ * Delegates to {@link Tunnel#getTunnelGreetMessage}.
+ *
+ * @returns {string | null} The greeting message, or null if unavailable.
+ * @throws {Error} If the tunnel is not initialized.
+ */
+  public getGreetMessage(): string | null {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    return this.tunnel.getTunnelGreetMessage();
+  }
+
+  public startUsageUpdate(): void {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    this.tunnel.startTunnelUsageUpdate();
+  }
+
+  public stopUsageUpdate(): void {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    this.tunnel.stopTunnelUsageUpdate();
+  }
+
+  public getUsages(): string | null {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    return this.tunnel.getTunnelUsages();
+  }
+
+  /**
+   * Get the latest usage statistics for the tunnel.
+   *
+   * Delegates to {@link Tunnel#getLatestUsage}.
+   *
+   * @returns {Record<string, any> | null} The latest usage statistics, or null if unavailable.
+   * @throws {Error} If the tunnel is not initialized.
+   */
+  public getLatestUsage(): Record<string, any> | null {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    return this.tunnel.getLatestUsage();
+  }
+
+  /**
+   * Sets a callback function to receive usage updates.
+   *
+   * Delegates to {@link Tunnel#setUsageUpdateCallback}.
+   *
+   * @param {function} callback - The callback function to receive usage updates.
+   * @returns {void}
+   * @throws {Error} If the tunnel is not initialized.
+   */
+  public setUsageUpdateCallback(callback: (usage: Record<string, any>) => void): void {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    this.tunnel.setUsageUpdateCallback(callback);
   }
 
   /**
@@ -257,13 +321,129 @@ export class TunnelInstance {
   }
 
   /**
+   * Returns whether HTTPS-only mode is enabled for the tunnel instance.
+   *
+   * @returns {boolean | null} `true` if HTTPS-only mode is enabled, `false` if disabled, or `null` if the configuration is unavailable.
+   */
+  public getHttpsOnly(): boolean | null {
+    return this.config?.getHttpsOnly() ?? null;
+  }
+
+  /**
+   * Retrieves IP whitelist for this tunnel instance.
+   *
+   * @returns {string[] | null} An array of whitelisted IP addresses, or `null` if no whitelist is configured.
+   */
+  public getIpWhiteList(): string[] | null {
+    return this.config?.getIpWhiteList() ?? null;
+  }
+
+  /**
+ * Retrieves Allow-Preflight configuration for this tunnel instance.
+ *
+ * @returns {boolean | null} The Allow-Preflight setting, or `null` if not configured.
+ */
+  public getAllowPreflight(): boolean | null {
+    return this.config?.getAllowPreflight() ?? null;
+  }
+
+  /**
+ * Retrieves No-Reverse-Proxy configuration for this tunnel instance.
+ *
+ * @returns {boolean | null} The No-Reverse-Proxy setting, or `null` if not configured.
+ */
+  public getNoReverseProxy(): boolean | null {
+    return this.config?.getNoReverseProxy() ?? null;
+  }
+
+  /**
+ * Retrieves X-Forwarded-For configuration for this tunnel instance.
+ *
+ * @returns {boolean | null} The X-Forwarded-For setting, or `null` if not configured.
+ */
+  public getXForwardedFor(): boolean | null {
+    return this.config?.getXForwardedFor() ?? null;
+  }
+
+  /**
+ * Retrieves Original-Request-URL configuration for this tunnel instance.
+ *
+ * @returns {boolean | null} The Original-Request-URL setting, or `null` if not configured.
+ */
+  public getOriginalRequestUrl(): boolean | null {
+    return this.config?.getOriginalRequestUrl() ?? null;
+  }
+
+  /**
+   * Retrieves the basic authentication values from the instance configuration.
+   *
+   * @returns An array of basic auth credentials when configured, or null if none are set.
+   */
+  public getBasicAuth(): string[] | null {
+    return this.config?.getBasicAuth() ?? null;
+  }
+
+  /**
+   * Returns bearer token authentication values defined in the configuration.
+   *
+   * @returns An array of bearer token strings if present; otherwise null.
+   */
+  public getBearerTokenAuth(): string[] | null {
+    return this.config?.getBearerTokenAuth() ?? null;
+  }
+
+  /**
+   * Returns header modification values defined in the configuration.
+   *
+   * @returns An array of header modification objects if present; otherwise null.
+   */
+  public getHeaderModification(): string[] | null {
+    return this.config?.getHeaderModification() ?? null;
+  }
+
+  /**
+   * Returns local server TLS configuration for this tunnel instance.
+   *
+   * @returns The local server TLS setting, or `null` if not configured.
+   */
+  public getLocalServerTls(): string | null {
+    return this.config?.getLocalServerTls() ?? null;
+  }
+
+  /**
+ * Returns reconnect interval configuration for this tunnel instance.
+ *
+ * @returns The reconnect interval setting, or `null` if not configured.
+ */
+  public getReconnectInterval(): number | null {
+    return this.config?.getReconnectInterval() ?? null;
+  }
+
+  /**
+ * Returns auto-reconnect configuration for this tunnel instance.
+ *
+ * @returns The auto-reconnect setting, or `null` if not configured.
+ */
+  public getAutoReconnect(): boolean | null {
+    return this.config?.getAutoReconnect() ?? null;
+  }
+
+  /**
+ * Returns MaxReconnectAttempts configuration for this tunnel instance.
+ *
+ * @returns The MaxReconnectAttempts setting, or `null` if not configured.
+ */
+  public getMaxReconnectAttempts(): number | null {
+    return this.config?.getMaxReconnectAttempts() ?? null;
+  }
+  /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
-  * @returns {PinggyOptions | null} The tunnel configuration, or null if unavailable.
+  * @returns {PinggyOptionsType | null} The tunnel configuration, or null if unavailable.
   */
-  public getConfig(): PinggyOptions | null {
-    const options: PinggyOptions = {};
+  public getConfig(): PinggyOptionsType | null {
+    const options: PinggyOptionsType = { optional: {} };
 
     // Add directly accessible properties
     const serverAddress = this.getServerAddress();
@@ -273,31 +453,80 @@ export class TunnelInstance {
     options.token = token || "";
 
     const sniServerName = this.getSniServerName()
-    options.sniServerName = sniServerName || "";
+    options.optional!.sniServerName = sniServerName || "";
 
     const force = this.getForce();
     options.force = force || false;
+
+    const httpsOnly = this.getHttpsOnly();
+    options.httpsOnly = httpsOnly !== null ? httpsOnly : false;
+
+    const ipWhiteList = this.getIpWhiteList();
+    options.ipWhitelist = ipWhiteList ? (ipWhiteList as string[]) : [];
+
+    const allowPreflight = this.getAllowPreflight();
+    options.allowPreflight = allowPreflight !== null ? allowPreflight : false;
+
+    const noReverseProxy = this.getNoReverseProxy();
+    options.reverseProxy = noReverseProxy !== null ? noReverseProxy : false;
+
+    const xForwardedFor = this.getXForwardedFor();
+    options.xForwardedFor = xForwardedFor !== null ? xForwardedFor : false;
+
+    const originalRequestUrl = this.getOriginalRequestUrl();
+    options.originalRequestUrl = originalRequestUrl !== null ? originalRequestUrl : false;
+
+    const rawAuthValue = this.getBasicAuth();
+
+    options.basicAuth = normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
+
+    const bearerAuth = this.getBearerTokenAuth();
+    options.bearerTokenAuth = bearerAuth ? bearerAuth : [];
+
+    const reconnectInterval = this.getReconnectInterval();
+    options.reconnectInterval = reconnectInterval !== null ? reconnectInterval : 0;
+
+    const maxReconnectAttempts = this.getMaxReconnectAttempts();
+    options.maxReconnectAttempts = maxReconnectAttempts !== null ? maxReconnectAttempts : 0;
+
+    const autoReconnect = this.getAutoReconnect();
+    options.autoReconnect = autoReconnect !== null ? autoReconnect : false;
+
+    const headerModificationRaw = this.getHeaderModification() as unknown as HeaderModification[];
+
+    options.headerModification = Array.isArray(headerModificationRaw)
+      ? headerModificationRaw.map(h => {
+        if (h.type === "remove") {
+          return { key: h.key, type: "remove" as const };
+        }
+        return {
+          key: h.key,
+          type: h.type,
+          value: Array.isArray(h.value) ? h.value : [],
+        };
+      })
+      : [];
 
 
 
     let type = this.getTunnelType() || this.getUdpType()
 
     if (type === "tcp" || type === "tls" || type === "http" || type === "udp") {
-      options.type = type;
+      options.tunnelType = [type as any];
       if (type === "http" || type === "tcp" || type === "tls") {
         const tcpForwardTo = this.getTcpForwardTo();
-        options.forwardTo = tcpForwardTo || "";
+        options.forwarding = tcpForwardTo || "";
       } else if (type === "udp") {
         const udpForwardTo = this.getUdpForwardTo();
-        options.forwardTo = udpForwardTo || "";
+        options.forwarding = udpForwardTo || "";
       }
     } else {
-      options.type = "http";
-      options.forwardTo = "";
+      options.tunnelType = ["http"] as any;
+      options.forwarding = "";
     }
 
     const ssl = this.getTunnelSsl();
-    options.ssl = ssl !== null ? ssl : false;
+    options.optional!.ssl = ssl !== null ? ssl : false;
 
 
     const argString = this.getArgument() || "";
@@ -313,58 +542,30 @@ export class TunnelInstance {
       !argumentInParts[0].startsWith("a:") && !argumentInParts[0].startsWith("r:") &&
       !argumentInParts[0].startsWith("u:") && !argumentInParts[0].startsWith("x:")
     ) {
-      options.cmd = argumentInParts[0];
+      options.optional!.additionalArguments = argumentInParts[0];
     }
-
-    // Initialize arrays and objects with empty defaults
-    options.ipWhitelist = [];
-    options.basicAuth = {};
-    options.bearerAuth = [];
-    options.headerModification = [];
-    options.xff = false;
-    options.httpsOnly = false;
-    options.fullRequestUrl = false;
-    options.allowPreflight = false;
-    options.noReverseProxy = false;
-
-
-    // Parse Ip whitelist, auth settings, and other flags
-    for (const argument of argumentInParts) {
-      if (argument.startsWith('w:')) {
-        options.ipWhitelist!.push(...argument.substring(2).split(','));
-      } else if (argument.startsWith('b:')) {
-        const [_, user, pass] = argument.split(':');
-        if (user && pass) options.basicAuth![user] = pass;
-      } else if (argument.startsWith('k:')) {
-        options.bearerAuth!.push(argument.substring(2));
-      } else if (argument.startsWith('a:')) {
-        const [_, key, value] = argument.split(':');
-        if (key && value) options.headerModification!.push({ action: 'add', key, value });
-      } else if (argument.startsWith('r:')) {
-        options.headerModification!.push({ action: 'remove', key: argument.substring(2) });
-      } else if (argument.startsWith('u:')) {
-        const [_, key, value] = argument.split(':');
-        if (key && value) options.headerModification!.push({ action: 'update', key, value });
-      } else if (argument.startsWith('x:localServerTls')) {
-        const parts = argument.split(':');
-        // Expected format: x:localServerTls:localhost
-        if (parts.length === 3) {
-          options.localServerTls = parts[2];
-        }
-      }
-      else if (argument === 'x:xff') {
-        options.xff = true;
-      } else if (argument === 'x:https') {
-        options.httpsOnly = true;
-      } else if (argument === 'x:fullurl') {
-        options.fullRequestUrl = true;
-      } else if (argument === 'x:passpreflight') {
-        options.allowPreflight = true;
-      } else if (argument === 'x:noreverseproxy') {
-        options.noReverseProxy = true;
-      }
-    }
-
     return options;
   }
+}
+
+type BasicAuthItem = { username: string; password: string };
+
+function normalizeBasicAuth(input: string | BasicAuthItem[] | null): BasicAuthItem[] {
+  let parsed: BasicAuthItem[] | null = null;
+
+  if (typeof input === "string") {
+    try {
+      parsed = JSON.parse(input);
+    } catch {
+      parsed = null;
+    }
+  } else {
+    parsed = input ?? null;
+  }
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    return [];
+  }
+
+  return parsed.filter(({ username, password }) => !!username && !!password);
 }

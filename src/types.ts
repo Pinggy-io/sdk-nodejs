@@ -7,156 +7,6 @@
  * @packageDocumentation
  */
 
-/**
- * Configuration for modifying HTTP headers in tunnel requests.
- *
- * @group Interfaces
- * @public
- *
- * @example
- * ```typescript
- * // Add a custom header
- * { key: "X-Custom-Header", value: "my-value", action: "add" }
- *
- * // Remove a header
- * { key: "X-Unwanted-Header", action: "remove" }
- *
- * // Update an existing header
- * { key: "User-Agent", value: "MyApp/1.0", action: "update" }
- * ```
- */
-export interface HeaderModification {
-  /** The header key. */
-  key: string;
-
-  /**
-   * The header value (optional, required for add/update).
-   */
-  value?: string;
-
-  /**
-   * The action to perform: add, remove, or update.
-   */
-  action: "add" | "remove" | "update";
-}
-
-/**
- * Configuration options for creating Pinggy tunnels.
- *
- * @group Interfaces
- * @public
- * @example
- * ```typescript
- * const options: PinggyOptions = {
- *   forwardTo: "localhost:3000",
- *   type: "http",
- *   debug: true,
- *   basicAuth: { "user": "password" }
- * };
- * ```
- */
-export interface PinggyOptions {
-  /**
-   * Authentication token for the tunnel.
-   * @example "tk_123abc456def"
-   */
-  token?: string;
-  /**
-   * Server address to connect to.
-   * @example "connect.pinggy.io"
-   */
-  serverAddress?: string;
-  /**
-   * SNI server name for SSL/TLS.
-   * @example "example.com"
-   */
-  sniServerName?: string;
-  /**
-   * Local address to forward traffic to.
-   * @example "localhost:3000"
-   */
-  forwardTo?: string;
-  /**
-   * Enable debug logging for this tunnel instance.
-   * @default false
-   */
-  debug?: boolean;
-  /**
-   * Local port for web debugger.
-   * @example 8080
-   */
-  debuggerPort?: number;
-  /**
-   * Tunnel protocol type.
-   * @default "http"
-   */
-  type?: "tcp" | "tls" | "http" | "udp";
-  /**
-   * List of whitelisted IP addresses that can access the tunnel.
-   * @example ["192.168.1.1", "10.0.0.1"]
-   */
-  ipWhitelist?: string[];
-  /**
-   * Basic authentication credentials (username: password).
-   * @example { "admin": "secret123", "user": "password" }
-   */
-  basicAuth?: Record<string, string>;
-  /**
-   * List of bearer authentication tokens.
-   * @example ["token123", "token456"]
-   */
-  bearerAuth?: string[];
-  /**
-   * List of header modification rules.
-   * @see {@link HeaderModification}
-   */
-  headerModification?: HeaderModification[];
-  /**
-   * Enable X-Forwarded-For header to pass client IP information.
-   * @default false
-   */
-  xff?: boolean;
-  /**
-   * Only allow HTTPS connections to the tunnel.
-   * @default false
-   */
-  httpsOnly?: boolean;
-  /**
-   * Enable localServerTls (connecting to local https server). Specify SNI value.
-   * @example "localhost"
-   */
-  localServerTls?: string;
-  /**
-   * Forward the full request URL to the backend service.
-   * @default false
-   */
-  fullRequestUrl?: boolean;
-  /**
-   * Allow CORS preflight (OPTIONS) requests.
-   * @default false
-   */
-  allowPreflight?: boolean;
-  /**
-   * Disable reverse proxy behavior.
-   * @default false
-   */
-  noReverseProxy?: boolean;
-  /**
-   * Optional command prefix for the tunnel.
-   * @example "--tcp"
-   */
-  cmd?: string;
-  /**
-   * Whether to use SSL for tunnel setup.
-   * @default false
-   */
-  ssl?: boolean;
-  /**
-   * Force specific tunnel settings or bypass certain restrictions.
-   * @default false
-   */
-  force?: boolean;
-}
 
 /**
  * Interface for the native Pinggy addon methods.
@@ -190,6 +40,18 @@ export interface PinggyNative {
   configSetSsl(configRef: number, ssl: boolean): void;
   /** Set force configuration for a config. */
   configSetForce(configRef: number, force: boolean): void;
+  /** Set auto-reconnect configuration for a config. */
+  configSetAutoReconnect(configRef: number, autoReconnect: boolean): void;
+  /** Set max reconnect attempts configuration for a config. */
+  configSetMaxReconnectAttempts(configRef: number, maxReconnectAttempts: number): void;
+  /** Set reconnect interval configuration for a config. */
+  configSetReconnectInterval(configRef: number, reconnectInterval: number): void;
+  /** Get auto-reconnect configuration for a config. */
+  configGetAutoReconnect(configRef: number): boolean;
+  /** Get max reconnect attempts configuration for a config. */
+  configGetMaxReconnectAttempts(configRef: number): number;
+  /** Get reconnect interval configuration for a config. */
+  configGetReconnectInterval(configRef: number): number;
   /** Get force configuration for a config. */
   configGetForce(configRef: number): boolean;
   /** Get the authentication token for a config. */
@@ -208,6 +70,46 @@ export interface PinggyNative {
   configGetUdpType(configRef: number): string;
   /** Get SSL configuration for a config. */
   configGetSsl(configRef: number): boolean;
+  /** Set HTTPS-only configuration for a config. */
+  configSetHttpsOnly(configRef: number, httpsOnly: boolean): void;
+  /** Set IP whitelist configuration for a config. */
+  configSetIpWhiteList(configRef: number, ipWhiteList: string): void;
+  /** Set the X-Forwarded-For header for a config. */
+  configSetXForwardedFor(configRef: number, xForwardedFor: boolean): void;
+  /** Set the Original-Request-URL header for a config. */
+  configSetOriginalRequestUrl(configRef: number, originalRequestUrl: boolean): void;
+  /** Set the Allow-Preflight configuration for a config. */
+  configSetAllowPreflight(configRef: number, allowPreflight: boolean): void;
+  /** Set the no-reverse-proxy configuration for a config. */
+  configSetReverseProxy(configRef: number, noReverseProxy: boolean): void;
+  /** Set the basic authentication configuration for a config. */
+  configSetBasicAuths(configRef: number, auths: string): void;
+  /** Set the bearer authentication configuration for a config. */
+  configSetBearerTokenAuths(configRef: number, tokens: string): void;
+  /** Set the header modification configuration for a config. */
+  configSetHeaderModification(configRef: number, headers: string): void;
+  /** Set local server TLS configuration for a config. */
+  configSetLocalServerTls(configRef: number, tls: string): void;
+  /** Get local server TLS configuration for a config. */
+  configGetLocalServerTls(configRef: number): string;
+  /** Get the header modification configuration for a config. */
+  configGetHeaderModification(configRef: number): string[];
+  /** Get the bearer authentication configuration for a config. */
+  configGetBearerTokenAuths(configRef: number): string[];
+  /** Get the basic authentication configuration for a config. */
+  configGetBasicAuths(configRef: number): string[];
+  /** Get the X-Forwarded-For header configuration for a config. */
+  configGetXForwardedFor(configRef: number): boolean;
+  /** Get the Original-Request-URL header configuration for a config. */
+  configGetOriginalRequestUrl(configRef: number): boolean;
+  /** Get the Allow-Preflight configuration for a config. */
+  configGetAllowPreflight(configRef: number): boolean;
+  /** Get the reverse-proxy configuration for a config. */
+  configGetReverseProxy(configRef: number): boolean;
+  /** Get the IP whitelist for a config. */
+  configGetIpWhiteList(configRef: number): string[];
+  /** Get HTTPS-only configuration for a config. */
+  configGetHttpsOnly(configRef: number): boolean;
   /** Set the log file path. */
   setLogPath(path: string): void;
   /** Enable or disable logging. */
@@ -291,6 +193,39 @@ export interface PinggyNative {
   setDebugLogging(enabled: boolean): void;
   /** Get the Pinggy SDK version. */
   getPinggyVersion(): string;
+  /** Get the tunnel greet message. */
+  getTunnelGreetMessage(tunnelRef: number): string;
+  /** start the tunnel usage update. */
+  startTunnelUsageUpdate(tunnelRef: number): void;
+  /** stop the tunnel usage update. */
+  stopTunnelUsageUpdate(tunnelRef: number): void;
+  /** get the tunnel usages. */
+  getTunnelUsages(tunnelRef: number): string;
+  /** Set the callback for forwarding changes. */
+  tunnelSetOnForwardingChangedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, forwardToAddr: string) => void
+  ): void;
+  /** Set the callback for usage updates. */
+  tunnelSetOnUsageUpdateCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, usageJson: string) => void
+  ): void;
+  /** Set the callback for reconnection failed. */
+  tunnelSetOnReconnectionFailedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number) => void
+  ): void;
+  /** Set the callback for reconnection completed. */
+  tunnelSetOnReconnectionCompletedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, urls: string[]) => void
+  ): void;
+  /** Set the callback for will reconnect event. */
+  tunnelSetOnWillReconnectCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, error: string, numMsgs: number, messages: string[]) => void
+  ): void;
 }
 
 /**

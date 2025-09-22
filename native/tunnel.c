@@ -641,6 +641,13 @@ typedef struct
 void authenticated_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel)
 {
     AuthCallbackData *cb_data = (AuthCallbackData *)user_data;
+    if (cb_data == NULL)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Callback data is NULL", __FILE__, __LINE__);
+        napi_throw_error(NULL, NULL, error_message);
+        return;
+    }
     napi_env env = cb_data->env;
 
     napi_value js_callback, js_tunnel, undefined, js_result;
@@ -1364,6 +1371,848 @@ napi_value ConfigSetSsl(napi_env env, napi_callback_info info)
     return NULL;
 }
 
+napi_value GetTunnelGreetMessage(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_value result;
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to parse arguments", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel)", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Get the first argument: tunnel (pinggy_ref_t)
+    uint32_t tunnel;
+    status = napi_get_value_uint32(env, args[0], &tunnel);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnel reference", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+    pinggy_capa_p_t required_len = 0;
+    // Call the native function to get the greet message length
+    pinggy_const_int_t rc = pinggy_tunnel_get_greeting_msgs_len(tunnel, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get greeting message length");
+        return NULL;
+    }
+    pinggy_char_p_t greet_msg = malloc(required_len + 1);
+    if (greet_msg == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+    // Call the native function to get the greet message
+    pinggy_const_int_t copied_len = pinggy_tunnel_get_greeting_msgs(tunnel, required_len, greet_msg);
+    if (copied_len < 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get greeting message");
+        free(greet_msg);
+        return NULL;
+    }
+    status = napi_create_string_utf8(env, greet_msg, copied_len, &result);
+    free(greet_msg);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create result string");
+        return NULL;
+    }
+    return result;
+}
+
+napi_value startTunnelUsageUpdate(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Convert the first argument to uint32_t (tunnel ref)
+    uint32_t tunnel_ref;
+    status = napi_get_value_uint32(env, args[0], &tunnel_ref);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the pinggy_tunnel_start_usage_update function
+    pinggy_tunnel_start_usage_update(tunnel_ref);
+}
+
+napi_value stopTunnelUsageUpdate(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Convert the first argument to uint32_t (tunnel ref)
+    uint32_t tunnel_ref;
+    status = napi_get_value_uint32(env, args[0], &tunnel_ref);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the pinggy_tunnel_stop_usage_update function
+    pinggy_tunnel_stop_usage_update(tunnel_ref);
+}
+
+napi_value GetTunnelUsages(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_value result;
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to parse arguments", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel)", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Get the first argument: tunnel (pinggy_ref_t)
+    uint32_t tunnel;
+    status = napi_get_value_uint32(env, args[0], &tunnel);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnel reference", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    pinggy_capa_p_t required_len = 0;
+    // Call the native function to get the usages length
+    pinggy_const_int_t rc = pinggy_tunnel_get_current_usages_len(tunnel, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get usages length");
+        return NULL;
+    }
+    pinggy_char_p_t usages = malloc(required_len + 1);
+    if (usages == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+    // Call the native function to get the usages
+    pinggy_const_int_t copied_len = pinggy_tunnel_get_current_usages(tunnel, required_len, usages);
+    if (copied_len < 0)
+    {
+        napi_throw_error(env, NULL, "Failed to get usages");
+        free(usages);
+        return NULL;
+    }
+    status = napi_create_string_utf8(env, usages, copied_len, &result);
+    free(usages);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create result string");
+        return NULL;
+    }
+    return result;
+}
+
+// forwarding changed callback: receives a JSON url_map string
+void on_forwarding_changed_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_const_char_p_t url_map)
+{
+    if (user_data == NULL)
+    {
+        fprintf(stderr, "[%s:%d] NULL user_data in on_forwarding_changed_cb\n", __FILE__, __LINE__);
+        return;
+    }
+
+    CallbackData *cb_data = (CallbackData *)user_data;
+    napi_env env = cb_data->env;
+    napi_status status;
+    if (env == NULL)
+    {
+        fprintf(stderr, "[%s:%d] NULL env in on_forwarding_changed_cb\n", __FILE__, __LINE__);
+        return;
+    }
+    napi_handle_scope scope;
+    napi_open_handle_scope(env, &scope);
+
+    napi_value callback;
+    napi_get_reference_value(env, cb_data->callback_ref, &callback);
+
+    napi_value argv[2];
+    status = napi_create_uint32(env, (uint32_t)tunnel_ref, &argv[0]);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create tunnel argument", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    status = napi_create_string_utf8(env, url_map ? url_map : "", NAPI_AUTO_LENGTH, &argv[1]);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create url_map argument", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+
+    napi_value undefined;
+    napi_get_undefined(env, &undefined);
+    napi_value js_result;
+    status = napi_call_function(env, undefined, callback, 2, argv, &js_result);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to call callback", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    PINGGY_DEBUG_RET(js_result);
+    napi_close_handle_scope(env, scope);
+}
+
+napi_value SetForwardingChangedCallback(napi_env env, napi_callback_info info)
+{
+
+    napi_status status;
+    size_t argc = 2;
+    napi_value args[2];
+    napi_value js_tunnel;
+    napi_value js_callback;
+
+    // Extract arguments (tunnel reference & callback function)
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 2)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Wrong number of arguments", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    js_tunnel = args[0];
+    js_callback = args[1];
+
+    // Convert tunnel reference to C type
+    pinggy_ref_t tunnel;
+    status = napi_get_value_int64(env, js_tunnel, (int64_t *)&tunnel);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnel reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Verify callback is a function
+    napi_valuetype valuetype;
+    status = napi_typeof(env, js_callback, &valuetype);
+    if (status != napi_ok || valuetype != napi_function)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Second argument must be a function", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Store callback in a reference
+    CallbackData *cb_data = (CallbackData *)malloc(sizeof(CallbackData));
+    if (cb_data == NULL)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to allocate memory for CallbackData", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+    cb_data->env = env;
+    status = napi_create_reference(env, js_callback, 1, &cb_data->callback_ref);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create reference for callback", __FILE__, __LINE__);
+        free(cb_data);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Register callback with Pinggy
+    pinggy_bool_t result = pinggy_tunnel_set_on_forwarding_changed_callback(tunnel, on_forwarding_changed_cb, cb_data);
+    PINGGY_DEBUG_RET(result);
+    if (result != pinggy_true)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to set forwarding changed callback", __FILE__, __LINE__);
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    return NULL;
+}
+
+void on_usage_update_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_const_char_p_t usages)
+{
+    CallbackData *cb_data = (CallbackData *)user_data;
+    if (cb_data == NULL)
+    {
+        fprintf(stderr, "[%s:%d] NULL cb_data in on_usage_update_cb\n", __FILE__, __LINE__);
+        return;
+    }
+    napi_env env = cb_data->env;
+    if (env == NULL)
+    {
+        fprintf(stderr, "[%s:%d] NULL env in on_usage_update_cb\n", __FILE__, __LINE__);
+        return;
+    }
+    napi_handle_scope scope;
+    napi_status status = napi_open_handle_scope(env, &scope);
+    if (status != napi_ok)
+        return;
+
+    napi_value callback;
+    status = napi_get_reference_value(env, cb_data->callback_ref, &callback);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        return;
+    }
+
+    napi_value argv[2];
+    status = napi_create_uint32(env, (uint32_t)tunnel_ref, &argv[0]);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create tunnel argument", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    status = napi_create_string_utf8(env, usages ? usages : "", NAPI_AUTO_LENGTH, &argv[1]);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create usages argument", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+
+    napi_value undefined;
+    napi_get_undefined(env, &undefined);
+    napi_value js_result;
+    status = napi_call_function(env, undefined, callback, 2, argv, &js_result);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to call JavaScript callback", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        napi_close_handle_scope(env, scope);
+        return;
+    }
+    PINGGY_DEBUG_RET(js_result);
+
+    napi_close_handle_scope(env, scope);
+}
+
+napi_value TunnelSetUsageUpdateCallback(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 2)
+    {
+        napi_throw_error(env, NULL, "Expected tunnelRef and callback");
+        return NULL;
+    }
+
+    uint32_t tunnelRef;
+    napi_get_value_uint32(env, args[0], &tunnelRef);
+
+    napi_valuetype cb_type;
+    napi_typeof(env, args[1], &cb_type);
+    if (cb_type != napi_function)
+    {
+        napi_throw_type_error(env, NULL, "Callback must be a function");
+        return NULL;
+    }
+
+    CallbackData *cb_data = malloc(sizeof(CallbackData));
+    if (cb_data == NULL)
+    {
+        napi_throw_error(env, NULL, "Failed to allocate callback data");
+        return NULL;
+    }
+    cb_data->env = env;
+    status = napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+    if (status != napi_ok)
+    {
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to create reference");
+        return NULL;
+    }
+    pinggy_bool_t result = pinggy_tunnel_set_on_usage_update_callback((pinggy_ref_t)tunnelRef, on_usage_update_cb, cb_data);
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to set usage update callback");
+        return NULL;
+    }
+    napi_value js_result;
+    napi_get_boolean(env, result, &js_result);
+    return js_result;
+}
+
+void on_reconnection_completed_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_len_t num_urls, pinggy_char_p_p_t urls)
+{
+    CallbackData *cb_data = (CallbackData *)user_data;
+    if (cb_data == NULL)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Callback data is NULL", __FILE__, __LINE__);
+        napi_throw_error(NULL, NULL, error_message);
+        return;
+    }
+    napi_env env = cb_data->env;
+    if (env == NULL)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] N-API environment is NULL", __FILE__, __LINE__);
+        napi_throw_error(NULL, NULL, error_message);
+        return;
+    }
+    napi_handle_scope scope;
+    napi_status status = napi_open_handle_scope(env, &scope);
+    if (status != napi_ok)
+    {
+        return;
+    }
+
+    napi_value callback;
+    status = napi_get_reference_value(env, cb_data->callback_ref, &callback);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to get callback reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+
+    napi_value argv[2];
+    status = napi_create_uint32(env, (uint32_t)tunnel_ref, &argv[0]);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create tunnel argument", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+
+    napi_value arr;
+    napi_create_array(env, &arr);
+    for (int i = 0; i < num_urls; i++)
+    {
+        napi_value s;
+        napi_create_string_utf8(env, urls[i] ? urls[i] : "", NAPI_AUTO_LENGTH, &s);
+        napi_set_element(env, arr, i, s);
+    }
+    argv[1] = arr;
+
+    napi_value undefined;
+    napi_get_undefined(env, &undefined);
+    napi_value js_result;
+    status = napi_call_function(env, undefined, callback, 2, argv, &js_result);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to call JavaScript callback", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    PINGGY_DEBUG_RET(js_result);
+
+    napi_close_handle_scope(env, scope);
+}
+
+napi_value TunnelSetReconnectionCompletedCallback(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+
+    if (status != napi_ok || argc < 2)
+    {
+        napi_throw_error(env, NULL, "Expected tunnelRef and callback");
+        return NULL;
+    }
+
+    uint32_t tunnelRef;
+    napi_get_value_uint32(env, args[0], &tunnelRef);
+
+    napi_valuetype cb_type;
+    napi_typeof(env, args[1], &cb_type);
+    if (cb_type != napi_function)
+    {
+        napi_throw_type_error(env, NULL, "Callback must be a function");
+        return NULL;
+    }
+
+    CallbackData *cb_data = malloc(sizeof(CallbackData));
+    if (cb_data == NULL)
+    {
+        napi_throw_error(env, NULL, "Failed to allocate callback data");
+        return NULL;
+    }
+    cb_data->env = env;
+    status = napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+    if (status != napi_ok)
+    {
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to create reference");
+        return NULL;
+    }
+
+    pinggy_bool_t result = pinggy_tunnel_set_on_reconnection_completed_callback((pinggy_ref_t)tunnelRef, on_reconnection_completed_cb, cb_data);
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to set reconnection completed callback");
+        return NULL;
+    }
+    napi_value js_result;
+    napi_get_boolean(env, result, &js_result);
+    return js_result;
+}
+
+void on_reconnection_failed_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_uint16_t retry_cnt)
+{
+    napi_status status;
+    CallbackData *cb_data = (CallbackData *)user_data;
+    if (cb_data == NULL)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Callback data is NULL", __FILE__, __LINE__);
+        napi_throw_error(NULL, NULL, error_message);
+        return;
+    }
+
+    napi_env env = cb_data->env;
+    if (env == NULL)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] N-API environment is NULL", __FILE__, __LINE__);
+        napi_throw_error(NULL, NULL, error_message);
+        return;
+    }
+    napi_handle_scope scope;
+    status = napi_open_handle_scope(env, &scope);
+    if (status != napi_ok)
+        return;
+
+    napi_value global;
+    status = napi_get_global(env, &global);
+    if (status != napi_ok)
+    {
+        napi_close_handle_scope(env, scope);
+        return;
+    }
+
+    napi_value callback;
+    status = napi_get_reference_value(env, cb_data->callback_ref, &callback);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to get callback reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+
+    napi_value argv[2];
+    status = napi_create_uint32(env, (uint32_t)tunnel_ref, &argv[0]);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create tunnel argument", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    status = napi_create_uint32(env, (uint32_t)retry_cnt, &argv[1]);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create retry count argument", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+
+    napi_value undefined;
+    napi_get_undefined(env, &undefined);
+    napi_value js_result;
+    status = napi_call_function(env, global, callback, 2, argv, &js_result);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to call JavaScript callback", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    PINGGY_DEBUG_RET(js_result);
+
+    napi_close_handle_scope(env, scope);
+}
+
+napi_value TunnelSetReconnectionFailedCallback(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+
+    if (status != napi_ok || argc < 2)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Wrong number of arguments", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    uint32_t tunnelRef;
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnel reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    napi_valuetype cb_type;
+    napi_typeof(env, args[1], &cb_type);
+    if (cb_type != napi_function)
+    {
+        napi_throw_type_error(env, NULL, "Callback must be a function");
+        return NULL;
+    }
+    // store callback in a reference
+    CallbackData *cb_data = malloc(sizeof(CallbackData));
+    if (cb_data == NULL)
+    {
+        napi_throw_error(env, NULL, "Failed to allocate callback data");
+        return NULL;
+    }
+    cb_data->env = env;
+    status = napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+    if (status != napi_ok)
+    {
+        ree(cb_data);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Unable to create reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    pinggy_bool_t result = pinggy_tunnel_set_on_reconnection_failed_callback((pinggy_ref_t)tunnelRef, on_reconnection_failed_cb, cb_data);
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to set reconnection failed callback");
+        return NULL;
+    }
+    napi_value js_result;
+    napi_get_boolean(env, result, &js_result);
+    return js_result;
+}
+
+void on_will_reconnect_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_const_char_p_t error, pinggy_len_t num_msgs, pinggy_char_p_p_t messages)
+{
+    CallbackData *cb_data = (CallbackData *)user_data;
+    if (cb_data == NULL)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Callback data is NULL", __FILE__, __LINE__);
+        napi_throw_error(NULL, NULL, error_message);
+        return;
+    }
+    napi_env env = cb_data->env;
+    napi_value js_callback, js_tunnel, undefined, js_result;
+    napi_status status;
+
+    napi_handle_scope scope;
+    napi_open_handle_scope(env, &scope);
+
+    // Get the js callback function from the reference
+    status = napi_get_reference_value(env, cb_data->callback_ref, &js_callback);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to get callback reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    // Get the tunnel reference as a JavaScript value
+    napi_value argv[3];
+    status = napi_create_uint32(env, (uint32_t)tunnel_ref, &argv[0]);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create tunnel argument", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    napi_create_string_utf8(env, error ? error : "", NAPI_AUTO_LENGTH, &argv[1]);
+
+    // Create array for messages
+    napi_value msgs_array;
+    napi_create_array(env, &msgs_array);
+    for (pinggy_len_t i = 0; i < num_msgs; i++)
+    {
+        napi_value msg_str;
+        napi_create_string_utf8(env, messages[i], NAPI_AUTO_LENGTH, &msg_str);
+        napi_set_element(env, msgs_array, i, msg_str);
+    }
+    argv[2] = msgs_array;
+
+    napi_get_undefined(env, &undefined);
+
+    status = napi_call_function(env, undefined, js_callback, 3, argv, &js_result);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to call JavaScript callback", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    PINGGY_DEBUG_RET(js_result);
+    napi_close_handle_scope(env, scope);
+}
+
+napi_value TunnelSetWillReconnectCallback(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+    // Extract arguments(tunnel reference & callback function)
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 2)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Wrong number of arguments", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    uint32_t tunnelRef;
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnel reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    napi_valuetype cb_type;
+    napi_typeof(env, args[1], &cb_type);
+    if (cb_type != napi_function)
+    {
+        napi_throw_type_error(env, NULL, "Callback must be a function");
+        return NULL;
+    }
+
+    // store callback in a reference
+    CallbackData *cb_data = malloc(sizeof(CallbackData));
+    if (cb_data == NULL)
+    {
+        napi_throw_error(env, NULL, "Failed to allocate callback data");
+        return NULL;
+    }
+    cb_data->env = env;
+    status = napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+
+    if (status != napi_ok)
+    {
+        ree(cb_data);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Unable to create reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    pinggy_bool_t result = pinggy_tunnel_set_on_will_reconnect_callback(tunnelRef, on_will_reconnect_cb, cb_data);
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to set will reconnect callback");
+        return NULL;
+    }
+    napi_value js_result;
+    napi_get_boolean(env, result, &js_result);
+    return js_result;
+}
+
 // ================================= INITIALIZATION =================================
 
 // Initialize the module and export the function
@@ -1373,6 +2222,11 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_initiate_fn, tunnel_start_fn,
         tunnel_resume_fn, tunnel_stop_fn,
         tunnel_set_reverse_forwarding_done_callback_fn,
+        tunnel_set_will_reconnect_callback_fn,
+        tunnel_set_usage_update_callback_fn,
+        tunnel_set_reconnection_completed_callback_fn,
+        tunnel_set_reconnection_failed_callback_fn,
+        tunnel_set_on_forwarding_changed_callback_fn,
         tunnel_connect_fn,
         tunnel_set_authenticated_callback_fn,
         tunnel_start_web_debugging_fn,
@@ -1384,7 +2238,11 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_set_additional_forwarding_failed_callback_fn,
         tunnel_set_on_disconnected_callback_fn,
         tunnel_set_on_tunnel_error_callback_fn,
-        config_set_ssl_fn;
+        config_set_ssl_fn,
+        tunnel_get_greet_message_fn,
+        tunnel_start_usage_update_fn,
+        tunnel_stop_usage_update_fn,
+        tunnel_get_usages_fn;
 
     napi_create_function(env, NULL, 0, TunnelRequestPrimaryForwarding, NULL, &request_primary_forwarding_fn);
     napi_set_named_property(env, exports, "tunnelRequestPrimaryForwarding", request_primary_forwarding_fn);
@@ -1433,6 +2291,21 @@ napi_value Init2(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, SetAdditionalForwardingFailedCallback, NULL, &tunnel_set_additional_forwarding_failed_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetAdditionalForwardingFailedCallback", tunnel_set_additional_forwarding_failed_callback_fn);
 
+    napi_create_function(env, NULL, 0, TunnelSetWillReconnectCallback, NULL, &tunnel_set_will_reconnect_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetOnWillReconnectCallback", tunnel_set_will_reconnect_callback_fn);
+
+    napi_create_function(env, NULL, 0, TunnelSetReconnectionCompletedCallback, NULL, &tunnel_set_reconnection_completed_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetOnReconnectionCompletedCallback", tunnel_set_reconnection_completed_callback_fn);
+
+    napi_create_function(env, NULL, 0, TunnelSetReconnectionFailedCallback, NULL, &tunnel_set_reconnection_failed_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetOnReconnectionFailedCallback", tunnel_set_reconnection_failed_callback_fn);
+
+    napi_create_function(env, NULL, 0, TunnelSetUsageUpdateCallback, NULL, &tunnel_set_usage_update_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetOnUsageUpdateCallback", tunnel_set_usage_update_callback_fn);
+
+    napi_create_function(env, NULL, 0, SetForwardingChangedCallback, NULL, &tunnel_set_on_forwarding_changed_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetOnForwardingChangedCallback", tunnel_set_on_forwarding_changed_callback_fn);
+
     napi_create_function(env, NULL, 0, TunnelIsActive, NULL, &tunnel_is_active_fn);
     napi_set_named_property(env, exports, "tunnelIsActive", tunnel_is_active_fn);
 
@@ -1444,6 +2317,18 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigSetSsl, NULL, &config_set_ssl_fn);
     napi_set_named_property(env, exports, "configSetSsl", config_set_ssl_fn);
+
+    napi_create_function(env, NULL, 0, GetTunnelGreetMessage, NULL, &tunnel_get_greet_message_fn);
+    napi_set_named_property(env, exports, "getTunnelGreetMessage", tunnel_get_greet_message_fn);
+
+    napi_create_function(env, NULL, 0, startTunnelUsageUpdate, NULL, &tunnel_start_usage_update_fn);
+    napi_set_named_property(env, exports, "startTunnelUsageUpdate", tunnel_start_usage_update_fn);
+
+    napi_create_function(env, NULL, 0, stopTunnelUsageUpdate, NULL, &tunnel_stop_usage_update_fn);
+    napi_set_named_property(env, exports, "stopTunnelUsageUpdate", tunnel_stop_usage_update_fn);
+
+    napi_create_function(env, NULL, 0, GetTunnelUsages, NULL, &tunnel_get_usages_fn);
+    napi_set_named_property(env, exports, "getTunnelUsages", tunnel_get_usages_fn);
 
     return exports;
 }

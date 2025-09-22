@@ -1,7 +1,6 @@
-import { join } from "shlex";
-
 import { Logger } from "../utils/logger";
-import { PinggyNative, PinggyOptions, Config as IConfig } from "../types";
+import { PinggyNative, Config as IConfig } from "../types";
+import { PinggyOptions } from "../pinggyOptions";
 import { PinggyError } from "./exception";
 
 /**
@@ -22,7 +21,7 @@ export class Config implements IConfig {
    * @param addon - The native addon instance.
    * @param {PinggyOptions} [options={}] - The tunnel configuration options.
    */
-  constructor(addon: PinggyNative, options: PinggyOptions = {}) {
+  constructor(addon: PinggyNative, options: PinggyOptions) {
     this.addon = addon;
     this.configRef = this.initialize(options);
   }
@@ -38,69 +37,237 @@ export class Config implements IConfig {
       const configRef = this.addon.createConfig();
       Logger.info(`Created config with reference: ${configRef}`);
 
+      if (!configRef) {
+        const lastEx = this.addon.getLastException();
+        if (lastEx) {
+          const pinggyError = new PinggyError(lastEx);
+          Logger.error("Failed to create native config:", pinggyError);
+          throw pinggyError;
+        } else {
+          const err = new Error("Failed to create native config: received invalid reference");
+          Logger.error(err.message);
+          throw err;
+        }
+      }
+
+      // Handle validation errors
+      try {
+        options.validate();
+      } catch (validationError) {
+        throw validationError instanceof PinggyError ? validationError : new Error(String(validationError));
+      }
+
       if (options.token) {
         try {
           this.addon.configSetToken(configRef, options.token);
           Logger.info("Token set successfully");
         } catch (e) {
-          Logger.error("Error setting token:", e as Error);
+          const lastEx = this.addon.getLastException();
+          if (lastEx) {
+            const pinggyError = new PinggyError(lastEx);
+            Logger.error("Error setting token:", pinggyError);
+            throw pinggyError;
+          } else {
+            Logger.error("Error setting token:", e instanceof Error ? e : new Error(String(e)));
+            throw e;
+          }
         }
       }
 
       // Apply user-defined values or set defaults
       const serverAddress = options.serverAddress || "a.pinggy.io:443";
-      const sniServerName = options.sniServerName || "a.pinggy.io";
-      const forwardTo = options.forwardTo || "localhost:4000";
-      const type = options.type || ""; // Default to empty string if not provided
-      const ssl = options.ssl !== undefined ? options.ssl : true; // Default to true if not specified
+      const sniServerName = options.getSniServerName() || "a.pinggy.io";
+      let forwardTo = options.getForwardingPrimary() || "localhost:80";
+      const ssl = options.getSsl() ?? true; // Default to true if not specified
+      const type = options.tunnelType?.[0] || "http"; // Default to "http" if not specified
 
-      this.prepareAndSetArgument(configRef, options);
+      // Set argument if provided
+      if (options.getAdditionalArguments()?.trim()) {
+        const argument = options.getAdditionalArguments()!.trim();
+        Logger.info(`Setting config argument: ${argument}`);
+        this.addon.configSetArgument(configRef, argument);
+      }
+
 
       this.addon.configSetServerAddress(configRef, serverAddress);
 
-      try {
-        this.addon.configSetSniServerName(configRef, sniServerName);
-      } catch (e) {
-        const lastEx = this.addon.getLastException();
-        if (lastEx) {
-          const pinggyError = new PinggyError(lastEx);
-          Logger.error("Error setting SNI server name:", pinggyError);
-          throw pinggyError;
-        } else {
-          if (e instanceof Error) {
-            Logger.error("Error setting SNI server name:", e);
-          } else {
-            Logger.error(
-              "Error setting SNI server name:",
-              new Error(String(e))
-            );
+      this.safeSet(
+        () => {
+          if (sniServerName) {
+            this.addon.configSetSniServerName(configRef, sniServerName);
           }
-          throw e;
-        }
-      }
+        },
+        "SNI server name configuration",
+        sniServerName ? `SNI server name set to: ${sniServerName}` : undefined
+      );
+
+      this.safeSet(
+        () => {
+          if (options.httpsOnly !== undefined) {
+            this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
+          }
+        },
+        "HTTPS-only configuration",
+        options.httpsOnly !== undefined ? `HTTPS-only configuration set to: ${options.httpsOnly}` : undefined
+      );
+
+      // set allow preflight
+      this.safeSet(
+        () => {
+          if (options.allowPreflight !== undefined) {
+            this.addon.configSetAllowPreflight(configRef, options.allowPreflight as boolean);
+          }
+        },
+        "Allow-Preflight configuration",
+        options.allowPreflight !== undefined ? `Allow-Preflight configuration set to: ${options.allowPreflight}` : undefined
+      );
+
+      // set xff
+      this.safeSet(
+        () => {
+          if (options.xForwardedFor !== undefined) {
+            this.addon.configSetXForwardedFor(configRef, options.xForwardedFor as boolean);
+          }
+        },
+        "X-Forwarded-For configuration",
+        options.xForwardedFor !== undefined ? `X-Forwarded-For configuration set to: ${options.xForwardedFor}` : undefined
+      );
+
+      // set original request url
+      this.safeSet(
+        () => {
+          if (options.originalRequestUrl !== undefined) {
+            this.addon.configSetOriginalRequestUrl(configRef, options.originalRequestUrl as boolean);
+          }
+        },
+        "Original-Request-URL configuration",
+        options.originalRequestUrl !== undefined ? `Original-Request-URL configuration set to: ${options.originalRequestUrl}` : undefined
+      );
+
+      // set no reverse proxy
+      this.safeSet(
+        () => {
+          if (options.reverseProxy !== undefined) {
+            this.addon.configSetReverseProxy(configRef, options.reverseProxy as boolean);
+          }
+        },
+        "No-Reverse-Proxy configuration",
+        options.reverseProxy !== undefined ? `No-Reverse-Proxy configuration set to: ${options.reverseProxy}` : undefined
+      );
+
+      // Set IP whitelist if provided
+      this.safeSet(
+        () => {
+          if (options.ipWhitelist && options.ipWhitelist.length > 0) {
+            const ipWhitelist = JSON.stringify(options.ipWhitelist);
+            this.addon.configSetIpWhiteList(configRef, ipWhitelist);
+          }
+        },
+        "IP whitelist configuration",
+        options.ipWhitelist && options.ipWhitelist.length > 0
+          ? `IP whitelist set to: ${JSON.stringify(options.ipWhitelist)}`
+          : undefined
+      );
+
+      // Set basic auth if provided (array of {username,password})
+      this.safeSet(
+        () => {
+          if (options.basicAuth && options.basicAuth.length > 0) {
+            this.addon.configSetBasicAuths(configRef, JSON.stringify(options.basicAuth));
+          }
+        },
+        "Basic auth configuration",
+        options.basicAuth && options.basicAuth.length > 0
+          ? `Basic auth set to: ${JSON.stringify(options.basicAuth)}`
+          : undefined
+      );
+
+      // Set bearer token if provided
+      this.safeSet(
+        () => {
+          if (options.bearerTokenAuth && options.bearerTokenAuth?.length > 0) {
+            this.addon.configSetBearerTokenAuths(configRef, JSON.stringify(options.bearerTokenAuth));
+          }
+        },
+        "Bearer auth configuration",
+        options.bearerTokenAuth && options.bearerTokenAuth?.length > 0
+          ? `Bearer auth set to: ${JSON.stringify(options.bearerTokenAuth)}`
+          : undefined
+      );
+
+      // Set header modifications if provided
+      this.safeSet(
+        () => {
+          if (options.headerModification && options.headerModification?.length > 0) {
+            this.addon.configSetHeaderModification(configRef, JSON.stringify(options.headerModification));
+          }
+        },
+        "Header modification configuration",
+        options.headerModification && options.headerModification?.length > 0
+          ? `Header modification set to: ${JSON.stringify(options.headerModification)}`
+          : undefined
+      );
 
       // Set SSL configuration
-      try {
-        this.addon.configSetSsl(configRef, ssl);
-        Logger.info(`SSL configuration set to: ${ssl}`);
-      } catch (e) {
-        const lastEx = this.addon.getLastException();
-        if (lastEx) {
-          const pinggyError = new PinggyError(lastEx);
-          Logger.error("Error setting SSL configuration:", pinggyError);
-          throw pinggyError;
-        } else {
-          if (e instanceof Error) {
-            Logger.error("Error setting SSL configuration:", e);
-          } else {
-            Logger.error(
-              "Error setting SSL configuration:",
-              new Error(String(e))
-            );
+      this.safeSet(
+        () => {
+          this.addon.configSetSsl(configRef, ssl);
+        },
+        "SSL configuration",
+        `SSL configuration set to: ${ssl}`
+      );
+
+      // Set local server TLS configuration (may be derived)
+      this.safeSet(
+        () => {
+          if (options.getLocalServerTls()) {
+            this.addon.configSetLocalServerTls(configRef, options.getLocalServerTls() as string);
           }
-          throw e;
-        }
-      }
+        },
+        "Local server TLS configuration",
+        options.getLocalServerTls()
+          ? `Local server TLS configuration set to: ${options.getLocalServerTls()}`
+          : undefined
+      );
+
+      // Set auto-reconnect options
+      this.safeSet(
+        () => {
+          if (options.autoReconnect !== undefined) {
+            this.addon.configSetAutoReconnect(configRef, options.autoReconnect as boolean);
+          }
+        },
+        "Auto-reconnect configuration",
+        options.autoReconnect !== undefined
+          ? `Auto-reconnect set to: ${options.autoReconnect}`
+          : undefined
+      );
+
+      // Set reconnect interval if provided
+      this.safeSet(
+        () => {
+          if (options.reconnectInterval !== undefined) {
+            this.addon.configSetReconnectInterval(configRef, options.reconnectInterval as number);
+          }
+        },
+        "Reconnect interval configuration",
+        options.reconnectInterval !== undefined
+          ? `Reconnect interval set to: ${options.reconnectInterval}`
+          : undefined
+      );
+
+      // Set max reconnect attempts if provided
+      this.safeSet(
+        () => {
+          if (options.maxReconnectAttempts !== undefined) {
+            this.addon.configSetMaxReconnectAttempts(configRef, options.maxReconnectAttempts as number);
+          }
+        },
+        "Max reconnect attempts configuration",
+        options.maxReconnectAttempts !== undefined
+          ? `Max reconnect attempts set to: ${options.maxReconnectAttempts}`
+          : undefined
+      );
 
       // Set force configuration if provided
       if (options.force !== undefined) {
@@ -181,112 +348,35 @@ export class Config implements IConfig {
       Logger.info("Configurations applied successfully.");
       return configRef;
     } catch (e) {
-      Logger.error("Error creating configuration:", e as Error);
-      return 0;
+      throw e;
     }
   }
 
   /**
-   * Prepares and sets the argument string for the native config, based on options.
-   * @param {number} configRef - The native config reference.
-   * @param {PinggyOptions} options - The tunnel configuration options.
+   * Run a setter action with uniform error handling .
+   * @param action - zero-arg function that performs the native call
+   * @param label - label used in logs/errors
+   * @param successMsg - optional success log message
    */
-  public prepareAndSetArgument(configRef: number, options: PinggyOptions) {
-    const val: string[] = [];
+  private safeSet(action: () => void, label: string, successMsg?: string): void {
+    // Call the native action (it won't throw)
+    action();
 
-    // IP Whitelist
-    if (options.ipWhitelist?.length) {
-      val.push(`w:${options.ipWhitelist.join(",")}`);
+    // Always check addon’s last exception after the call
+    const lastEx = this.addon.getLastException();
+    if (
+      lastEx !== null &&
+      lastEx !== undefined &&
+      !(typeof lastEx === "string" && lastEx.trim().length === 0)
+    ) {
+      const pinggyError = new PinggyError(lastEx as any);
+      Logger.error(`Error setting ${label}:`, pinggyError);
+      throw pinggyError;
     }
 
-    // Basic Auth
-    if (options.basicAuth && Object.keys(options.basicAuth).length > 0) {
-      for (const [user, pass] of Object.entries(options.basicAuth)) {
-        val.push(`b:${user}:${pass}`);
-      }
+    if (successMsg) {
+      Logger.info(successMsg);
     }
-
-    // Bearer Auth
-    if (options.bearerAuth?.length) {
-      for (const token of options.bearerAuth) {
-        val.push(`k:${token}`);
-      }
-    }
-
-    // Header Modification
-    if (options.headerModification?.length) {
-      for (const header of options.headerModification) {
-        switch (header.action) {
-          case "add":
-            if (header.key && header.value) {
-              val.push(`a:${header.key}:${header.value}`);
-            } else {
-              Logger.error(
-                `Invalid add header: missing key or value for ${JSON.stringify(
-                  header
-                )}`
-              );
-            }
-            break;
-          case "remove":
-            if (header.key) {
-              val.push(`r:${header.key}`);
-            } else {
-              Logger.error(
-                `Invalid remove header: missing key for ${JSON.stringify(
-                  header
-                )}`
-              );
-            }
-            break;
-          case "update":
-            if (header.key && header.value) {
-              val.push(`u:${header.key}:${header.value}`);
-            } else {
-              Logger.error(
-                `Invalid update header: missing key or value for ${JSON.stringify(
-                  header
-                )}`
-              );
-            }
-            break;
-          default:
-            Logger.error(
-              `Unknown header action: ${header.action} for ${JSON.stringify(
-                header
-              )}`
-            );
-        }
-      }
-    }
-
-    // X-Forwarded-For
-    if (options.xff) val.push("x:xff");
-
-    // Force HTTPS (Redirect to HTTPS)
-    if (options.httpsOnly) val.push("x:https");
-
-    // Set X-Pinggy-Url header to original url
-    if (options.fullRequestUrl) val.push("x:fullurl");
-
-    // Pass pre-flight request through auth / screening
-    if (options.allowPreflight) val.push("x:passpreflight");
-
-    // Disable reverse proxy headers (X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host, and Forwarded)
-    if (options.noReverseProxy) val.push("x:noreverseproxy");
-
-    // Local Server TLS (Connect to local https server)
-    if (options.localServerTls) val.push(`x:localServerTls:${options.localServerTls}`);
-
-
-    let argument = join(val);
-    if (options.cmd && options.cmd.trim()) {
-      argument = `${options.cmd.trim()} ${argument}`;
-    }
-
-    Logger.info(`Setting config argument: ${argument}`);
-
-    this.addon.configSetArgument(configRef, argument);
   }
 
   /**
@@ -487,6 +577,125 @@ export class Config implements IConfig {
         : null;
     } catch (e) {
       Logger.error("Error getting tunnel ssl configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the current HTTPS-only configuration setting.
+   * @returns {boolean | null} The HTTPS-only setting, or null if unavailable.
+   */
+  public getHttpsOnly(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetHttpsOnly(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting HTTPS-only configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getIpWhiteList(): string[] | null {
+    try {
+      return this.configRef ? this.addon.configGetIpWhiteList(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting IP whitelist configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getAllowPreflight(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetAllowPreflight(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Allow-Preflight configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getXForwardedFor(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetXForwardedFor(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting X-Forwarded-For configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getOriginalRequestUrl(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetOriginalRequestUrl(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Original-Request-URL configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getNoReverseProxy(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetReverseProxy(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting No-Reverse-Proxy configuration:", e as Error);
+      return null;
+    }
+  }
+  public getBasicAuth(): string[] | null {
+    try {
+      return this.configRef ? this.addon.configGetBasicAuths(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Basic Auth configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getBearerTokenAuth(): string[] | null {
+    try {
+      return this.configRef ? this.addon.configGetBearerTokenAuths(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Bearer Token Auth configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getHeaderModification(): string[] | null {
+    try {
+      return this.configRef ? this.addon.configGetHeaderModification(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Header Modification configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getLocalServerTls(): string | null {
+    try {
+      return this.configRef ? this.addon.configGetLocalServerTls(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Local Server TLS configuration:", e as Error);
+      return null;
+    }
+  }
+  public getAutoReconnect(): boolean | null {
+    try {
+      return this.configRef ? this.addon.configGetAutoReconnect(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Auto-Reconnect configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getReconnectInterval(): number | null {
+    try {
+      return this.configRef ? this.addon.configGetReconnectInterval(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Reconnect Interval configuration:", e as Error);
+      return null;
+    }
+  }
+
+  public getMaxReconnectAttempts(): number | null {
+    try {
+      return this.configRef ? this.addon.configGetMaxReconnectAttempts(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Max Reconnect Attempts configuration:", e as Error);
       return null;
     }
   }

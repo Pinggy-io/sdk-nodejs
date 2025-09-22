@@ -55,7 +55,7 @@ if (!fileName) {
 }
 
 // Define the version of libpinggy to download
-const version = "0.0.21";
+const version = "0.0.22";
 
 // Build artifact filename and URL based on OS and architecture
 function getArtifactInfo(os, arch) {
@@ -151,6 +151,8 @@ function extractArchive(archivePath, outDir, innerLibName, destLibPath) {
     console.log(
       `[Pinggy Prebuild] Downloading ${artifactName} from ${artifactUrl}...`
     );
+
+    // Todo: If environment variable LIBPINGGY_PATH is set, then copy it instead of downloading.
     await download(artifactUrl, destArchivePath);
 
     // Step 2: Extract the library from the downloaded archive
