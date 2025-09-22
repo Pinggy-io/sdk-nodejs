@@ -489,8 +489,8 @@ export class TunnelInstance {
     const maxReconnectAttempts = this.getMaxReconnectAttempts();
     options.maxReconnectAttempts = maxReconnectAttempts !== null ? maxReconnectAttempts : 0;
 
-    // const autoReconnect = this.getAutoReconnect();
-    // options.autoReconnect = autoReconnect !== null ? autoReconnect : false;
+    const autoReconnect = this.getAutoReconnect();
+    options.autoReconnect = autoReconnect !== null ? autoReconnect : false;
 
     const headerModificationRaw = this.getHeaderModification() as unknown as HeaderModification[];
 
