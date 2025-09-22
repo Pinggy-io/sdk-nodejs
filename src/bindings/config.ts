@@ -1,6 +1,6 @@
 import { Logger } from "../utils/logger";
 import { PinggyNative, Config as IConfig } from "../types";
-import { PinggyOptionsBuilder } from "../pinggyOptions";
+import { PinggyOptions } from "../pinggyOptions";
 import { PinggyError } from "./exception";
 
 /**
@@ -21,7 +21,7 @@ export class Config implements IConfig {
    * @param addon - The native addon instance.
    * @param {PinggyOptions} [options={}] - The tunnel configuration options.
    */
-  constructor(addon: PinggyNative, options: PinggyOptionsBuilder) {
+  constructor(addon: PinggyNative, options: PinggyOptions) {
     this.addon = addon;
     this.configRef = this.initialize(options);
   }
@@ -32,7 +32,7 @@ export class Config implements IConfig {
    * @param {PinggyOptions} options - The tunnel configuration options.
    * @returns {number} The reference to the native config object.
    */
-  private initialize(options: PinggyOptionsBuilder): number {
+  private initialize(options: PinggyOptions): number {
     try {
       const configRef = this.addon.createConfig();
       Logger.info(`Created config with reference: ${configRef}`);
@@ -125,12 +125,12 @@ export class Config implements IConfig {
       // set xff
       this.safeSet(
         () => {
-          if (options.xForwarderFor !== undefined) {
-            this.addon.configSetXForwardedFor(configRef, options.xForwarderFor as boolean);
+          if (options.xForwardedFor !== undefined) {
+            this.addon.configSetXForwardedFor(configRef, options.xForwardedFor as boolean);
           }
         },
         "X-Forwarded-For configuration",
-        options.xForwarderFor !== undefined ? `X-Forwarded-For configuration set to: ${options.xForwarderFor}` : undefined
+        options.xForwardedFor !== undefined ? `X-Forwarded-For configuration set to: ${options.xForwardedFor}` : undefined
       );
 
       // set original request url

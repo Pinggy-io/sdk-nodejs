@@ -1,5 +1,5 @@
 import { PinggyNative } from "./types";
-import { PinggyOptions, PinggyOptionsBuilder } from "./pinggyOptions";
+import { PinggyOptionsType, PinggyOptions } from "./pinggyOptions";
 import { TunnelInstance } from "./tunnel-instance";
 import { Logger } from "./utils/logger";
 const binary = require("@mapbox/node-pre-gyp");
@@ -49,8 +49,8 @@ export class Pinggy {
    * @see {@link TunnelInstance}
    * @see {@link pinggy}
    */
-  public createTunnel(options: PinggyOptions): TunnelInstance {
-    const pinggyOptions = new PinggyOptionsBuilder(options);
+  public createTunnel(options: PinggyOptionsType): TunnelInstance {
+    const pinggyOptions = new PinggyOptions(options);
     const tunnel = new TunnelInstance(Pinggy.addon, pinggyOptions);
     this.tunnels.add(tunnel);
     return tunnel;
@@ -59,12 +59,12 @@ export class Pinggy {
   /**
    * Creates and starts a new tunnel with the given options.
    *
-   * @param {PinggyOptions} options - The tunnel configuration options.
+   * @param {PinggyOptionsType} options - The tunnel configuration options.
    * @returns {Promise<TunnelInstance>} Resolves with the started tunnel instance.
    * @see {@link TunnelInstance#start}
    * @see {@link pinggy}
    */
-  public forward(options: PinggyOptions): Promise<TunnelInstance> {
+  public forward(options: PinggyOptionsType): Promise<TunnelInstance> {
     const tunnel = this.createTunnel(options);
     return tunnel.start().then(() => tunnel);
   }

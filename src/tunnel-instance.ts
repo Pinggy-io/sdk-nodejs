@@ -1,5 +1,5 @@
 import { PinggyNative, TunnelStatus } from "./types";
-import { HeaderModification, PinggyOptions, PinggyOptionsBuilder, PinggyOptionsResp } from "./pinggyOptions"
+import { HeaderModification, PinggyOptionsType, PinggyOptions } from "./pinggyOptions"
 import { Config } from "./bindings/config";
 import { Tunnel } from "./bindings/tunnel";
 import { Logger } from "./utils/logger";
@@ -31,7 +31,7 @@ export class TunnelInstance {
    * @param addon - The native addon instance.
    * @param options - The tunnel configuration options.
    */
-  constructor(addon: PinggyNative, options: PinggyOptionsBuilder) {
+  constructor(addon: PinggyNative, options: PinggyOptions) {
     this.addon = addon;
     initExceptionHandling(this.addon);
 
@@ -440,10 +440,10 @@ export class TunnelInstance {
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
-  * @returns {PinggyOptions | null} The tunnel configuration, or null if unavailable.
+  * @returns {PinggyOptionsType | null} The tunnel configuration, or null if unavailable.
   */
-  public getConfig(): PinggyOptionsResp | null {
-    const options: PinggyOptionsResp = { optional: {} };
+  public getConfig(): PinggyOptionsType | null {
+    const options: PinggyOptionsType = { optional: {} };
 
     // Add directly accessible properties
     const serverAddress = this.getServerAddress();
@@ -470,8 +470,8 @@ export class TunnelInstance {
     const noReverseProxy = this.getNoReverseProxy();
     options.reverseProxy = noReverseProxy !== null ? noReverseProxy : false;
 
-    const xForwarderFor = this.getXForwardedFor();
-    options.xForwarderFor = xForwarderFor !== null ? xForwarderFor : false;
+    const xForwardedFor = this.getXForwardedFor();
+    options.xForwardedFor = xForwardedFor !== null ? xForwardedFor : false;
 
     const originalRequestUrl = this.getOriginalRequestUrl();
     options.originalRequestUrl = originalRequestUrl !== null ? originalRequestUrl : false;
@@ -491,9 +491,6 @@ export class TunnelInstance {
 
     // const autoReconnect = this.getAutoReconnect();
     // options.autoReconnect = autoReconnect !== null ? autoReconnect : false;
-
-    const localServerTls = this.getLocalServerTls();
-    options.localServerTls = localServerTls || "";
 
     const headerModificationRaw = this.getHeaderModification() as unknown as HeaderModification[];
 

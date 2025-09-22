@@ -63,13 +63,6 @@ export interface Optional {
   additionalArguments?: string;
 }
 
-export interface PinggyOptionsResp extends PinggyOptions {
-  /**
-   * Local server TLS configuration (inferred from forwarding at runtime)
-   */
-  localServerTls?: string;
-}
-
 /**
  * Configuration options for creating Pinggy tunnels.
  *
@@ -85,22 +78,22 @@ export interface PinggyOptionsResp extends PinggyOptions {
  * };
  * ```
  */
-export type PinggyOptions = {
-  /**
-   * Forwarding can either be a string, or a list of objects. But it is required - at least empty string or empty list.
-   * @example "http://localhost:3000" or [{ address: "http://localhost:3000" }, { listenAddress: "0.tcp.pinggy.io:12345", address: "http://localhost:4000" }]
+export type PinggyOptionsType = {
+    /**
+   * Server address to connect to.
+   * @example "connect.pinggy.io"
    */
-  forwarding?: string | ForwardingEntry[];
+  serverAddress?: string;
   /**
    * Authentication token for the tunnel.
    * @example "tk_123abc456def"
    */
   token?: string;
   /**
-   * Server address to connect to.
-   * @example "connect.pinggy.io"
+   * Forwarding can either be a string, or a list of objects. But it is required - at least empty string or empty list.
+   * @example "http://localhost:3000" or [{ address: "http://localhost:3000" }, { listenAddress: "0.tcp.pinggy.io:12345", address: "http://localhost:4000" }]
    */
-  serverAddress?: string;
+  forwarding?: string | ForwardingEntry[];
   /**
    * Local address for web debugger.
    * @example "localhost:8080"
@@ -135,7 +128,7 @@ export type PinggyOptions = {
    * Enable X-Forwarded-For header to pass client IP information.
    * @default false
    */
-  xForwarderFor?: boolean;
+  xForwardedFor?: boolean;
   /**
    * Only allow HTTPS connections to the tunnel.
    * @default false
@@ -181,7 +174,7 @@ export type PinggyOptions = {
   maxReconnectAttempts?: number;
 };
 
-export class PinggyOptionsBuilder implements PinggyOptions {
+export class PinggyOptions implements PinggyOptionsType {
   public forwarding?: string | ForwardingEntry[];
   public token?: string;
   public serverAddress?: string;
@@ -191,7 +184,7 @@ export class PinggyOptionsBuilder implements PinggyOptions {
   public basicAuth?: { username: string; password: string }[];
   public bearerTokenAuth?: string[];
   public headerModification?: HeaderModification[];
-  public xForwarderFor?: boolean;
+  public xForwardedFor?: boolean;
   public httpsOnly?: boolean;
   public localServerTls?: string;
   public originalRequestUrl?: boolean;
@@ -214,7 +207,7 @@ export class PinggyOptionsBuilder implements PinggyOptions {
   private ipv6CidrRegex = new RegExp(`^${this.ipv6Regex.source}\\/(?:[0-9]|[1-9][0-9]|1[01][0-9]|12[0-8])$`);
 
 
-  constructor(options: PinggyOptions = {}) {
+  constructor(options: PinggyOptionsType = {}) {
     this.forwarding = options.forwarding;
     this.token = options.token;
     this.serverAddress = options.serverAddress;
@@ -224,7 +217,7 @@ export class PinggyOptionsBuilder implements PinggyOptions {
     this.basicAuth = options.basicAuth;
     this.bearerTokenAuth = options.bearerTokenAuth;
     this.headerModification = options.headerModification;
-    this.xForwarderFor = options.xForwarderFor;
+    this.xForwardedFor = options.xForwardedFor;
     this.httpsOnly = options.httpsOnly;
     this.originalRequestUrl = options.originalRequestUrl;
     this.allowPreflight = options.allowPreflight;
@@ -280,7 +273,7 @@ export class PinggyOptionsBuilder implements PinggyOptions {
         const maybeUrl = new URL(primaryAddress);
         const proto = maybeUrl.protocol.toLowerCase();
         if (proto === "https:") {
-          return PinggyOptionsBuilder.getHostnameFromUrl(maybeUrl);
+          return PinggyOptions.getHostnameFromUrl(maybeUrl);
         }
       } catch {
         // Not a URL, cannot infer TLS info
