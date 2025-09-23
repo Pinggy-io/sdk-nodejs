@@ -34,5 +34,6 @@ export { pinggy, TunnelInstance, Config, Tunnel };
  * @see {@link HeaderModification}
  */
 export type { PinggyOptionsType as PinggyOptions, HeaderModification } from "./pinggyOptions";
+export type { TunnelUsageType } from "./bindings/tunnel-usage";
 
 export { listen } from "./utils/listen";

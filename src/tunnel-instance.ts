@@ -8,6 +8,7 @@ import {
   PinggyError,
   initExceptionHandling,
 } from "./bindings/exception";
+import { TunnelUsageType } from "./bindings/tunnel-usage";
 
 /**
  * Represents a high-level tunnel instance, managing both configuration and tunnel lifecycle.
@@ -136,7 +137,7 @@ export class TunnelInstance {
    * @returns {Record<string, any> | null} The latest usage statistics, or null if unavailable.
    * @throws {Error} If the tunnel is not initialized.
    */
-  public getLatestUsage(): Record<string, any> | null {
+  public getLatestUsage(): TunnelUsageType | null {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     return this.tunnel.getLatestUsage();
   }
