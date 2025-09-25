@@ -63,6 +63,13 @@ export interface Optional {
   additionalArguments?: string;
 }
 
+export const enum TunnelType {
+  Http = "http",
+  Tcp = "tcp",
+  Tls = "tls",
+  Udp = "udp",
+  TlsTcp = "tlstcp",
+}
 /**
  * Configuration options for creating Pinggy tunnels.
  *
@@ -79,10 +86,10 @@ export interface Optional {
  * ```
  */
 export type PinggyOptionsType = {
-    /**
-   * Server address to connect to.
-   * @example "connect.pinggy.io"
-   */
+  /**
+ * Server address to connect to.
+ * @example "connect.pinggy.io"
+ */
   serverAddress?: string;
   /**
    * Authentication token for the tunnel.
@@ -103,7 +110,7 @@ export type PinggyOptionsType = {
    * Tunnel protocol types.
    * (Required) One or more of: "http", "tcp", "tls", "udp", "tlstcp"
    */
-  tunnelType?: ("http" | "tcp" | "tls" | "udp" | "tlstcp")[];
+  tunnelType?: TunnelType[];
   /**
    * List of whitelisted IP addresses that can access the tunnel.
    * @example ["192.168.1.1", "10.0.0.1"]
@@ -179,7 +186,7 @@ export class PinggyOptions implements PinggyOptionsType {
   public token?: string;
   public serverAddress?: string;
   public webDebugger?: string;
-  public tunnelType?: ("http" | "tcp" | "tls" | "udp" | "tlstcp")[];
+  public tunnelType?: TunnelType[];
   public ipWhitelist?: string[];
   public basicAuth?: { username: string; password: string }[];
   public bearerTokenAuth?: string[];
@@ -198,13 +205,13 @@ export class PinggyOptions implements PinggyOptionsType {
 
   private hostPortRegex = /^[a-zA-Z0-9.-]+:\d+$/;
   // IPv4
-  private ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  private ipv4Regex = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
   // IPv4 with CIDR (/0 - /32)
-  private ipv4CidrRegex = new RegExp(`^${this.ipv4Regex.source}\\/(?:[0-9]|[1-2][0-9]|3[0-2])$`);
+  private ipv4CidrRegex = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\/(?:[0-9]|[1-2]\d|3[0-2])$/;
   // IPv6
-  private ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
+  private ipv6Regex = /^((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::1|::)$/;
   // IPv6 with CIDR (/0 - /128)
-  private ipv6CidrRegex = new RegExp(`^${this.ipv6Regex.source}\\/(?:[0-9]|[1-9][0-9]|1[01][0-9]|12[0-8])$`);
+  private ipv6CidrRegex = /^((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::1|::)\/(?:[0-9]|[1-9]\d|1[01]\d|12[0-8])$/;
 
 
   constructor(options: PinggyOptionsType = {}) {
@@ -415,7 +422,7 @@ export class PinggyOptions implements PinggyOptionsType {
   private validateForwardingAddress(address: string, errors: string[], context: string = "forwarding address"): void {
     try {
       // Check if any configured tunnel type is HTTP
-      if (this.tunnelType?.includes("http")) {
+      if (this.tunnelType?.includes(TunnelType.Http)) {
         let url: URL;
 
         // Allow host:port without protocol, assume http://

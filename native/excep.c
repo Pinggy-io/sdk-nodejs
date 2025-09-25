@@ -111,6 +111,11 @@ napi_value GetLastException(napi_env env, napi_callback_info info)
 {
     napi_value result;
     char buffer[TLS_BUFFER_SIZE * 2];
+    char * type = get_tls_exception_type();
+    if(!type||!type[0]) {
+      napi_get_null(env, &result);
+      return result;
+    }
     snprintf(buffer, sizeof(buffer), "%s  %s",
              get_tls_exception_type(),
              get_tls_exception_message());

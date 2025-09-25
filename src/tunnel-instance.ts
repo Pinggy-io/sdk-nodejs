@@ -463,7 +463,7 @@ export class TunnelInstance {
     options.httpsOnly = httpsOnly !== null ? httpsOnly : false;
 
     const ipWhiteList = this.getIpWhiteList();
-    options.ipWhitelist = ipWhiteList ? (ipWhiteList as string[]) : [];
+    options.ipWhitelist = parseArrayOrEmpty(ipWhiteList);
 
     const allowPreflight = this.getAllowPreflight();
     options.allowPreflight = allowPreflight !== null ? allowPreflight : false;
@@ -482,7 +482,7 @@ export class TunnelInstance {
     options.basicAuth = normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
 
     const bearerAuth = this.getBearerTokenAuth();
-    options.bearerTokenAuth = bearerAuth ? bearerAuth : [];
+    options.bearerTokenAuth = parseArrayOrEmpty(bearerAuth);
 
     const reconnectInterval = this.getReconnectInterval();
     options.reconnectInterval = reconnectInterval !== null ? reconnectInterval : 0;
@@ -569,4 +569,17 @@ function normalizeBasicAuth(input: string | BasicAuthItem[] | null): BasicAuthIt
   }
 
   return parsed.filter(({ username, password }) => !!username && !!password);
+}
+function parseArrayOrEmpty(value: string[] | null): string[] {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  } else if (Array.isArray(value)) {
+    return value;
+  }
+  return [];
 }
