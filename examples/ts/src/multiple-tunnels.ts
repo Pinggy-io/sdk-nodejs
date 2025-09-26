@@ -1,4 +1,4 @@
-import { pinggy, PinggyOptions } from "@pinggy/pinggy";
+import { pinggy, PinggyOptions, TunnelType } from "@pinggy/pinggy";
 
 (async () => {
   console.log("=== Multiple Tunnels Example ===");
@@ -6,14 +6,13 @@ import { pinggy, PinggyOptions } from "@pinggy/pinggy";
   try {
     // Create multiple tunnels with different configurations
     const options1: PinggyOptions = {
-      forwardTo: "localhost:3000",
-      type: "http",
+      forwarding: "localhost:3000",
+      tunnelType: [TunnelType.Http],
     };
 
     const options2: PinggyOptions = {
-      forwardTo: "localhost:4000",
-      type: "http",
-      ssl: false,
+      forwarding: "localhost:4000",
+      tunnelType: [TunnelType.Http],
     };
 
     // Create tunnel instances

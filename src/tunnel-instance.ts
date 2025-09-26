@@ -114,16 +114,38 @@ export class TunnelInstance {
     return this.tunnel.getTunnelGreetMessage();
   }
 
+  /**
+   * Starts continuous usage updates for the tunnel.
+   *
+   * @throws {Error} If the tunnel instance or its tunnelRef is not initialized.
+   * @returns void
+   */
   public startUsageUpdate(): void {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     this.tunnel.startTunnelUsageUpdate();
   }
+
+  /**
+   * Stops continuous usage updates for the tunnel.
+   *
+   * @throws {Error} If the tunnel instance or its tunnelRef is not initialized.
+   * @returns void
+   */
 
   public stopUsageUpdate(): void {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     this.tunnel.stopTunnelUsageUpdate();
   }
 
+  /**
+   * Retrieves usage information from the underlying tunnel instance.
+   *
+   * This method delegates to the tunnel's getTunnelUsages() implementation. If the tunnel is not initialized or its reference is
+   * missing, an Error is thrown.
+   *
+   * @returns The tunnel usages as a string, or null if no usages are available.
+   * @throws {Error} If the tunnel or its tunnelRef is not initialized.
+   */
   public getUsages(): string | null {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     return this.tunnel.getTunnelUsages();

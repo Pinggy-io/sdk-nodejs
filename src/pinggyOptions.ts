@@ -78,10 +78,10 @@ export const enum TunnelType {
  * @example
  * ```typescript
  * const options: PinggyOptions = {
- *   forwardTo: "localhost:3000",
- *   type: "http",
+ *   forwarding: "localhost:3000",
+ *   tunnelType: ["http"],
  *   debug: true,
- *   basicAuth: { "user": "password" }
+ *   basicAuth: [{ username: "user", password: "pass" }]
  * };
  * ```
  */
@@ -118,7 +118,7 @@ export type PinggyOptionsType = {
   ipWhitelist?: string[];
   /**
    * Basic authentication credentials (username: password).
-   * @example { "admin": "secret123", "user": "password" }
+   * @example [{ username: "user", password: "pass" }]
    */
   basicAuth?: { username: string; password: string }[];
   /**

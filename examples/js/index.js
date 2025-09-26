@@ -2,7 +2,7 @@ const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
   const options = {
-    forwardTo: "localhost:7878",
+    forwarding: "localhost:7878",
   };
 
   // Create and start tunnel using forward method
@@ -10,6 +10,7 @@ const { pinggy } = require("@pinggy/pinggy");
 
   console.log("Tunnel URLs:", tunnel.urls());
   console.log("Status:", tunnel.getStatus());
+  console.log("Greet Message:", tunnel.getGreetMessage());
 
   // Start web debugging interface
   tunnel.startWebDebugging(8080);
@@ -28,18 +29,17 @@ const { pinggy } = require("@pinggy/pinggy");
 
 // Additional configurations can be passed to the "options" object, such as:
 // token: "terminateAtUsages",
-// ssl: false,
-// type: "http", // defaults to http if not provided
-// fullRequestUrl: true,
+// TunnelType: "http", // defaults to http if not provided
+// originalRequestUrl: true,
 // allowPreflight: true,
-// noReverseProxy: true,
+// reverseProxy: true,
 // httpsOnly: true,
-// xff: true,
-// bearerAuth: ["hello"],
+// xForwardedFor: true,
+// bearerTokenAuth: ["hello"],
 // basicAuth: { username: "password" },
 // ipWhitelist: [""],
 // headerModification: {
 //   key: "x-custom-header",
 //   value: "value",
-//   action: "add", // or "remove" or "update"
+//   type: "add", // or "remove" or "update"
 // },

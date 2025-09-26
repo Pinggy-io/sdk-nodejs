@@ -12,8 +12,8 @@ process.argv.forEach((item, index) => {
 
 async function setupPinggy() {
   const tunnel = await pinggy.forward({
-    type: "http",
-    forwardTo: `${host}:${port}`,
+    tunnelType: ["http"],
+    forwarding: `${host}:${port}`,
   });
   const urls = tunnel.urls();
   console.log(

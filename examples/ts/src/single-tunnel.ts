@@ -1,4 +1,4 @@
-import { pinggy, PinggyOptions } from "@pinggy/pinggy";
+import { pinggy, PinggyOptions, TunnelType } from "@pinggy/pinggy";
 
 (async () => {
   console.log("=== Single Tunnel Example ===");
@@ -6,9 +6,8 @@ import { pinggy, PinggyOptions } from "@pinggy/pinggy";
   try {
     // Simple tunnel creation with basic options
     const options: PinggyOptions = {
-      forwardTo: "localhost:3000",
-      type: "http",
-      ssl: true,
+      forwarding: "localhost:3000",
+      tunnelType: [TunnelType.Http],
     };
 
     const tunnel = await pinggy.forward(options);

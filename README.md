@@ -188,11 +188,11 @@ import {
 - `getToken(): string | null` — Get the tunnel token.
 - `startWebDebugging(port: number): void` — Start web debugging on a local port.
 - `tunnelRequestAdditionalForwarding(hostname: string, target: string): void` — Request additional forwarding.
-- `getconfig(): Record<string, any> | null`  
-  Return the SDK's current runtime configuration object `PinggyOptions`. Returns `null` if no config is loaded.
+- `getconfig(): PinggyOptions | null`  
+  Return the tunnel's current runtime configuration object `PinggyOptions`. Returns `null` if no config is loaded.
 - `getGreetMessage(): string`  
   Return a short human-readable greeting. Always returns a string.
-- `setUsageUpdateCallback(cb: (usage: UsageData) => void): void`  
+- `setUsageUpdateCallback(cb: (usage: Record<string, any>) => void): void`  
   Register a callback that will be invoked when the SDK receives usage updates from the backend or tunnel process.
 
   Example:
