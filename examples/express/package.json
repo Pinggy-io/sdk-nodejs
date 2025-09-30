@@ -4,6 +4,7 @@
   "description": "",
   "main": "express-listen-example.js",
   "scripts": {
+    "start": "node express-listen-example.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
