@@ -416,12 +416,22 @@ export class Tunnel implements ITunnel {
 
   public getTunnelGreetMessage(): string | null {
     return this.executeTunnelOperation({
-      operation: () => this.addon.getTunnelGreetMessage(this.tunnelRef),
+      operation: () => {
+        const raw = this.addon.getTunnelGreetMessage(this.tunnelRef);
+        if (!raw) return null;
+        try {
+          const parsedGreetMsg = JSON.parse(raw);
+
+          return parsedGreetMsg.join(" ");
+        } catch (e) {
+          return null;
+        }
+      },
       operationName: "getting tunnel greet message",
       logResult: (message) => Logger.info(`Tunnel greet message: ${message}`),
-
     });
   }
+
   public startTunnelUsageUpdate(): void {
     this.executeTunnelOperation({
       operation: () => this.addon.startTunnelUsageUpdate(this.tunnelRef),

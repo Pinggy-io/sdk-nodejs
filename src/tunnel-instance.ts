@@ -485,7 +485,7 @@ export class TunnelInstance {
     options.httpsOnly = httpsOnly !== null ? httpsOnly : false;
 
     const ipWhiteList = this.getIpWhiteList();
-    options.ipWhitelist = parseArrayOrEmpty(ipWhiteList);
+    options.ipWhitelist = ipWhiteList || [];
 
     const allowPreflight = this.getAllowPreflight();
     options.allowPreflight = allowPreflight !== null ? allowPreflight : false;
@@ -504,7 +504,7 @@ export class TunnelInstance {
     options.basicAuth = normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
 
     const bearerAuth = this.getBearerTokenAuth();
-    options.bearerTokenAuth = parseArrayOrEmpty(bearerAuth);
+    options.bearerTokenAuth = bearerAuth || [];
 
     const reconnectInterval = this.getReconnectInterval();
     options.reconnectInterval = reconnectInterval !== null ? reconnectInterval : 0;

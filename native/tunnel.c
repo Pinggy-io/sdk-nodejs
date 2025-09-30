@@ -1429,7 +1429,7 @@ napi_value GetTunnelGreetMessage(napi_env env, napi_callback_info info)
         free(greet_msg);
         return NULL;
     }
-    status = napi_create_string_utf8(env, greet_msg, copied_len, &result);
+    status = napi_create_string_utf8(env, greet_msg, NAPI_AUTO_LENGTH, &result);
     free(greet_msg);
     if (status != napi_ok)
     {
@@ -2096,7 +2096,7 @@ void on_will_reconnect_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pi
         return;
     }
     napi_env env = cb_data->env;
-    napi_value js_callback, js_tunnel, undefined, js_result;
+    napi_value js_callback, undefined, js_result;
     napi_status status;
 
     napi_handle_scope scope;

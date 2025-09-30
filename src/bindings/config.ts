@@ -596,7 +596,17 @@ export class Config implements IConfig {
 
   public getIpWhiteList(): string[] | null {
     try {
-      return this.configRef ? this.addon.configGetIpWhiteList(this.configRef) : null;
+      if (!this.configRef) {
+        Logger.error("Config reference is not initialized.");
+        throw new Error("Config reference is not initialized.");
+      }
+
+      const raw = this.addon.configGetIpWhiteList(this.configRef);
+
+      // If the config always returns a JSON string
+      const parsed = JSON.parse(raw);
+
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       Logger.error("Error getting IP whitelist configuration:", e as Error);
       return null;
@@ -640,7 +650,14 @@ export class Config implements IConfig {
   }
   public getBasicAuth(): string[] | null {
     try {
-      return this.configRef ? this.addon.configGetBasicAuths(this.configRef) : null;
+      if (!this.configRef) {
+        Logger.error("Config reference is not initialized.");
+        throw new Error("Config reference is not initialized.");
+      }
+      const raw = this.addon.configGetBasicAuths(this.configRef);
+      // If the config always returns a JSON string
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       Logger.error("Error getting Basic Auth configuration:", e as Error);
       return null;
@@ -649,7 +666,14 @@ export class Config implements IConfig {
 
   public getBearerTokenAuth(): string[] | null {
     try {
-      return this.configRef ? this.addon.configGetBearerTokenAuths(this.configRef) : null;
+      if (!this.configRef) {
+        Logger.error("Config reference is not initialized.");
+        throw new Error("Config reference is not initialized.");
+      }
+      const raw = this.addon.configGetBearerTokenAuths(this.configRef);
+      // If the config always returns a JSON string
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       Logger.error("Error getting Bearer Token Auth configuration:", e as Error);
       return null;
@@ -658,7 +682,14 @@ export class Config implements IConfig {
 
   public getHeaderModification(): string[] | null {
     try {
-      return this.configRef ? this.addon.configGetHeaderModification(this.configRef) : null;
+      if (!this.configRef) {
+        Logger.error("Config reference is not initialized.");
+        throw new Error("Config reference is not initialized.");
+      }
+      const raw = this.addon.configGetHeaderModification(this.configRef);
+      // If the config always returns a JSON string
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       Logger.error("Error getting Header Modification configuration:", e as Error);
       return null;
