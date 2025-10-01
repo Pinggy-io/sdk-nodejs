@@ -2,6 +2,7 @@ import { Logger } from "../utils/logger";
 import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
 import { PinggyError } from "./exception";
 import { TunnelUsage } from "./tunnel-usage";
+import { PinggyOptions } from "..";
 
 type Task = () => void;
 class FunctionQueue {
@@ -67,19 +68,21 @@ export class Tunnel implements ITunnel {
   private functionQueue: FunctionQueue;
   private _latestUsage: TunnelUsage = new TunnelUsage();
   private onUsageUpdateCallback: ((usage: TunnelUsage) => void) | null = null;
+  private pinggyOptions: PinggyOptions;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
    * @param {PinggyNative} addon - The native addon instance.
    * @param {number} configRef - The reference to the native config object.
    */
-  constructor(addon: PinggyNative, configRef: number) {
+  constructor(addon: PinggyNative, configRef: number, pinggyOptions: PinggyOptions) {
     this.addon = addon;
     this.tunnelRef = this.initialize(configRef);
     this.authenticated = false;
     this.primaryForwardingDone = false;
     this.status = TunnelStatus.IDLE;
     this.functionQueue = new FunctionQueue();
+    this.pinggyOptions = pinggyOptions;
 
     // Create promises that will be resolved when authentication and forwarding complete
     this.authPromise = new Promise((resolve, reject) => {
@@ -266,7 +269,28 @@ export class Tunnel implements ITunnel {
         this.pollStart();
 
         // Wait for forwarding to complete and return the addresses
-        return await this.forwardingPromise;
+        const urls = await this.forwardingPromise;
+
+        // Auto-start web debugger if configured
+        if (this.pinggyOptions.webDebugger) {
+          try {
+            const debuggerAddress = this.pinggyOptions.webDebugger;
+            // Extract port from address (format like "localhost:8080")
+            const portMatch = debuggerAddress.match(/:(\d+)$/);
+            if (portMatch) {
+              const port = parseInt(portMatch[1], 10);
+              Logger.info(`Auto-starting web debugger on port ${port}...`);
+              await this.startWebDebugging(port);
+            } else {
+              Logger.info(`Invalid web debugger address format: ${debuggerAddress}. Expected format: host:port`);
+            }
+          } catch (error) {
+            Logger.error("Failed to auto-start web debugger:", error as Error);
+            // Don't throw - web debugger failure shouldn't stop the tunnel
+          }
+        }
+
+        return urls;
       },
       operationName: "starting tunnel",
 

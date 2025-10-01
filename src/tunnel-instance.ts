@@ -43,7 +43,7 @@ export class TunnelInstance {
       this.config = new Config(this.addon, options);
       if (!this.config.configRef)
         throw new Error("Failed to initialize config.");
-      this.tunnel = new Tunnel(this.addon, this.config.configRef);
+      this.tunnel = new Tunnel(this.addon, this.config.configRef, options);
     } catch (e) {
       // If the error is already a proper Error object (like validation errors),
       // preserve it instead of trying to convert it to PinggyError
