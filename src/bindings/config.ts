@@ -594,7 +594,7 @@ export class Config implements IConfig {
     }
   }
 
-  public getIpWhiteList(): string[] | null {
+  public getIpWhiteList(): string[] {
     try {
       if (!this.configRef) {
         Logger.error("Config reference is not initialized.");
@@ -609,7 +609,7 @@ export class Config implements IConfig {
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       Logger.error("Error getting IP whitelist configuration:", e as Error);
-      return null;
+      return [];
     }
   }
 
@@ -664,7 +664,7 @@ export class Config implements IConfig {
     }
   }
 
-  public getBearerTokenAuth(): string[] | null {
+  public getBearerTokenAuth(): string[] {
     try {
       if (!this.configRef) {
         Logger.error("Config reference is not initialized.");
@@ -676,7 +676,7 @@ export class Config implements IConfig {
       return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       Logger.error("Error getting Bearer Token Auth configuration:", e as Error);
-      return null;
+      return [];
     }
   }
 

@@ -106,10 +106,10 @@ export class TunnelInstance {
  *
  * Delegates to {@link Tunnel#getTunnelGreetMessage}.
  *
- * @returns {string | null} The greeting message, or null if unavailable.
+ * @returns {string[]} The greeting message.
  * @throws {Error} If the tunnel is not initialized.
  */
-  public getGreetMessage(): string | null {
+  public getGreetMessage(): string[] {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     return this.tunnel.getTunnelGreetMessage();
   }
@@ -355,10 +355,10 @@ export class TunnelInstance {
   /**
    * Retrieves IP whitelist for this tunnel instance.
    *
-   * @returns {string[] | null} An array of whitelisted IP addresses, or `null` if no whitelist is configured.
+   * @returns {string[]} An array of whitelisted IP addresses, or an empty array if no whitelist is configured.
    */
-  public getIpWhiteList(): string[] | null {
-    return this.config?.getIpWhiteList() ?? null;
+  public getIpWhiteList(): string[] {
+    return this.config?.getIpWhiteList() ?? [];
   }
 
   /**
@@ -409,10 +409,10 @@ export class TunnelInstance {
   /**
    * Returns bearer token authentication values defined in the configuration.
    *
-   * @returns An array of bearer token strings if present; otherwise null.
+   * @returns An array of bearer token strings if present; otherwise an empty array.
    */
-  public getBearerTokenAuth(): string[] | null {
-    return this.config?.getBearerTokenAuth() ?? null;
+  public getBearerTokenAuth(): string[] {
+    return this.config?.getBearerTokenAuth() ?? [];
   }
 
   /**
@@ -485,7 +485,7 @@ export class TunnelInstance {
     options.httpsOnly = httpsOnly !== null ? httpsOnly : false;
 
     const ipWhiteList = this.getIpWhiteList();
-    options.ipWhitelist = ipWhiteList || [];
+    options.ipWhitelist = ipWhiteList;
 
     const allowPreflight = this.getAllowPreflight();
     options.allowPreflight = allowPreflight !== null ? allowPreflight : false;
@@ -504,7 +504,7 @@ export class TunnelInstance {
     options.basicAuth = normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
 
     const bearerAuth = this.getBearerTokenAuth();
-    options.bearerTokenAuth = bearerAuth || [];
+    options.bearerTokenAuth = bearerAuth;
 
     const reconnectInterval = this.getReconnectInterval();
     options.reconnectInterval = reconnectInterval !== null ? reconnectInterval : 0;
@@ -591,17 +591,4 @@ function normalizeBasicAuth(input: string | BasicAuthItem[] | null): BasicAuthIt
   }
 
   return parsed.filter(({ username, password }) => !!username && !!password);
-}
-function parseArrayOrEmpty(value: string[] | null): string[] {
-  if (typeof value === "string") {
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  } else if (Array.isArray(value)) {
-    return value;
-  }
-  return [];
 }

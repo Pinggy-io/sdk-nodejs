@@ -438,17 +438,17 @@ export class Tunnel implements ITunnel {
     return this._urls;
   }
 
-  public getTunnelGreetMessage(): string | null {
+  public getTunnelGreetMessage(): string[] {
     return this.executeTunnelOperation({
       operation: () => {
         const raw = this.addon.getTunnelGreetMessage(this.tunnelRef);
-        if (!raw) return null;
+        if (!raw) return [];
         try {
           const parsedGreetMsg = JSON.parse(raw);
 
-          return parsedGreetMsg.join(" ");
+          return parsedGreetMsg;
         } catch (e) {
-          return null;
+          return [];
         }
       },
       operationName: "getting tunnel greet message",
