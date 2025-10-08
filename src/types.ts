@@ -121,7 +121,7 @@ export interface PinggyNative {
   /** Resume a tunnel. */
   tunnelResume(tunnelRef: number): boolean;
   /** Start web debugging for a tunnel. */
-  tunnelStartWebDebugging(tunnelRef: number, port: number): void;
+  tunnelStartWebDebugging(tunnelRef: number, port: number): number;
   /** Request primary forwarding for a tunnel. */
   tunnelRequestPrimaryForwarding(tunnelRef: number): void;
   /** Request additional forwarding for a tunnel. */

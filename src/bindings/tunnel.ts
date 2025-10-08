@@ -69,6 +69,7 @@ export class Tunnel implements ITunnel {
   private _latestUsage: TunnelUsage = new TunnelUsage();
   private onUsageUpdateCallback: ((usage: TunnelUsage) => void) | null = null;
   private pinggyOptions: PinggyOptions;
+  private webDebuggerPort: number = 0;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -359,7 +360,12 @@ export class Tunnel implements ITunnel {
     await this.authPromise; // Wait for authentication
 
     this.executeTunnelOperation({
-      operation: () => this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort),
+      operation: () => {
+        const port = this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort);
+        if (port && port > 0) {
+          this.webDebuggerPort = port;
+        }
+      },
       operationName: "starting web debugging",
       successMessage: `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
     });
@@ -489,5 +495,9 @@ export class Tunnel implements ITunnel {
   public setUsageUpdateCallback(callback: (usage: TunnelUsage) => void): void {
     this.onUsageUpdateCallback = callback;
     this.startTunnelUsageUpdate();
+  }
+
+  public getWebDebuggerPort(): number | null {
+    return this.webDebuggerPort;
   }
 }

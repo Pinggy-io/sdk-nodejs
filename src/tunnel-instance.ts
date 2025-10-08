@@ -434,30 +434,39 @@ export class TunnelInstance {
   }
 
   /**
- * Returns reconnect interval configuration for this tunnel instance.
- *
- * @returns The reconnect interval setting, or `null` if not configured.
- */
+   * Returns reconnect interval configuration for this tunnel instance.
+   *
+   * @returns The reconnect interval setting, or `null` if not configured.
+   */
   public getReconnectInterval(): number | null {
     return this.config?.getReconnectInterval() ?? null;
   }
 
   /**
- * Returns auto-reconnect configuration for this tunnel instance.
- *
- * @returns The auto-reconnect setting, or `null` if not configured.
- */
+   * Returns auto-reconnect configuration for this tunnel instance.
+   *
+   * @returns The auto-reconnect setting, or `null` if not configured.
+   */
   public getAutoReconnect(): boolean | null {
     return this.config?.getAutoReconnect() ?? null;
   }
 
   /**
- * Returns MaxReconnectAttempts configuration for this tunnel instance.
- *
- * @returns The MaxReconnectAttempts setting, or `null` if not configured.
- */
+   * Returns MaxReconnectAttempts configuration for this tunnel instance.
+   *
+   * @returns The MaxReconnectAttempts setting, or `null` if not configured.
+   */
   public getMaxReconnectAttempts(): number | null {
     return this.config?.getMaxReconnectAttempts() ?? null;
+  }
+
+  /**
+   * Returns WebDebuggerPort configuration for this tunnel instance.
+   *
+   * @returns The WebDebuggerPort setting, or `null` if not configured.
+   */
+  public getWebDebuggerPort(): number {
+    return this.tunnel?.getWebDebuggerPort() ?? 0;
   }
   /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
@@ -516,6 +525,9 @@ export class TunnelInstance {
     options.autoReconnect = autoReconnect !== null ? autoReconnect : false;
 
     const headerModificationRaw = this.getHeaderModification() as unknown as HeaderModification[];
+
+    const webDebuggerPort = this.getWebDebuggerPort();
+    options.webDebugger = `localhost:${webDebuggerPort}`;
 
     options.headerModification = Array.isArray(headerModificationRaw)
       ? headerModificationRaw.map(h => {
