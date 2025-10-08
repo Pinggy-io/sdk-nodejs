@@ -183,6 +183,50 @@ napi_value TunnelResume(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value TunnelResumeWithTimeout(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse the arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Convert the first argument to uint32_t (tunnel ref)
+    uint32_t tunnel_ref;
+    status = napi_get_value_uint32(env, args[0], &tunnel_ref);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the pinggy_tunnel_resume function
+    pinggy_bool_t ret = pinggy_tunnel_resume_timeout((pinggy_ref_t)tunnel_ref, -1);
+    PINGGY_DEBUG_RET(ret);
+
+    // Return the result as a JavaScript boolean
+    napi_value result;
+    status = napi_get_boolean(env, ret, &result);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create JavaScript boolean", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    return result;
+}
 // Wrapper for pinggy_tunnel_stop
 napi_value TunnelStop(napi_env env, napi_callback_info info)
 {
@@ -1429,7 +1473,7 @@ napi_value GetTunnelGreetMessage(napi_env env, napi_callback_info info)
         free(greet_msg);
         return NULL;
     }
-    status = napi_create_string_utf8(env, greet_msg, copied_len, &result);
+    status = napi_create_string_utf8(env, greet_msg, NAPI_AUTO_LENGTH, &result);
     free(greet_msg);
     if (status != napi_ok)
     {
@@ -2096,7 +2140,7 @@ void on_will_reconnect_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pi
         return;
     }
     napi_env env = cb_data->env;
-    napi_value js_callback, js_tunnel, undefined, js_result;
+    napi_value js_callback, undefined, js_result;
     napi_status status;
 
     napi_handle_scope scope;
@@ -2242,7 +2286,8 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_get_greet_message_fn,
         tunnel_start_usage_update_fn,
         tunnel_stop_usage_update_fn,
-        tunnel_get_usages_fn;
+        tunnel_get_usages_fn,
+        tunnel_resume_withtimeout_fn;
 
     napi_create_function(env, NULL, 0, TunnelRequestPrimaryForwarding, NULL, &request_primary_forwarding_fn);
     napi_set_named_property(env, exports, "tunnelRequestPrimaryForwarding", request_primary_forwarding_fn);
@@ -2255,6 +2300,9 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, TunnelResume, NULL, &tunnel_resume_fn);
     napi_set_named_property(env, exports, "tunnelResume", tunnel_resume_fn);
+
+    napi_create_function(env, NULL, 0, TunnelResumeWithTimeout, NULL, &tunnel_resume_withtimeout_fn);
+    napi_set_named_property(env, exports, "tunnelResumeWithTimeout", tunnel_resume_withtimeout_fn);
 
     napi_create_function(env, NULL, 0, TunnelStop, NULL, &tunnel_stop_fn);
     napi_set_named_property(env, exports, "tunnelStop", tunnel_stop_fn);

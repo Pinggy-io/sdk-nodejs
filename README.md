@@ -32,7 +32,7 @@ import { pinggy } from "@pinggy/pinggy";
 ### Create and Start a Tunnel
 
 ```ts
-const tunnel = pinggy.createTunnel({ forwardTo: "localhost:3000" });
+const tunnel = pinggy.createTunnel({ forwarding: "localhost:3000" });
 await tunnel.start();
 console.log("Tunnel URLs:", tunnel.urls()); // Get all public addresses
 ```
@@ -45,8 +45,8 @@ Find complete examples at [examples](https://github.com/Pinggy-io/sdk-nodejs/tre
 You can create and manage multiple tunnels simultaneously:
 
 ```ts
-const tunnel1 = pinggy.createTunnel({ forwardTo: "localhost:3000" });
-const tunnel2 = pinggy.createTunnel({ forwardTo: "localhost:4000" });
+const tunnel1 = pinggy.createTunnel({ forwarding: "localhost:3000" });
+const tunnel2 = pinggy.createTunnel({ forwarding: "localhost:4000" });
 await tunnel1.start();
 await tunnel2.start();
 console.log("Tunnel 1 URLs:", tunnel1.urls());
@@ -56,7 +56,7 @@ console.log("Tunnel 2 URLs:", tunnel2.urls());
 Or use the convenient `forward` method:
 
 ```ts
-const tunnel = await pinggy.forward({ forwardTo: "localhost:5000" });
+const tunnel = await pinggy.forward({ forwarding: "localhost:5000" });
 console.log("Tunnel URLs:", tunnel.urls());
 ```
 
@@ -118,10 +118,14 @@ npx degit github:Pinggy-io/sdk-nodejs/examples/express express && cd express && 
   const urls = tunnel.urls(); // array of public addresses
   console.log("Tunnel URLs:", urls);
   ```
-  - **Check tunnel status:**
+- **Check tunnel status:**
   ```ts
   tunnel.getStatus(); // "starting" | "live" | "closed"
   ```
+- **Check tunnel stats:**
+   ```ts
+   tunnel.getLatestUsage(); // {"elapsedTime":7,"numLiveConnections":6,"numTotalConnections":6,"numTotalReqBytes":16075,"numTotalResBytes":815760,"numTotalTxBytes":831835}
+   ```
 - **Check if tunnel is active:**
   ```ts
   tunnel.isActive(); // true or false
@@ -163,6 +167,7 @@ import {
   TunnelInstance,
   type PinggyOptions,
   listen,
+  TunnelType
 } from "@pinggy/pinggy";
 ```
 
@@ -183,6 +188,22 @@ import {
 - `getToken(): string | null` — Get the tunnel token.
 - `startWebDebugging(port: number): void` — Start web debugging on a local port.
 - `tunnelRequestAdditionalForwarding(hostname: string, target: string): void` — Request additional forwarding.
+- `getconfig(): PinggyOptions | null`  
+  Return the tunnel's current runtime configuration object `PinggyOptions`. Returns `null` if no config is loaded.
+- `getGreetMessage(): string`  
+  Return a short human-readable greeting. Always returns a string.
+- `setUsageUpdateCallback(cb: (usage: Record<string, any>) => void): void`  
+  Register a callback that will be invoked when the SDK receives usage updates from the backend or tunnel process.
+
+  Example:
+  ```ts
+  pinggy.setUsageUpdateCallback((usage) => {
+    console.log("Usage update:", usage);
+  });
+
+  ```
+- `getLatestUsage(): UsageData | null`  
+  Return the most recently received usage snapshot, or `null` if no usage data has been received yet.
 
 ### `PinggyOptions`
 
@@ -192,28 +213,49 @@ The `PinggyOptions` interface defines all available configuration options for cr
 interface PinggyOptions {
   token?: string; // Optional authentication token for the tunnel
   serverAddress?: string; // Custom Pinggy server address
-  sniServerName?: string; // SNI server name for TLS
-  forwardTo?: string; // Local address to forward traffic to (e.g., "localhost:3000")
-  debug?: boolean; // Enable debug logging for this tunnel
-  debuggerPort?: number; // Port for web debugging
-  type?: "tcp" | "tls" | "http" | "udp"; // Tunnel protocol type
+  forwarding?: string | ForwardingEntry; // Local address to forward traffic to (e.g., "localhost:3000")
+  webDebugger?: string; // Local address for web debugger.(e,g "localhost:8080")
+  tunnelType?: TunnelType[]; // Tunnel protocol type
   ipWhitelist?: string[]; // List of allowed client IPs
-  basicAuth?: Record<string, string>; // Basic authentication users (username: password)
-  bearerAuth?: string[]; // Bearer tokens for authentication
+  basicAuth?: { username: string; password: string }[];; // Basic authentication users { "admin": "secret123", "user": "password" }
+  bearerTokenAuth?: string[]; // Bearer tokens for authentication
   headerModification?: HeaderModification[]; // Modify headers (add, remove, update)
-  xff?: boolean; // Enable X-Forwarded-For header
+  xForwardedFor?: boolean; // Enable X-Forwarded-For header
   httpsOnly?: boolean; // Only allow HTTPS traffic
-  fullRequestUrl?: boolean; // Provide full request URL to backend
+  originalRequestUrl?: boolean; // Provide full request URL to backend
   allowPreflight?: boolean; // Allow CORS preflight requests
-  noReverseProxy?: boolean; // Disable reverse proxy behavior
-  cmd?: string; // Optional command prefix
-  ssl?: boolean; // Use SSL for tunnel setup
+  reverseProxy?: boolean; // Disable reverse proxy behavior
+  force?: boolean; // Force specific tunnel settings or bypass certain restrictions.
+  autoReconnect?: boolean; // Auto-reconnect configuration for the tunnel.
+  reconnectInterval?:number; // Time interval (in seconds) between reconnection attempts.(default: 5)
+  maxReconnectAttempts?:number; // Maximum number of reconnection attempts before giving up.(default: 20)
+  optional?: Optional; // Optional command prefix
+  
 }
 
 interface HeaderModification {
   key: string;
   value?: string;
-  action: "add" | "remove" | "update";
+  type: "add" | "remove" | "update";
+}
+
+interface ForwardingEntry {
+  listenAddress?: string; // empty or undefined means default forwarding
+  address: string;        // e.g., http://localhost:80 or host:port 
+}
+
+const enum TunnelType {
+  Http = "http",
+  Tcp = "tcp",
+  Tls = "tls",
+  Udp = "udp",
+  TlsTcp = "tlstcp",
+}
+
+interface Optional {
+  sniServerName?: string; // SNI server name for SSL/TLS.
+  ssl?: boolean; //  Whether to use SSL for tunnel setup. (default: false)
+  additionalArguments?: string; // Optional command prefix for the tunnel.(e,g "--tcp)
 }
 ```
 
@@ -221,22 +263,26 @@ interface HeaderModification {
 
 - `token`: Use this to authenticate your tunnel with a Pinggy token.
 - `serverAddress`: Specify a custom Pinggy server if needed.
-- `sniServerName`: For advanced TLS/SNI routing.
-- `forwardTo`: The local address (host:port) to forward incoming traffic to.
-- `debug`: Enable debug logging for this tunnel instance.
-- `debuggerPort`: Port to use for web debugging.
-- `type`: Choose the protocol for your tunnel (`tcp`, `tls`, `http`, or `udp`).
+- `forwarding`: The local address (host:port) to forward incoming traffic to.
+- `webDebugger`: Local address use for web debugging for this tunnel instance.
+- `tunnelType`: Choose the protocol for your tunnel (`tcp`, `tls`, `http`,`udp` or `tlstcp`).
 - `ipWhitelist`: Restrict access to specific client IPs.
-- `basicAuth`: Provide a map of usernames to passwords for HTTP basic authentication.
-- `bearerAuth`: List of bearer tokens for HTTP authentication.
+- `basicAuth`: An array of objects, where each object has a username (string) and password (string)..
+- `bearerTokenAuth`: List of bearer tokens for HTTP authentication.
 - `headerModification`: Modify HTTP headers (add, remove, update) for incoming requests.
-- `xff`: Enable the X-Forwarded-For header for client IP forwarding.
+- `xForwardedFor`: Enable the X-Forwarded-For header for client IP forwarding.
 - `httpsOnly`: Only allow HTTPS connections to your tunnel.
-- `fullRequestUrl`: Pass the full request URL to your backend.
+- `originalRequestUrl`: Pass the full request URL to your backend.
 - `allowPreflight`: Allow CORS preflight (OPTIONS) requests.
-- `noReverseProxy`: Disable reverse proxy features if not needed.
-- `cmd`: Optional command prefix for advanced use.
-- `ssl`: Use SSL for tunnel setup and communication.
+- `reverseProxy`: Disable reverse proxy features if not needed.
+- `force`: Force specific tunnel settings or bypass certain server-side restrictions. 
+- `autoReconnect`: Automatically try to reconnect the tunnel if the connection drops. Set to `true` to enable automatic reconnection.
+- `reconnectInterval`: Time in seconds between automatic reconnection attempts (default: 5). Increase to reduce retry frequency.
+- `maxReconnectAttempts`: Maximum number of reconnection attempts before the tunnel gives up (default: 20).
+- `optional`: Miscellaneous optional parameters for advanced setups:
+  - `sniServerName`: Override the SNI server name used during TLS handshakes.
+  - `ssl`: Whether to use SSL for tunnel setup (default: `false`).
+  - `additionalArguments`: Extra command-line style arguments or flags to pass to the underlying tunnel process (e.g., `"--tcp`).
 
 ---
 

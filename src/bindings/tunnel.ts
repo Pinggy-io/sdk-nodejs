@@ -2,6 +2,7 @@ import { Logger } from "../utils/logger";
 import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
 import { PinggyError } from "./exception";
 import { TunnelUsage } from "./tunnel-usage";
+import { PinggyOptions } from "..";
 
 type Task = () => void;
 class FunctionQueue {
@@ -67,19 +68,22 @@ export class Tunnel implements ITunnel {
   private functionQueue: FunctionQueue;
   private _latestUsage: TunnelUsage = new TunnelUsage();
   private onUsageUpdateCallback: ((usage: TunnelUsage) => void) | null = null;
+  private pinggyOptions: PinggyOptions;
+  private webDebuggerPort: number = 0;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
    * @param {PinggyNative} addon - The native addon instance.
    * @param {number} configRef - The reference to the native config object.
    */
-  constructor(addon: PinggyNative, configRef: number) {
+  constructor(addon: PinggyNative, configRef: number, pinggyOptions: PinggyOptions) {
     this.addon = addon;
     this.tunnelRef = this.initialize(configRef);
     this.authenticated = false;
     this.primaryForwardingDone = false;
     this.status = TunnelStatus.IDLE;
     this.functionQueue = new FunctionQueue();
+    this.pinggyOptions = pinggyOptions;
 
     // Create promises that will be resolved when authentication and forwarding complete
     this.authPromise = new Promise((resolve, reject) => {
@@ -266,7 +270,28 @@ export class Tunnel implements ITunnel {
         this.pollStart();
 
         // Wait for forwarding to complete and return the addresses
-        return await this.forwardingPromise;
+        const urls = await this.forwardingPromise;
+
+        // Auto-start web debugger if configured
+        if (this.pinggyOptions.webDebugger) {
+          try {
+            const debuggerAddress = this.pinggyOptions.webDebugger;
+            // Extract port from address (format like "localhost:8080")
+            const portMatch = debuggerAddress.match(/:(\d+)$/);
+            if (portMatch) {
+              const port = parseInt(portMatch[1], 10);
+              Logger.info(`Auto-starting web debugger on port ${port}...`);
+              await this.startWebDebugging(port);
+            } else {
+              Logger.info(`Invalid web debugger address format: ${debuggerAddress}. Expected format: host:port`);
+            }
+          } catch (error) {
+            Logger.error("Failed to auto-start web debugger:", error as Error);
+            // Don't throw - web debugger failure shouldn't stop the tunnel
+          }
+        }
+
+        return urls;
       },
       operationName: "starting tunnel",
 
@@ -335,7 +360,12 @@ export class Tunnel implements ITunnel {
     await this.authPromise; // Wait for authentication
 
     this.executeTunnelOperation({
-      operation: () => this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort),
+      operation: () => {
+        const port = this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort);
+        if (port && port > 0) {
+          this.webDebuggerPort = port;
+        }
+      },
       operationName: "starting web debugging",
       successMessage: `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
     });
@@ -414,14 +444,24 @@ export class Tunnel implements ITunnel {
     return this._urls;
   }
 
-  public getTunnelGreetMessage(): string | null {
+  public getTunnelGreetMessage(): string[] {
     return this.executeTunnelOperation({
-      operation: () => this.addon.getTunnelGreetMessage(this.tunnelRef),
+      operation: () => {
+        const raw = this.addon.getTunnelGreetMessage(this.tunnelRef);
+        if (!raw) return [];
+        try {
+          const parsedGreetMsg = JSON.parse(raw);
+
+          return parsedGreetMsg;
+        } catch (e) {
+          return [];
+        }
+      },
       operationName: "getting tunnel greet message",
       logResult: (message) => Logger.info(`Tunnel greet message: ${message}`),
-
     });
   }
+
   public startTunnelUsageUpdate(): void {
     this.executeTunnelOperation({
       operation: () => this.addon.startTunnelUsageUpdate(this.tunnelRef),
@@ -455,5 +495,9 @@ export class Tunnel implements ITunnel {
   public setUsageUpdateCallback(callback: (usage: TunnelUsage) => void): void {
     this.onUsageUpdateCallback = callback;
     this.startTunnelUsageUpdate();
+  }
+
+  public getWebDebuggerPort(): number | null {
+    return this.webDebuggerPort;
   }
 }

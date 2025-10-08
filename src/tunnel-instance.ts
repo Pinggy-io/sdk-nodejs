@@ -43,7 +43,7 @@ export class TunnelInstance {
       this.config = new Config(this.addon, options);
       if (!this.config.configRef)
         throw new Error("Failed to initialize config.");
-      this.tunnel = new Tunnel(this.addon, this.config.configRef);
+      this.tunnel = new Tunnel(this.addon, this.config.configRef, options);
     } catch (e) {
       // If the error is already a proper Error object (like validation errors),
       // preserve it instead of trying to convert it to PinggyError
@@ -106,24 +106,46 @@ export class TunnelInstance {
  *
  * Delegates to {@link Tunnel#getTunnelGreetMessage}.
  *
- * @returns {string | null} The greeting message, or null if unavailable.
+ * @returns {string[]} The greeting message.
  * @throws {Error} If the tunnel is not initialized.
  */
-  public getGreetMessage(): string | null {
+  public getGreetMessage(): string[] {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     return this.tunnel.getTunnelGreetMessage();
   }
 
+  /**
+   * Starts continuous usage updates for the tunnel.
+   *
+   * @throws {Error} If the tunnel instance or its tunnelRef is not initialized.
+   * @returns void
+   */
   public startUsageUpdate(): void {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     this.tunnel.startTunnelUsageUpdate();
   }
+
+  /**
+   * Stops continuous usage updates for the tunnel.
+   *
+   * @throws {Error} If the tunnel instance or its tunnelRef is not initialized.
+   * @returns void
+   */
 
   public stopUsageUpdate(): void {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     this.tunnel.stopTunnelUsageUpdate();
   }
 
+  /**
+   * Retrieves usage information from the underlying tunnel instance.
+   *
+   * This method delegates to the tunnel's getTunnelUsages() implementation. If the tunnel is not initialized or its reference is
+   * missing, an Error is thrown.
+   *
+   * @returns The tunnel usages as a string, or null if no usages are available.
+   * @throws {Error} If the tunnel or its tunnelRef is not initialized.
+   */
   public getUsages(): string | null {
     if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
     return this.tunnel.getTunnelUsages();
@@ -333,10 +355,10 @@ export class TunnelInstance {
   /**
    * Retrieves IP whitelist for this tunnel instance.
    *
-   * @returns {string[] | null} An array of whitelisted IP addresses, or `null` if no whitelist is configured.
+   * @returns {string[]} An array of whitelisted IP addresses, or an empty array if no whitelist is configured.
    */
-  public getIpWhiteList(): string[] | null {
-    return this.config?.getIpWhiteList() ?? null;
+  public getIpWhiteList(): string[] {
+    return this.config?.getIpWhiteList() ?? [];
   }
 
   /**
@@ -387,10 +409,10 @@ export class TunnelInstance {
   /**
    * Returns bearer token authentication values defined in the configuration.
    *
-   * @returns An array of bearer token strings if present; otherwise null.
+   * @returns An array of bearer token strings if present; otherwise an empty array.
    */
-  public getBearerTokenAuth(): string[] | null {
-    return this.config?.getBearerTokenAuth() ?? null;
+  public getBearerTokenAuth(): string[] {
+    return this.config?.getBearerTokenAuth() ?? [];
   }
 
   /**
@@ -412,30 +434,39 @@ export class TunnelInstance {
   }
 
   /**
- * Returns reconnect interval configuration for this tunnel instance.
- *
- * @returns The reconnect interval setting, or `null` if not configured.
- */
+   * Returns reconnect interval configuration for this tunnel instance.
+   *
+   * @returns The reconnect interval setting, or `null` if not configured.
+   */
   public getReconnectInterval(): number | null {
     return this.config?.getReconnectInterval() ?? null;
   }
 
   /**
- * Returns auto-reconnect configuration for this tunnel instance.
- *
- * @returns The auto-reconnect setting, or `null` if not configured.
- */
+   * Returns auto-reconnect configuration for this tunnel instance.
+   *
+   * @returns The auto-reconnect setting, or `null` if not configured.
+   */
   public getAutoReconnect(): boolean | null {
     return this.config?.getAutoReconnect() ?? null;
   }
 
   /**
- * Returns MaxReconnectAttempts configuration for this tunnel instance.
- *
- * @returns The MaxReconnectAttempts setting, or `null` if not configured.
- */
+   * Returns MaxReconnectAttempts configuration for this tunnel instance.
+   *
+   * @returns The MaxReconnectAttempts setting, or `null` if not configured.
+   */
   public getMaxReconnectAttempts(): number | null {
     return this.config?.getMaxReconnectAttempts() ?? null;
+  }
+
+  /**
+   * Returns WebDebuggerPort configuration for this tunnel instance.
+   *
+   * @returns The WebDebuggerPort setting, or `null` if not configured.
+   */
+  public getWebDebuggerPort(): number {
+    return this.tunnel?.getWebDebuggerPort() ?? 0;
   }
   /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
@@ -463,7 +494,7 @@ export class TunnelInstance {
     options.httpsOnly = httpsOnly !== null ? httpsOnly : false;
 
     const ipWhiteList = this.getIpWhiteList();
-    options.ipWhitelist = ipWhiteList ? (ipWhiteList as string[]) : [];
+    options.ipWhitelist = ipWhiteList;
 
     const allowPreflight = this.getAllowPreflight();
     options.allowPreflight = allowPreflight !== null ? allowPreflight : false;
@@ -482,7 +513,7 @@ export class TunnelInstance {
     options.basicAuth = normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
 
     const bearerAuth = this.getBearerTokenAuth();
-    options.bearerTokenAuth = bearerAuth ? bearerAuth : [];
+    options.bearerTokenAuth = bearerAuth;
 
     const reconnectInterval = this.getReconnectInterval();
     options.reconnectInterval = reconnectInterval !== null ? reconnectInterval : 0;
@@ -494,6 +525,9 @@ export class TunnelInstance {
     options.autoReconnect = autoReconnect !== null ? autoReconnect : false;
 
     const headerModificationRaw = this.getHeaderModification() as unknown as HeaderModification[];
+
+    const webDebuggerPort = this.getWebDebuggerPort();
+    options.webDebugger = `localhost:${webDebuggerPort}`;
 
     options.headerModification = Array.isArray(headerModificationRaw)
       ? headerModificationRaw.map(h => {

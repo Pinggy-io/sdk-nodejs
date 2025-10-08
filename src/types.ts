@@ -93,11 +93,11 @@ export interface PinggyNative {
   /** Get local server TLS configuration for a config. */
   configGetLocalServerTls(configRef: number): string;
   /** Get the header modification configuration for a config. */
-  configGetHeaderModification(configRef: number): string[];
+  configGetHeaderModification(configRef: number): string;
   /** Get the bearer authentication configuration for a config. */
-  configGetBearerTokenAuths(configRef: number): string[];
+  configGetBearerTokenAuths(configRef: number): string;
   /** Get the basic authentication configuration for a config. */
-  configGetBasicAuths(configRef: number): string[];
+  configGetBasicAuths(configRef: number): string;
   /** Get the X-Forwarded-For header configuration for a config. */
   configGetXForwardedFor(configRef: number): boolean;
   /** Get the Original-Request-URL header configuration for a config. */
@@ -107,7 +107,7 @@ export interface PinggyNative {
   /** Get the reverse-proxy configuration for a config. */
   configGetReverseProxy(configRef: number): boolean;
   /** Get the IP whitelist for a config. */
-  configGetIpWhiteList(configRef: number): string[];
+  configGetIpWhiteList(configRef: number): string;
   /** Get HTTPS-only configuration for a config. */
   configGetHttpsOnly(configRef: number): boolean;
   /** Set the log file path. */
@@ -121,7 +121,7 @@ export interface PinggyNative {
   /** Resume a tunnel. */
   tunnelResume(tunnelRef: number): boolean;
   /** Start web debugging for a tunnel. */
-  tunnelStartWebDebugging(tunnelRef: number, port: number): void;
+  tunnelStartWebDebugging(tunnelRef: number, port: number): number;
   /** Request primary forwarding for a tunnel. */
   tunnelRequestPrimaryForwarding(tunnelRef: number): void;
   /** Request additional forwarding for a tunnel. */
