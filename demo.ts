@@ -5,7 +5,7 @@ console.log("Pinggy version:", version);
 
 (async () => {
   const options: PinggyOptions = {
-    forwardTo: "localhost:5173",
+    forwarding: "localhost:5173",
     // token: "terminateAtUsages",
     // ssl: false,
     // type: "http", // defaults to http if not provided
