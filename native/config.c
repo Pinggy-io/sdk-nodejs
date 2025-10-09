@@ -2138,14 +2138,14 @@ napi_value ConfigGetIpWhiteList(napi_env env, napi_callback_info info)
     // Return the ip_white_list as a JavaScript string
     napi_value result;
     status = napi_create_string_utf8(env, ip_white_list, copied, &result);
-    free(ip_white_list);
+
     if (status != napi_ok)
     {
         free(ip_white_list);
         napi_throw_error(env, NULL, "Failed to create JS string from ip_white_list");
         return NULL;
     }
-
+    free(ip_white_list);
     return result;
 }
 

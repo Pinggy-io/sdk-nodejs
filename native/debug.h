@@ -36,7 +36,8 @@ extern "C"
     } while (0)
 
 // Backward compatibility macro for existing printf statements
-#define PINGGY_DEBUG_RET(ret) PINGGY_DEBUG("ret = %d", ret)
+#define PINGGY_DEBUG_RET(ret) PINGGY_DEBUG("ret = %p", (void *)ret)
+#define PINGGY_DEBUG_INT(val)  PINGGY_DEBUG("val = %llu", (unsigned long long)(val))
 #define PINGGY_DEBUG_VOID() PINGGY_DEBUG("ret = void")
 
 // N-API module initialization function
