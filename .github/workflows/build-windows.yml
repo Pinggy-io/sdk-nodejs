@@ -1,10 +1,8 @@
 name: Build Windows Binaries
 
 on:
-  workflow_dispatch: # Trigger manually from Actions tab
-  push:
-    tags:
-      - "v*" # OR when you push a version tag like `v1.0.0`
+  release:
+    types: [created]
 
 jobs:
   build:
