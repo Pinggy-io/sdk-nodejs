@@ -179,6 +179,34 @@ export class TunnelInstance {
   }
 
   /**
+   * Sets a callback function to receive errors.
+   *
+   * Delegates to {@link Tunnel#setTunnelErrorCallback}.
+   *
+   * @param {function} callback - The callback function to receive errors.
+   * @returns {void}
+   * @throws {Error} If the tunnel is not initialized.
+   */
+  public setTunnelErrorCallback(callback: (errorNo: number, error: string, recoverable: boolean) => void): void {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    this.tunnel.setTunnelErrorCallback(callback);
+  }
+
+  /**
+   * Sets a callback function to receive disconnected events.
+   *
+   * Delegates to {@link Tunnel#setTunnelDisconnectedCallback}.
+   *
+   * @param {function} callback - The callback function to receive disconnected events.
+   * @returns {void}
+   * @throws {Error} If the tunnel is not initialized.
+   */
+  public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
+    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
+    this.tunnel.setTunnelDisconnectedCallback(callback);
+  }
+
+  /**
    * Checks if the tunnel is currently active.
    *
    * Delegates to {@link Tunnel#tunnelIsActive}.

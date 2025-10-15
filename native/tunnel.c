@@ -1219,6 +1219,11 @@ napi_value SetAdditionalForwardingFailedCallback(napi_env env, napi_callback_inf
 
     napi_value js_result;
     status = napi_get_boolean(env, result, &js_result);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create boolean result");
+        return NULL;
+    }
     return js_result;
 }
 
@@ -1265,35 +1270,60 @@ void on_disconnected_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, ping
 
 napi_value TunnelSetDisconnectedCallback(napi_env env, napi_callback_info info)
 {
+    napi_status status;
     size_t argc = 2;
     napi_value args[2];
-    napi_get_cb_info(env, info, &argc, args, NULL, NULL);
 
-    if (argc < 2)
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok || argc < 2)
     {
-        napi_throw_error(env, NULL, "Expected tunnelRef and callback");
+        napi_throw_error(env, NULL, "Expected 2 arguments: tunnelRef (uint32), callback (function)");
         return NULL;
     }
 
     uint32_t tunnelRef;
-    napi_get_value_uint32(env, args[0], &tunnelRef);
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid tunnel reference");
+        return NULL;
+    }
 
     napi_valuetype cb_type;
-    napi_typeof(env, args[1], &cb_type);
-    if (cb_type != napi_function)
+    status = napi_typeof(env, args[1], &cb_type);
+    if (status != napi_ok || cb_type != napi_function)
     {
         napi_throw_type_error(env, NULL, "Callback must be a function");
         return NULL;
     }
 
     disconnected_callback_data *cb_data = malloc(sizeof(disconnected_callback_data));
+    if (cb_data == NULL)
+    {
+        napi_throw_error(env, NULL, "Failed to allocate memory for callback data");
+        return NULL;
+    }
     cb_data->env = env;
-    napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+    status = napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+    if (status != napi_ok)
+    {
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to create callback reference");
+        return NULL;
+    }
 
     pinggy_bool_t result = pinggy_tunnel_set_on_disconnected_callback(
         (pinggy_ref_t)tunnelRef,
         on_disconnected_cb,
         cb_data);
+
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to register callback in Pinggy native layer");
+        return NULL;
+    }
 
     napi_value js_result;
     napi_get_boolean(env, result, &js_result);
@@ -1334,38 +1364,69 @@ void on_tunnel_error_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, ping
 
 napi_value TunnelSetErrorCallback(napi_env env, napi_callback_info info)
 {
+    napi_status status;
     size_t argc = 2;
     napi_value args[2];
-    napi_get_cb_info(env, info, &argc, args, NULL, NULL);
 
-    if (argc < 2)
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+
+    if (status != napi_ok || argc < 2)
     {
-        napi_throw_error(env, NULL, "Expected tunnelRef and callback");
+        napi_throw_error(env, NULL, "Expected 2 arguments: tunnelRef (uint32), callback (function)");
         return NULL;
     }
 
     uint32_t tunnelRef;
-    napi_get_value_uint32(env, args[0], &tunnelRef);
-
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid tunnel reference");
+        return NULL;
+    }
     napi_valuetype cb_type;
-    napi_typeof(env, args[1], &cb_type);
-    if (cb_type != napi_function)
+    status = napi_typeof(env, args[1], &cb_type);
+    if (status != napi_ok || cb_type != napi_function)
     {
         napi_throw_type_error(env, NULL, "Callback must be a function");
         return NULL;
     }
 
     tunnel_error_callback_data *cb_data = malloc(sizeof(tunnel_error_callback_data));
+    if (cb_data == NULL)
+    {
+        napi_throw_error(env, NULL, "Failed to allocate memory for callback data");
+        return NULL;
+    }
     cb_data->env = env;
-    napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+    status = napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+
+    if (status != napi_ok)
+    {
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to create callback reference");
+        return NULL;
+    }
 
     pinggy_bool_t result = pinggy_tunnel_set_on_tunnel_error_callback(
         (pinggy_ref_t)tunnelRef,
         on_tunnel_error_cb,
         cb_data);
 
+    if (!result)
+    {
+        napi_delete_reference(env, cb_data->callback_ref);
+        free(cb_data);
+        napi_throw_error(env, NULL, "Failed to register callback in Pinggy native layer");
+        return NULL;
+    }
+
     napi_value js_result;
-    napi_get_boolean(env, result, &js_result);
+    status = napi_get_boolean(env, result, &js_result);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create boolean result");
+        return NULL;
+    }
     return js_result;
 }
 

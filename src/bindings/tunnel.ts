@@ -68,6 +68,8 @@ export class Tunnel implements ITunnel {
   private functionQueue: FunctionQueue;
   private _latestUsage: TunnelUsage = new TunnelUsage();
   private onUsageUpdateCallback: ((usage: TunnelUsage) => void) | null = null;
+  private onTunnelErrorCallback: ((errorNo: number, error: string, recoverable: boolean) => void) | null = null;
+  private onTunnelDisconnectedCallback: ((error: string, messages: string[]) => void) | null = null;
   private pinggyOptions: PinggyOptions;
   private webDebuggerPort: number = 0;
 
@@ -205,17 +207,29 @@ export class Tunnel implements ITunnel {
       },
       {
         setter: 'tunnelSetOnDisconnectedCallback',
-        callback: (tunnelRef: number, error: string, messages: string[]) => {
-          Logger.info(`Tunnel disconnected: ${tunnelRef}, error: ${error}`);
-          if (messages && messages.length > 0) {
-            Logger.info(`Disconnection messages: ${messages.join(", ")}`);
+        callback: (tunnelRef: number,error: string, messages: string[]) => {
+          Logger.info(`Tunnel disconnected: error: ${error}`);
+          if(this.onTunnelDisconnectedCallback) {
+            try {
+              this.onTunnelDisconnectedCallback(error, messages);
+            } catch (cbErr) {
+              Logger.error("Error in onTunnelDisconnectedCallback:", cbErr as Error);
+            }
           }
         }
       },
       {
         setter: 'tunnelSetOnTunnelErrorCallback',
-        callback: (tunnelRef: number, errorNo: number, error: string, recoverable: boolean) => {
-          Logger.error(`Tunnel error on ${tunnelRef} (${errorNo}): ${error} (recoverable: ${recoverable})`);
+        callback: (tunnelRef: number,errorNo: number, error: string, recoverable: boolean) => {
+          Logger.error(`Tunnel error on  (${errorNo}): ${error} (recoverable: ${recoverable})`);
+          // notify client callback if provided
+          if (this.onTunnelErrorCallback) {
+            try {
+              this.onTunnelErrorCallback(errorNo, error, recoverable);
+            } catch (cbErr) {
+              Logger.error("Error in onTunnelErrorCallback:", cbErr as Error);
+            }
+          }
         }
       },
       {
@@ -499,5 +513,13 @@ export class Tunnel implements ITunnel {
 
   public getWebDebuggerPort(): number | null {
     return this.webDebuggerPort;
+  }
+
+  public setTunnelErrorCallback(callback: (errorNo: number, error: string, recoverable: boolean) => void): void {
+    this.onTunnelErrorCallback = callback;
+  }
+
+  public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
+    this.onTunnelDisconnectedCallback = callback;
   }
 }

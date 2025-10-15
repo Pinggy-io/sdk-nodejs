@@ -76,6 +76,9 @@ export class Logger {
 
   public static error(message: string, error?: Error): void {
     // Always log error messages regardless of debug state
-    this.log("error", message, error || null);
+    if(Logger.isDebugEnabled()) {
+      this.log("error", message, error || null);
+    }
+    
   }
 }
