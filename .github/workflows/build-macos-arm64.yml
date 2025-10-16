@@ -49,10 +49,3 @@ jobs:
 
       - name: Package native binary
         run: npm run package
-
-      - name: Upload to GitHub Release
-        env:
-          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Publishing to GitHub Release..."
-          npx node-pre-gyp-github publish --release
