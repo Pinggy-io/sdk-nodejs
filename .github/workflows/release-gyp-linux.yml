@@ -1,4 +1,4 @@
-name: Build Native Binaries
+name: Release Native Binaries
 
 on:
   release:

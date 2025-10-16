@@ -1,4 +1,4 @@
-name: Build Native Binaries for linux arm64
+name: Release Native Binaries for linux arm64
 
 on:
   release:

@@ -1,4 +1,4 @@
-name: Build Native Binaries for macOS
+name: Release Native Binaries for macOS
 
 on:
   release:
