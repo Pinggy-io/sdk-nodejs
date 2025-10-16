@@ -3,6 +3,10 @@ name: Build Native Binaries for macOS
 on:
   release:
     types: [created]
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -29,7 +33,7 @@ jobs:
         run: |
           sudo xcode-select --install || true
           brew update
-          brew install python@3 pkg-config automake autoconf libtool
+          brew install pkg-config automake autoconf libtool
 
       - name: Install npm dependencies
         run: npm ci --ignore-scripts
