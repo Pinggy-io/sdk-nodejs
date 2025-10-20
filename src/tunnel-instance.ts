@@ -297,12 +297,12 @@ export class TunnelInstance {
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
-  public tunnelRequestAdditionalForwarding(
+  public async tunnelRequestAdditionalForwarding(
     hostname: string,
     target: string
-  ): void {
+  ): Promise<void> {
     if (!this.tunnel) throw new Error("Tunnel not initialized");
-    this.tunnel.tunnelRequestAdditionalForwarding(hostname, target);
+    await this.tunnel.tunnelRequestAdditionalForwarding(hostname, target);
   }
 
   /**

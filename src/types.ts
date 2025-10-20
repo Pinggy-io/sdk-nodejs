@@ -149,7 +149,6 @@ export interface PinggyNative {
       tunnelRef: number,
       bindAddr: string,
       forwardToAddr: string,
-      protocol: string
     ) => void
   ): void;
   /** Set the callback for additional forwarding failure. */
@@ -157,7 +156,8 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (
       tunnelRef: number,
-      remoteAddress: string,
+      bindAddress: string,
+      forwardToAddr: string,
       errorMessage: string
     ) => void
   ): void;
