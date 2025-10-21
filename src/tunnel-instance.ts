@@ -2,11 +2,11 @@ import { PinggyNative, TunnelStatus } from "./types";
 import { HeaderModification, PinggyOptionsType, PinggyOptions } from "./pinggyOptions"
 import { Config } from "./bindings/config";
 import { Tunnel } from "./bindings/tunnel";
+import { TunnelWorker } from "./tunnel-worker";
 import { Logger } from "./utils/logger";
 import {
   getLastException,
   PinggyError,
-  initExceptionHandling,
 } from "./bindings/exception";
 import { TunnelUsageType } from "./bindings/tunnel-usage";
 
@@ -20,8 +20,9 @@ import { TunnelUsageType } from "./bindings/tunnel-usage";
  * @public
  */
 export class TunnelInstance {
+  // All tunnel/config operations are delegated to a worker-style dispatcher
   private config: Config | null = null;
-  private tunnel: Tunnel | null = null;
+  private worker: any | null = null;
   private addon: PinggyNative;
 
   /**
@@ -34,25 +35,17 @@ export class TunnelInstance {
    */
   constructor(addon: PinggyNative, options: PinggyOptions) {
     this.addon = addon;
-    initExceptionHandling(this.addon);
-
-    // set debug logging to false initially
-    this.addon.setLogEnable(false);
-
     try {
+      // Move all initialization into the worker abstraction for maintainability
       this.config = new Config(this.addon, options);
       if (!this.config.configRef)
         throw new Error("Failed to initialize config.");
-      this.tunnel = new Tunnel(this.addon, this.config.configRef, options);
+      this.worker = new TunnelWorker(this.addon, this.config.configRef, options);
     } catch (e) {
-      // If the error is already a proper Error object (like validation errors),
-      // preserve it instead of trying to convert it to PinggyError
       if (e instanceof PinggyError) {
         Logger.error("Tunnel init error:", e);
         throw e;
       }
-
-      // For other types of errors, check if there's a native exception
       const lastEx = getLastException(this.addon);
       const pinggyError = lastEx
         ? new PinggyError(lastEx)
@@ -71,8 +64,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized or fails to start.
    */
   public async start(): Promise<string[]> {
-    if (!this.tunnel) throw new Error("Tunnel not initialized");
-    return await this.tunnel.start();
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    return await this.worker.invoke('start');
   }
 
   /**
@@ -83,7 +76,8 @@ export class TunnelInstance {
    * @returns {string[]} The list of public tunnel URLs.
    */
   public urls(): string[] {
-    return this.tunnel?.getUrls() ?? [];
+    if (!this.worker) return [];
+    return this.worker.invoke('urls');
   }
 
   /**
@@ -95,10 +89,9 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public stop(): void {
-    if (!this.tunnel) throw new Error("Tunnel not initialized");
-    this.tunnel.tunnelStop();
-    this.tunnel = null;
-    this.config = null;
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    this.worker.invoke('stop');
+    this.worker = null;
   }
 
   /**
@@ -110,8 +103,8 @@ export class TunnelInstance {
  * @throws {Error} If the tunnel is not initialized.
  */
   public getGreetMessage(): string[] {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    return this.tunnel.getTunnelGreetMessage();
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    return this.worker.invoke('getGreetMessage');
   }
 
   /**
@@ -121,8 +114,8 @@ export class TunnelInstance {
    * @returns void
    */
   public startUsageUpdate(): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.startTunnelUsageUpdate();
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    this.worker.invoke('startUsageUpdate');
   }
 
   /**
@@ -133,8 +126,8 @@ export class TunnelInstance {
    */
 
   public stopUsageUpdate(): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.stopTunnelUsageUpdate();
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    this.worker.invoke('stopUsageUpdate');
   }
 
   /**
@@ -147,8 +140,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel or its tunnelRef is not initialized.
    */
   public getUsages(): string | null {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    return this.tunnel.getTunnelUsages();
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    return this.worker.invoke('getUsages');
   }
 
   /**
@@ -160,8 +153,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public getLatestUsage(): TunnelUsageType | null {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    return this.tunnel.getLatestUsage();
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    return this.worker.invoke('getLatestUsage');
   }
 
   /**
@@ -174,8 +167,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setUsageUpdateCallback(callback: (usage: Record<string, any>) => void): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.setUsageUpdateCallback(callback);
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    this.worker.invoke('setUsageUpdateCallback', callback);
   }
 
   /**
@@ -188,8 +181,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setTunnelErrorCallback(callback: (errorNo: number, error: string, recoverable: boolean) => void): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.setTunnelErrorCallback(callback);
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    this.worker.invoke('setTunnelErrorCallback', callback);
   }
 
   /**
@@ -202,8 +195,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.setTunnelDisconnectedCallback(callback);
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    this.worker.invoke('setTunnelDisconnectedCallback', callback);
   }
 
   /**
@@ -214,8 +207,8 @@ export class TunnelInstance {
    * @returns {boolean} True if the tunnel is active, false otherwise.
    */
   public isActive(): boolean {
-    if (!this.tunnel) return false;
-    return this.tunnel.tunnelIsActive();
+    if (!this.worker) return false;
+    return this.worker.invoke('isActive');
   }
 
   /**
@@ -226,7 +219,8 @@ export class TunnelInstance {
    * @returns {"starting" | "live" | "closed"} The tunnel status.
    */
   public getStatus(): TunnelStatus {
-    return this.tunnel?.status ?? TunnelStatus.CLOSED;
+    if (!this.worker) return TunnelStatus.CLOSED;
+    return this.worker.invoke('getStatus');
   }
 
   /**
@@ -283,8 +277,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public startWebDebugging(port: number): void {
-    if (!this.tunnel) throw new Error("Tunnel not initialized");
-    this.tunnel.startWebDebugging(port);
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    this.worker.invoke('startWebDebugging', port);
   }
 
   /**
@@ -301,8 +295,17 @@ export class TunnelInstance {
     hostname: string,
     target: string
   ): Promise<void> {
-    if (!this.tunnel) throw new Error("Tunnel not initialized");
-    await this.tunnel.tunnelRequestAdditionalForwarding(hostname, target);
+    if (!this.worker) throw new Error("Tunnel not initialized");
+    await this.worker.invoke('tunnelRequestAdditionalForwarding', hostname, target);
+  }
+
+  /**
+ * Returns WebDebuggerPort configuration for this tunnel instance.
+ *
+ * @returns The WebDebuggerPort setting, or `null` if not configured.
+ */
+  public getWebDebuggerPort(): number {
+    return this.worker?.invoke('getWebDebuggerPort') ?? 0;
   }
 
   /**
@@ -486,15 +489,6 @@ export class TunnelInstance {
    */
   public getMaxReconnectAttempts(): number | null {
     return this.config?.getMaxReconnectAttempts() ?? null;
-  }
-
-  /**
-   * Returns WebDebuggerPort configuration for this tunnel instance.
-   *
-   * @returns The WebDebuggerPort setting, or `null` if not configured.
-   */
-  public getWebDebuggerPort(): number {
-    return this.tunnel?.getWebDebuggerPort() ?? 0;
   }
   /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
