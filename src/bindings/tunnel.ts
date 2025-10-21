@@ -3,6 +3,7 @@ import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
 import { PinggyError } from "./exception";
 import { TunnelUsage } from "./tunnel-usage";
 import { PinggyOptions } from "..";
+import { AdditionalForwardingManager } from "../utils/additionalForwardingManager";
 
 type Task = () => void;
 class FunctionQueue {
@@ -65,11 +66,7 @@ export class Tunnel implements ITunnel {
   private rejectAuth: ((reason?: any) => void) | null = null;
   private resolveForwarding: ((addresses: string[]) => void) | null = null;
   private rejectForwarding: ((reason?: any) => void) | null = null;
-  // Map key: `${remoteAddress}|${localAddress}` -> Array of pending resolvers/rejectors
-  private additionalForwardingPending: Map<
-    string,
-    Array<{ resolve: () => void; reject: (reason?: any) => void }>
-  > = new Map();
+  private additionalForwardingPending: AdditionalForwardingManager = new AdditionalForwardingManager();
   private _urls: string[] = [];
   private intentionallyStopped: boolean = false; // Track intentional stops
   private functionQueue: FunctionQueue;
@@ -193,13 +190,7 @@ export class Tunnel implements ITunnel {
         callback: (tunnelRef: number, bindAddr: string, forwardToAddr: string) => {
           Logger.info(`Additional forwarding succeeded for tunnel ${tunnelRef}: ${bindAddr} -> ${forwardToAddr}`);
           // Resolve the oldest pending promise for this bindAddr (remote) + forwardToAddr (local)
-          const key = `${bindAddr}|${forwardToAddr}`;
-          const arr = this.additionalForwardingPending.get(key);
-          if (arr && arr.length > 0) {
-            const entry = arr.shift();
-            if (entry) entry.resolve();
-            if (arr.length === 0) this.additionalForwardingPending.delete(key);
-          }
+          this.additionalForwardingPending.resolveOne(bindAddr, forwardToAddr);
         }
       },
       {
@@ -207,25 +198,23 @@ export class Tunnel implements ITunnel {
         callback: (tunnelRef: number, bindAddress: string, forwardToAddr: string, errorMessage: string) => {
           Logger.error(`Additional forwarding failed for ${bindAddress} -> ${forwardToAddr} on tunnel ${tunnelRef}: ${errorMessage}`);
           // Reject the oldest pending promise for this bindAddress (remote) + forwardToAddr (local)
-          const key = `${bindAddress}|${forwardToAddr}`;
-          const arr = this.additionalForwardingPending.get(key);
-          if (arr && arr.length > 0) {
-            const entry = arr.shift();
-            if (entry) {
-              entry.reject(
-                new PinggyError(
-                  `Additional forwarding failed for ${bindAddress} -> ${forwardToAddr}: ${errorMessage}`
-                )
-              );
-            }
-            if (arr.length === 0) this.additionalForwardingPending.delete(key);
-          }
+          this.additionalForwardingPending.rejectOne(
+            bindAddress,
+            forwardToAddr,
+            new PinggyError(`Additional forwarding failed for ${bindAddress} -> ${forwardToAddr}: ${errorMessage}`)
+          );
         }
       },
       {
         setter: 'tunnelSetOnDisconnectedCallback',
         callback: (tunnelRef: number, error: string, messages: string[]) => {
           Logger.info(`Tunnel disconnected: error: ${error}`);
+          // Clear any pending additional forwarding promises since tunnel is disconnected
+          try {
+            this.additionalForwardingPending.clearAll(new PinggyError(`Tunnel disconnected: ${error}`));
+          } catch (e) {
+            // ignore
+          }
           if (this.onTunnelDisconnectedCallback) {
             try {
               this.onTunnelDisconnectedCallback(error, messages);
@@ -419,23 +408,18 @@ export class Tunnel implements ITunnel {
     remoteAddress: string,
     localAddress: string
   ): Promise<void> {
-    await this.forwardingPromise; // Wait for primary forwarding to complete
-    // Create a per-request promise and store its resolvers in the map
-    const key = `${remoteAddress}|${localAddress}`;
-    const promise = new Promise<void>((resolve, reject) => {
-      const arr = this.additionalForwardingPending.get(key) || [];
-      arr.push({ resolve, reject });
-      this.additionalForwardingPending.set(key, arr);
-    });
+    // Wait for primary forwarding to complete
+    await this.forwardingPromise; 
 
-    // Trigger native request
+    // Enqueue a pending promise for this remote/local pair 
+    const { promise } = this.additionalForwardingPending.enqueue(remoteAddress, localAddress);
+
     this.executeAddonOperation({
       operation: () => this.addon.tunnelRequestAdditionalForwarding(this.tunnelRef, remoteAddress, localAddress),
       operationName: "requesting additional forwarding",
       successMessage: `Requested additional forwarding from ${remoteAddress} to ${localAddress}`
     });
 
-    // Await the per-request promise
     return promise;
   }
 
