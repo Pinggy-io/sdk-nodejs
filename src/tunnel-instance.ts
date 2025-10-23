@@ -1,5 +1,5 @@
 import { HeaderModification, PinggyOptions, PinggyOptionsType } from "./pinggyOptions"
-import { TunnelWorkerManager } from "./tunnel-worker-manager";
+import { TunnelWorkerManager } from "./worker/tunnel-worker-manager";
 import { Logger } from "./utils/logger"
 import { Tunnel } from "./bindings/tunnel";
 import { Config } from "./bindings/config";

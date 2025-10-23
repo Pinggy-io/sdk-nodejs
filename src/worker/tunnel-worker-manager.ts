@@ -1,10 +1,10 @@
 import { Worker } from "worker_threads";
 import path from "path/win32";
-import { Logger } from "./utils/logger";
-import { PinggyOptions } from "./pinggyOptions";
-import { PinggyError } from "./bindings/exception";
+import { Logger } from "../utils/logger";
+import { PinggyOptions } from "../pinggyOptions";
+import { PinggyError } from "../bindings/exception";
 import { v4 as uuidv4 } from 'uuid';
-import { WorkerMessages, workerMessageType } from "./types";
+import { WorkerMessages, workerMessageType } from "../types";
 
 type PendingCall = {
     resolve: (value: any) => void;

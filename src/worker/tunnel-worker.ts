@@ -1,14 +1,14 @@
 import { parentPort, workerData } from "worker_threads";
-import { PinggyNative, WorkerMessages, workerMessageType } from "./types.js";
-import { Config } from "./bindings/config.js";
-import { Tunnel } from "./bindings/tunnel.js";
-import { Logger } from "./utils/logger.js";
+import { PinggyNative, WorkerMessages, workerMessageType } from "../types.js";
+import { Config } from "../bindings/config.js";
+import { Tunnel } from "../bindings/tunnel.js";
+import { Logger } from "../utils/logger.js";
 import {
   getLastException,
   PinggyError,
   initExceptionHandling,
-} from "./bindings/exception.js";
-import { PinggyOptions } from "./pinggyOptions.js";
+} from "../bindings/exception.js";
+import { PinggyOptions } from "../pinggyOptions.js";
 const binary = require("@mapbox/node-pre-gyp");
 const path = require("path");
 
@@ -29,7 +29,7 @@ class TunnelWorker {
    */
   private initialize(rawTunnelOptions: any): void {
     try {
-      const addonPath = binary.find(path.resolve(path.join(__dirname, "../package.json")));
+      const addonPath = binary.find(path.resolve(path.join(__dirname, "../../package.json")));
       this.addon = require(addonPath);
       if (!this.addon) throw new Error("Failed to load native addon.");
 
