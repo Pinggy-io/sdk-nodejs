@@ -14,13 +14,13 @@ jobs:
         with:
           fetch-depth: 0 # Needed to check branch history
 
-      - name: Ensure tag is on master
+      - name: Ensure tag is on main
         run: |
-          git fetch origin master
+          git fetch origin main
           TAG_COMMIT=$(git rev-parse HEAD)
-          MASTER_COMMIT=$(git rev-parse origin/master)
-          if ! git merge-base --is-ancestor $TAG_COMMIT $MASTER_COMMIT; then
-            echo "Tag is not on master. Skipping publish."
+          MAIN_COMMIT=$(git rev-parse origin/main)
+          if ! git merge-base --is-ancestor $TAG_COMMIT $MAIN_COMMIT; then
+            echo "Tag is not on main. Skipping publish."
             exit 1
           fi
 

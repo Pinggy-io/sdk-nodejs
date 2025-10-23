@@ -3,6 +3,10 @@ name: Build Native Binaries for macOS (arm64)
 on:
   release:
     types: [created]
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -28,7 +32,7 @@ jobs:
         run: |
           sudo xcode-select --install || true
           brew update
-          brew install python@3 pkg-config automake autoconf libtool
+          brew install pkg-config automake autoconf libtool
 
       - name: Install npm dependencies
         run: npm ci --ignore-scripts
@@ -45,10 +49,3 @@ jobs:
 
       - name: Package native binary
         run: npm run package
-
-      - name: Upload to GitHub Release
-        env:
-          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Publishing to GitHub Release..."
-          npx node-pre-gyp-github publish --release

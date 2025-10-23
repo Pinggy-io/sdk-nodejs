@@ -1,42 +1,32 @@
-name: Build Native Binaries for macOS
+name: Release Windows Binaries
 
 on:
   release:
     types: [created]
-  push:
-    branches:
-      - main
-  workflow_dispatch:
 
 jobs:
   build:
-    name: Build ${{ matrix.os }} (${{ matrix.arch }}) Node.js ${{ matrix.node-version }}
+    name: Build ${{ matrix.os }} ${{ matrix.arch }} (Node ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13]
-        arch: [x64]
+        os: [windows-latest]
+        arch: [x64] # You can add more like arm64 if needed
         node-version: [18, 19, 20, 21, 22, 23, 24]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install build dependencies (macOS)
-        if: runner.os == 'macOS'
+      - name: Install dependencies and build
         run: |
-          sudo xcode-select --install || true
-          brew update
-          brew install pkg-config automake autoconf libtool
-
-      - name: Install npm dependencies
-        run: npm ci --ignore-scripts
+          npm ci --ignore-scripts
 
       - name: Install node-gyp globally
         run: npm install -g node-gyp
@@ -50,3 +40,10 @@ jobs:
 
       - name: Package native binary
         run: npm run package
+
+      - name: Upload to GitHub Release
+        env:
+          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Publishing to GitHub Release..."
+          npx node-pre-gyp-github publish --release
