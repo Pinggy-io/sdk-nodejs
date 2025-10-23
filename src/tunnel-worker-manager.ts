@@ -3,6 +3,8 @@ import path from "path/win32";
 import { Logger } from "./utils/logger";
 import { PinggyOptions } from "./pinggyOptions";
 import { PinggyError } from "./bindings/exception";
+import { v4 as uuidv4 } from 'uuid';
+import { WorkerMessages, workerMessageType } from "./types";
 
 type PendingCall = {
     resolve: (value: any) => void;
@@ -11,8 +13,7 @@ type PendingCall = {
 
 export class TunnelWorkerManager {
     private worker: Worker;
-    private nextCallId = 0;
-    private pendingCalls = new Map<number, PendingCall>();
+    private pendingCalls = new Map<string, PendingCall>();
     private ready = false;
     private readyPromise: Promise<void>;
     private callbackHandler?: (event: string, data: any) => void;
@@ -22,13 +23,13 @@ export class TunnelWorkerManager {
         this.worker = new Worker(workerPath, { workerData: { options } } as any);
 
         this.readyPromise = new Promise((resolve, reject) => {
-            const onMessage = (msg: any) => {
+            const onMessage = (msg: WorkerMessages) => {
                 if (!msg || typeof msg !== "object") return;
-                if (msg.type === "ready") {
+                if (msg.type === workerMessageType.Ready) {
                     this.ready = true;
                     resolve();
                     this.worker.off("message", onMessage);
-                } else if (msg.type === "initError") {
+                } else if (msg.type === workerMessageType.InitError) {
                     reject(new Error(msg.error));
                     this.worker.off("message", onMessage);
                 }
@@ -49,21 +50,30 @@ export class TunnelWorkerManager {
 
     public async call(target: "config" | "tunnel", method: string, ...args: any[]) {
         await this.ensureReady();
-        const id = this.nextCallId++;
+        const id = uuidv4();
         return new Promise<any>((resolve, reject) => {
             this.pendingCalls.set(id, { resolve, reject });
-            this.worker.postMessage({
-                type: "call",
+            const msg: Extract<WorkerMessages, { type: workerMessageType.Call }> = {
+                type: workerMessageType.Call,
                 id,
+                target,
                 method,
                 args,
-                target,
-            });
+            };
+            this.worker.postMessage(msg);
         });
     }
 
+    public async setDebugLoggingInWorker(enable:boolean){
+        const msg:Extract<WorkerMessages,{type:workerMessageType.enableLogger}>={
+            type:workerMessageType.enableLogger,
+            enabled:enable
+        }
+        this.worker.postMessage(msg);
+    }
+
     public registerCallback(event: string) {
-        this.worker.postMessage({ type: "registerCallback", event });
+        this.worker.postMessage({ type: workerMessageType.RegisterCallback, event });
     }
 
     public async terminate(): Promise<number | void> {
@@ -74,22 +84,24 @@ export class TunnelWorkerManager {
             return undefined;
         }
     }
-
+    /**
+     * Incoming messages from worker thread to main thread
+     */
     private registerWorkerListeners(): void {
-        this.worker.on("message", (msg) => {
+        this.worker.on("message", (msg: WorkerMessages) => {
             if (!msg || typeof msg !== "object") return;
 
             switch (msg.type) {
-                case "ready":
+                case workerMessageType.Ready:
                     this.ready = true;
                     Logger.info("TunnelWorker ready.");
                     break;
 
-                case "initError":
-                    Logger.error("Worker initialization failed:", msg.error);
+                case workerMessageType.InitError:
+                    Logger.error(`Worker initialization failed:", ${msg.error}`);
                     throw new PinggyError(msg.error);
 
-                case "response": {
+                case workerMessageType.Response: {
                     const pending = this.pendingCalls.get(msg.id);
                     if (!pending) return;
                     this.pendingCalls.delete(msg.id);
@@ -98,7 +110,7 @@ export class TunnelWorkerManager {
                     break;
                 }
 
-                case "callback":
+                case workerMessageType.Callback:
                     if (this.callbackHandler) this.callbackHandler(msg.event, msg.data);
                     break;
 
@@ -113,9 +125,6 @@ export class TunnelWorkerManager {
 
         this.worker.on("exit", (code) => {
             Logger.info(`TunnelWorker exited with code ${code}`);
-            if (code !== 0) {
-                Logger.error("TunnelWorker exited unexpectedly");
-            }
         });
     }
 }

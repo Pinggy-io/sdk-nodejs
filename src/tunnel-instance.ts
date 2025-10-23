@@ -117,6 +117,10 @@ export class TunnelInstance {
     return await this.activeTunnel.start();
   }
 
+  public async setDebugLogging(enable:boolean):Promise<void>{
+    this.workerManager.setDebugLoggingInWorker(enable);
+  }
+
   /**
    * Gets the list of public URLs for the tunnel.
    *

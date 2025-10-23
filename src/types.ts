@@ -294,3 +294,22 @@ export enum TunnelStatus {
   LIVE = "live",
   CLOSED = "closed",
 }
+
+export enum workerMessageType {
+  Ready = "ready",
+  InitError = "initError",
+  Call = "call",
+  Response = "response",
+  Callback = "callback",
+  RegisterCallback = "registerCallback",
+  enableLogger = "enableLogger"
+}
+
+export type WorkerMessages =
+  | { type: workerMessageType.Ready }
+  | { type: workerMessageType.InitError; error: string }
+  | { type: workerMessageType.Call; id: string; target: "config" | "tunnel"; method: string; args: any[] }
+  | { type: workerMessageType.Response; id: string; result?: any; error?: string }
+  | { type: workerMessageType.Callback; event: string; data: any }
+  | { type: workerMessageType.RegisterCallback; event: string }
+  | { type: workerMessageType.enableLogger; enabled: boolean };

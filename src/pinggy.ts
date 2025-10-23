@@ -23,6 +23,7 @@ export class Pinggy {
     path.resolve(path.join(__dirname, "../package.json"))
   ));
   private tunnels: Set<TunnelInstance> = new Set();
+
   /**
    * Private constructor for singleton pattern. Use {@link pinggy} to get the instance.
    * @internal
@@ -87,14 +88,14 @@ export class Pinggy {
    * @returns {void}
    * @see {@link pinggy}
    */
-  // public closeAllTunnels(): void {
-  //   for (const tunnel of this.tunnels) {
-  //     if (tunnel.isActive()) {
-  //       tunnel.stop();
-  //     }
-  //   }
-  //   this.tunnels.clear();
-  // }
+  public async closeAllTunnels(): Promise<void> {
+    for (const tunnel of this.tunnels) {
+      if (await tunnel.isActive()) {
+        tunnel.stop();
+      }
+    }
+    this.tunnels.clear();
+  }
 
   /**
    * Enables or disables debug logging for both native and JavaScript code.
@@ -105,10 +106,6 @@ export class Pinggy {
    */
   public setDebugLogging(enabled: boolean = false): void {
     // enable libpinggy logs
-    Pinggy.addon.setLogEnable(enabled);
-
-    // Set debug state for native C code
-    Pinggy.addon.setDebugLogging(enabled);
 
     // Set debug state for JavaScript Logger
     Logger.setDebugEnabled(enabled);
