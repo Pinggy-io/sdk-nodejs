@@ -1,117 +1,169 @@
-import { PinggyNative, TunnelStatus } from "./types";
-import { PinggyOptions } from "./pinggyOptions";
-import { Config } from "./bindings/config";
-import { Tunnel } from "./bindings/tunnel";
-import { Logger } from "./utils/logger";
-import { getLastException, PinggyError, initExceptionHandling } from "./bindings/exception";
-import { TunnelUsageType } from "./bindings/tunnel-usage";
+import { parentPort, workerData } from "worker_threads";
+import { PinggyNative } from "./types.js";
+import { Config } from "./bindings/config.js";
+import { Tunnel } from "./bindings/tunnel.js";
+import { Logger } from "./utils/logger.js";
+import {
+  getLastException,
+  PinggyError,
+  initExceptionHandling,
+} from "./bindings/exception.js";
+import { PinggyOptions } from "./pinggyOptions.js";
+const binary = require("@mapbox/node-pre-gyp");
+const path = require("path");
 
-/**
- * A lightweight worker-style abstraction that encapsulates all tunnel/config operations.
- *
- * This class centralizes initialization and method dispatch so that the outer TunnelInstance
- * can forward calls via a message-like API. This design allows future replacement with a real
- * Worker Thread without changing TunnelInstance public API.
- */
-export class TunnelWorker {
+
+class TunnelWorker {
+  private addon: PinggyNative | null = null;
   private config: Config | null = null;
   private tunnel: Tunnel | null = null;
-  private addon: PinggyNative;
+  private registeredCallbacks: Set<string> = new Set();
 
-  constructor(addon: PinggyNative, configRef: number, options: PinggyOptions) {
-    this.addon = addon;
-    initExceptionHandling(this.addon);
+  constructor(rawTunnelOptions: any) {
+    this.initialize(rawTunnelOptions);
+    this.registerMessageHandlers();
+  }
 
-    // set debug logging to false initially
-    this.addon.setLogEnable(false);
-
+  /**
+   * Initialize native addon, config, and tunnel
+   */
+  private initialize(rawTunnelOptions: any): void {
     try {
-      this.tunnel = new Tunnel(this.addon, configRef, options);
-    } catch (e) {
-      if (e instanceof PinggyError) {
-        Logger.error("Tunnel init error:", e);
-        throw e;
-      }
-      const lastEx = getLastException(this.addon);
-      const pinggyError = lastEx ? new PinggyError(lastEx) : new Error(String(e));
-      Logger.error("Tunnel init error:", pinggyError);
-      throw pinggyError;
+      const addonPath = binary.find(path.resolve(path.join(__dirname, "../package.json")));
+      this.addon = require(addonPath);
+      if (!this.addon) throw new Error("Failed to load native addon.");
+      initExceptionHandling(this.addon);
+      this.addon.setLogEnable(false);
+      const options = new PinggyOptions(rawTunnelOptions);
+      this.config = new Config(this.addon, options);
+      if (!this.config.configRef) throw new Error("Failed to initialize config.");
+
+      this.tunnel = new Tunnel(this.addon, this.config.configRef, options);
+
+      // Attach native callbacks
+      this.attachCallbacks();
+
+      // Inform main thread initialization succeeded
+      parentPort?.postMessage({ type: "ready" });
+    } catch (e: any) {
+      const pinggyError = this.convertToPinggyError(e);
+      Logger.error("TunnelWorker init error:", pinggyError);
+      parentPort?.postMessage({
+        type: "initError",
+        error: pinggyError.message,
+      });
     }
   }
 
-  // Generic dispatcher map to keep maintenance simple when adding methods
-  private methodMap: Record<string, (...args: any[]) => any> = {
-    // Tunnel related
-    start: async () => {
-      if (!this.tunnel) throw new Error("Tunnel not initialized");
-      return await this.tunnel.start();
-    },
-    urls: () => this.tunnel?.getUrls() ?? [],
-    stop: () => {
-      if (!this.tunnel) throw new Error("Tunnel not initialized");
-      this.tunnel.tunnelStop();
-      this.tunnel = null;
-      this.config = null;
-    },
-    getGreetMessage: () => {
-      if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-      return this.tunnel.getTunnelGreetMessage();
-    },
-    startUsageUpdate: () => {
-      if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-      this.tunnel.startTunnelUsageUpdate();
-    },
-    stopUsageUpdate: () => {
-      if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-      this.tunnel.stopTunnelUsageUpdate();
-    },
-    getUsages: () => {
-      if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-      return this.tunnel.getTunnelUsages();
-    },
-    getLatestUsage: (): TunnelUsageType | null => {
-      if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-      return this.tunnel.getLatestUsage();
-    },
-    setUsageUpdateCallback: (callback: (usage: Record<string, any>) => void) => {
-      if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-      this.tunnel.setUsageUpdateCallback(callback);
-    },
-    setTunnelErrorCallback: (callback: (errorNo: number, error: string, recoverable: boolean) => void) => {
-      if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-      this.tunnel.setTunnelErrorCallback(callback);
-    },
-    setTunnelDisconnectedCallback: (callback: (error: string, messages: string[]) => void) => {
-      if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-      this.tunnel.setTunnelDisconnectedCallback(callback);
-    },
-    isActive: (): boolean => {
-      if (!this.tunnel) return false;
-      return this.tunnel.tunnelIsActive();
-    },
-    getStatus: (): TunnelStatus => {
-      return this.tunnel?.status ?? TunnelStatus.CLOSED;
-    },
-    startWebDebugging: (port: number) => {
-      if (!this.tunnel) throw new Error("Tunnel not initialized");
-      this.tunnel.startWebDebugging(port);
-    },
-    tunnelRequestAdditionalForwarding: async (hostname: string, target: string) => {
-      if (!this.tunnel) throw new Error("Tunnel not initialized");
-      await this.tunnel.tunnelRequestAdditionalForwarding(hostname, target);
-    },
-    getWebDebuggerPort: (): number => {
-      return this.tunnel?.getWebDebuggerPort() ?? 0;
-    },
-  };
+  /**
+   * Converts any unknown error into a PinggyError (if possible)
+   */
+  private convertToPinggyError(e: unknown): Error {
+    if (e instanceof PinggyError) return e;
+    const lastEx = this.addon ? getLastException(this.addon) : null;
+    return lastEx ? new PinggyError(lastEx) : new Error(String(e));
+  }
 
   /**
-   * Generic message-style invoker. For maintainability, all TunnelInstance method
-   * calls should be routed via this function with the method name.
+   * Handle messages (method calls) from the main thread
    */
-  public invoke<T = any>(method: string, ...args: any[]): T {
-    const fn = this.methodMap[method];
-    if (!fn) throw new Error(`Unknown method: ${method}`);
-    return fn(...args);
+  private registerMessageHandlers(): void {
+    parentPort?.on("message", async (msg) => {
+      if (!msg || (msg.type !== "call" && msg.type !== "registerCallback")) return;
+      const { id, method, args, target } = msg;
+
+      if (msg.type === "registerCallback") {
+        this.registeredCallbacks.add(msg.event);
+        return;
+      }
+
+      if (!this.tunnel) {
+        this.sendResponse(id, null, "Tunnel not initialized");
+        return;
+      }
+
+      try {
+        const targetMethod = target === "config" ? this.config : this.tunnel;
+        if (!targetMethod) throw new Error(`${msg.target} not initialized`);
+        // example this.tunnel[method](args) this.tunnel[start]()
+
+        const result = await (targetMethod as any)[method](...(args || []));
+
+        this.sendResponse(id, result);
+      } catch (err: any) {
+        Logger.error("TunnelWorker method call error:", err);
+        this.sendResponse(id, null, err?.message || String(err));
+      }
+    });
+
+    parentPort?.on("close", () => this.cleanup());
   }
+
+  /**
+   * Relay native callbacks back to the main thread
+   */
+  private attachCallbacks(): void {
+    if (!this.tunnel) return;
+
+    this.tunnel.setUsageUpdateCallback((usage) => {
+      if (this.registeredCallbacks.has("usageUpdate")) {
+        parentPort?.postMessage({
+          type: "callback",
+          event: "usageUpdate",
+          data: usage,
+        });
+      }
+    });
+
+    this.tunnel.setTunnelErrorCallback((errorNo, error, recoverable) => {
+      if (this.registeredCallbacks.has("tunnelError")) {
+        parentPort?.postMessage({
+          type: "callback",
+          event: "tunnelError",
+          data: { errorNo, error, recoverable },
+        });
+      }
+    });
+
+    this.tunnel.setTunnelDisconnectedCallback((error, messages) => {
+      if (this.registeredCallbacks.has("tunnelDisconnected")) {
+        parentPort?.postMessage({
+          type: "callback",
+          event: "tunnelDisconnected",
+          data: { error, messages },
+        });
+      }
+    });
+  }
+
+  /**
+   * Send a response back to the main thread
+   */
+  private sendResponse(id: number, result: any, error?: string): void {
+    parentPort?.postMessage({
+      type: "response",
+      id,
+      result,
+      error,
+    });
+  }
+
+  /**
+   * Gracefully clean up resources when the worker shuts down
+   */
+  private cleanup(): void {
+    try {
+      this.tunnel?.tunnelStop();
+    } catch (e) {
+      Logger.error(`TunnelWorker cleanup error: ${e}`);
+    }
+    this.tunnel = null;
+    this.config = null;
+    this.addon = null;
+  }
+
 }
+
+// ======== Worker Entrypoint ======== //
+const { options } = workerData;
+new TunnelWorker(options);

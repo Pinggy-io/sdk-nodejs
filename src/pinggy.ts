@@ -51,7 +51,7 @@ export class Pinggy {
    */
   public createTunnel(options: PinggyOptionsType): TunnelInstance {
     const pinggyOptions = new PinggyOptions(options);
-    const tunnel = new TunnelInstance(Pinggy.addon, pinggyOptions);
+    const tunnel = new TunnelInstance(pinggyOptions);
     this.tunnels.add(tunnel);
     return tunnel;
   }
@@ -87,14 +87,14 @@ export class Pinggy {
    * @returns {void}
    * @see {@link pinggy}
    */
-  public closeAllTunnels(): void {
-    for (const tunnel of this.tunnels) {
-      if (tunnel.isActive()) {
-        tunnel.stop();
-      }
-    }
-    this.tunnels.clear();
-  }
+  // public closeAllTunnels(): void {
+  //   for (const tunnel of this.tunnels) {
+  //     if (tunnel.isActive()) {
+  //       tunnel.stop();
+  //     }
+  //   }
+  //   this.tunnels.clear();
+  // }
 
   /**
    * Enables or disables debug logging for both native and JavaScript code.
