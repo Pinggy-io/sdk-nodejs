@@ -2,14 +2,23 @@ import { Worker } from "worker_threads";
 import path from "path/win32";
 import { Logger } from "../utils/logger";
 import { PinggyOptions } from "../pinggyOptions";
-import { PinggyError } from "../bindings/exception";
 import { v4 as uuidv4 } from 'uuid';
-import { WorkerMessage, workerMessageType } from "../types";
+import { PendingCall, WorkerMessage, workerMessageType } from "../types";
 
-type PendingCall = {
-    resolve: (value: any) => void;
-    reject: (reason?: any) => void;
-};
+/**
+ * Manages the dedicated worker thread responsible for running a single Pinggy tunnel instance.
+ *
+ * Each {@link TunnelInstance} internally owns one {@link TunnelWorkerManager},
+ * which isolates the native addon and tunnel execution inside a separate worker thread.
+ *
+ * This class provides an RPC-style interface for:
+ * - Sending method calls (`call`) to the worker for both {@link Config} and {@link Tunnel} operations.
+ * - Receiving async responses and callback events from the worker.
+ * - Managing worker lifecycle, readiness state, and graceful termination.
+ * - Propagating runtime configurations like debug logging to the worker.
+ *
+ * @internal
+ */
 
 export class TunnelWorkerManager {
     private worker: Worker;

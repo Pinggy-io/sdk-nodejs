@@ -16,29 +16,29 @@ import { pinggy, PinggyOptions, TunnelType } from "@pinggy/pinggy";
     };
 
     // Create tunnel instances
-    const tunnel1 = pinggy.createTunnel(options1);
-    const tunnel2 = pinggy.createTunnel(options2);
+    const tunnel1 = await pinggy.createTunnel(options1);
+    const tunnel2 = await pinggy.createTunnel(options2);
 
     // Start both tunnels
     await tunnel1.start();
     await tunnel2.start();
 
     // Display tunnel information
-    console.log("Tunnel 1 URLs:", tunnel1.urls());
-    console.log("Tunnel 1 Status:", tunnel1.getStatus());
+    console.log("Tunnel 1 URLs:", await tunnel1.urls());
+    console.log("Tunnel 1 Status:", await tunnel1.getStatus());
 
-    console.log("Tunnel 2 URLs:", tunnel2.urls());
-    console.log("Tunnel 2 Status:", tunnel2.getStatus());
+    console.log("Tunnel 2 URLs:", await tunnel2.urls());
+    console.log("Tunnel 2 Status:", await tunnel2.getStatus());
 
     // Check all active tunnels
     const allTunnels = pinggy.getAllTunnels();
     console.log("Total active tunnels:", allTunnels.length);
 
     // Stop tunnels after 10 seconds
-    setTimeout(() => {
+    setTimeout(async () => {
       console.log("Stopping all tunnels...");
-      tunnel1.stop();
-      tunnel2.stop();
+      await tunnel1.stop();
+      await tunnel2.stop();
       console.log("All tunnels stopped.");
 
       console.log("Remaining active tunnels:", pinggy.getAllTunnels().length);

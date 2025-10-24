@@ -19,6 +19,7 @@ const path = require("path");
  */
 export class Pinggy {
   private static _instance: Pinggy;
+  private static debugEnabled = false;
   private static addon: PinggyNative = require(binary.find(
     path.resolve(path.join(__dirname, "../package.json"))
   ));
@@ -54,6 +55,10 @@ export class Pinggy {
     const pinggyOptions = new PinggyOptions(options);
     const tunnel = new TunnelInstance(pinggyOptions);
     this.tunnels.add(tunnel);
+    // If debug was previously enabled, enable it inside this tunnel’s worker
+    if (Pinggy.debugEnabled) {
+      tunnel.setDebugLogging(true);
+    }
     return tunnel;
   }
 
@@ -65,9 +70,9 @@ export class Pinggy {
    * @see {@link TunnelInstance#start}
    * @see {@link pinggy}
    */
-  public forward(options: PinggyOptionsType): Promise<TunnelInstance> {
+  public async forward(options: PinggyOptionsType): Promise<TunnelInstance> {
     const tunnel = this.createTunnel(options);
-    return tunnel.start().then(() => tunnel);
+    return await tunnel.start().then(() => tunnel);
   }
 
   /**
@@ -105,10 +110,14 @@ export class Pinggy {
    * @see {@link pinggy}
    */
   public setDebugLogging(enabled: boolean = false): void {
-    // enable libpinggy logs
+    // enable libpinggy logs for all active tunnels
+    Pinggy.debugEnabled = enabled;
 
     // Set debug state for JavaScript Logger
     Logger.setDebugEnabled(enabled);
+    for (const tunnel of this.tunnels) {
+      tunnel.setDebugLogging(enabled);
+    }
   }
 
   /**

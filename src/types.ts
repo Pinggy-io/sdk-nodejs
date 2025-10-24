@@ -311,3 +311,8 @@ export type WorkerMessage =
   | { type: workerMessageType.Callback; event: string; data: any }
   | { type: workerMessageType.RegisterCallback; event: string }
   | { type: workerMessageType.enableLogger; enabled: boolean };
+
+export type PendingCall = {
+  resolve: (value: any) => void;
+  reject: (reason?: any) => void;
+};

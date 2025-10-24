@@ -1,4 +1,4 @@
-import { HeaderModification, PinggyOptions, PinggyOptionsType } from "./pinggyOptions"
+import { HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "./pinggyOptions"
 import { TunnelWorkerManager } from "./worker/tunnel-worker-manager";
 import { Logger } from "./utils/logger"
 import { Tunnel } from "./bindings/tunnel";
@@ -119,7 +119,7 @@ export class TunnelInstance {
     return await this.activeTunnel.start();
   }
 
-  public async setDebugLogging(enable:boolean):Promise<void>{
+  public async setDebugLogging(enable: boolean): Promise<void> {
     this.workerManager.setDebugLoggingInWorker(enable);
   }
 
@@ -268,7 +268,7 @@ export class TunnelInstance {
    * @returns {"starting" | "live" | "closed"} The tunnel status.
    */
   public async getStatus(): Promise<TunnelStatus> {
-    return await this.tunnel?.status ?? TunnelStatus.CLOSED;
+    return await this.activeTunnel?.getStatus();
   }
 
   /**
@@ -624,7 +624,7 @@ export class TunnelInstance {
         options.forwarding = udpForwardTo || "";
       }
     } else {
-      options.tunnelType = ["http"] as any;
+      options.tunnelType = [TunnelType.Http];
       options.forwarding = "";
     }
 

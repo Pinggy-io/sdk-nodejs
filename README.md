@@ -115,28 +115,28 @@ npx degit github:Pinggy-io/sdk-nodejs/examples/express express && cd express && 
 
 - **Get all public URLs for a tunnel:**
   ```ts
-  const urls = tunnel.urls(); // array of public addresses
+  const urls = await tunnel.urls(); // array of public addresses
   console.log("Tunnel URLs:", urls);
   ```
 - **Check tunnel status:**
   ```ts
-  tunnel.getStatus(); // "starting" | "live" | "closed"
+  await tunnel.getStatus(); // "starting" | "live" | "closed"
   ```
 - **Check tunnel stats:**
    ```ts
-   tunnel.getLatestUsage(); // {"elapsedTime":7,"numLiveConnections":6,"numTotalConnections":6,"numTotalReqBytes":16075,"numTotalResBytes":815760,"numTotalTxBytes":831835}
+   await tunnel.getLatestUsage(); // {"elapsedTime":7,"numLiveConnections":6,"numTotalConnections":6,"numTotalReqBytes":16075,"numTotalResBytes":815760,"numTotalTxBytes":831835}
    ```
 - **Check if tunnel is active:**
   ```ts
-  tunnel.isActive(); // true or false
+  await tunnel.isActive(); // true or false
   ```
 - **Stop a tunnel:**
   ```ts
-  tunnel.stop();
+  await tunnel.stop();
   ```
 - **Close all tunnels:**
   ```ts
-  pinggy.closeAllTunnels();
+  await pinggy.closeAllTunnels();
   ```
 
 ---
@@ -149,7 +149,7 @@ npx degit github:Pinggy-io/sdk-nodejs/examples/express express && cd express && 
   ```
 - **Request additional forwarding:**
   ```ts
-  tunnel.tunnelRequestAdditionalForwarding(
+  await tunnel.tunnelRequestAdditionalForwarding(
     "custom.pinggy.io:443",
     "localhost:6000"
   );

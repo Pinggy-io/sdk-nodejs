@@ -11,8 +11,8 @@ const { pinggy } = require("@pinggy/pinggy");
   const tunnel = await pinggy.forward(options);
 
   console.log("Tunnel URLs:", await tunnel.urls());
-  // console.log("Status:", tunnel.getStatus());
-  // console.log("Greet Message:", tunnel.getGreetMessage());
+  console.log("Status:", await tunnel.getStatus());
+  console.log("Greet Message:", await tunnel.getGreetMessage());
 
   // Start web debugging interface
   tunnel.startWebDebugging(8080);

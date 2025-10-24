@@ -409,7 +409,7 @@ export class Tunnel implements ITunnel {
     localAddress: string
   ): Promise<void> {
     // Wait for primary forwarding to complete
-    await this.forwardingPromise; 
+    await this.forwardingPromise;
 
     // Enqueue a pending promise for this remote/local pair 
     const { promise } = this.additionalForwardingPending.enqueue(remoteAddress, localAddress);
@@ -532,5 +532,9 @@ export class Tunnel implements ITunnel {
 
   public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
     this.onTunnelDisconnectedCallback = callback;
+  }
+
+  public getStatus(): TunnelStatus {
+    return this.status;
   }
 }
