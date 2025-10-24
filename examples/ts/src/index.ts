@@ -5,8 +5,8 @@ import { pinggy } from "@pinggy/pinggy";
   try {
     const tunnel = await pinggy.forward({ forwarding: "localhost:3000" });
     console.log("Tunnel created successfully!");
-    console.log("URLs:", tunnel.urls());
-    console.log("Greet Message:", tunnel.getGreetMessage());
+    console.log("URLs:", await tunnel.urls());
+    console.log("Greet Message:", await tunnel.getGreetMessage());
 
     // Clean up immediately
     setTimeout(() => {

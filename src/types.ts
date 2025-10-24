@@ -149,7 +149,6 @@ export interface PinggyNative {
       tunnelRef: number,
       bindAddr: string,
       forwardToAddr: string,
-      protocol: string
     ) => void
   ): void;
   /** Set the callback for additional forwarding failure. */
@@ -157,7 +156,8 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (
       tunnelRef: number,
-      remoteAddress: string,
+      bindAddress: string,
+      forwardToAddr: string,
       errorMessage: string
     ) => void
   ): void;
@@ -294,3 +294,25 @@ export enum TunnelStatus {
   LIVE = "live",
   CLOSED = "closed",
 }
+
+export enum workerMessageType {
+  Init = "init",
+  Call = "call",
+  Response = "response",
+  Callback = "callback",
+  RegisterCallback = "registerCallback",
+  enableLogger = "enableLogger"
+}
+
+export type WorkerMessage =
+  | { type: workerMessageType.Init; success: boolean; error: string | null }
+  | { type: workerMessageType.Call; id: string; target: "config" | "tunnel"; method: string; args: any[] }
+  | { type: workerMessageType.Response; id: string; result?: any; error?: string }
+  | { type: workerMessageType.Callback; event: string; data: any }
+  | { type: workerMessageType.RegisterCallback; event: string }
+  | { type: workerMessageType.enableLogger; enabled: boolean };
+
+export type PendingCall = {
+  resolve: (value: any) => void;
+  reject: (reason?: any) => void;
+};

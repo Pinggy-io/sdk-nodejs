@@ -19,10 +19,12 @@ const path = require("path");
  */
 export class Pinggy {
   private static _instance: Pinggy;
+  private static debugEnabled = false;
   private static addon: PinggyNative = require(binary.find(
     path.resolve(path.join(__dirname, "../package.json"))
   ));
   private tunnels: Set<TunnelInstance> = new Set();
+
   /**
    * Private constructor for singleton pattern. Use {@link pinggy} to get the instance.
    * @internal
@@ -51,8 +53,12 @@ export class Pinggy {
    */
   public createTunnel(options: PinggyOptionsType): TunnelInstance {
     const pinggyOptions = new PinggyOptions(options);
-    const tunnel = new TunnelInstance(Pinggy.addon, pinggyOptions);
+    const tunnel = new TunnelInstance(pinggyOptions);
     this.tunnels.add(tunnel);
+    // If debug was previously enabled, enable it inside this tunnel’s worker
+    if (Pinggy.debugEnabled) {
+      tunnel.setDebugLogging(true);
+    }
     return tunnel;
   }
 
@@ -64,9 +70,9 @@ export class Pinggy {
    * @see {@link TunnelInstance#start}
    * @see {@link pinggy}
    */
-  public forward(options: PinggyOptionsType): Promise<TunnelInstance> {
+  public async forward(options: PinggyOptionsType): Promise<TunnelInstance> {
     const tunnel = this.createTunnel(options);
-    return tunnel.start().then(() => tunnel);
+    return await tunnel.start().then(() => tunnel);
   }
 
   /**
@@ -87,9 +93,9 @@ export class Pinggy {
    * @returns {void}
    * @see {@link pinggy}
    */
-  public closeAllTunnels(): void {
+  public async closeAllTunnels(): Promise<void> {
     for (const tunnel of this.tunnels) {
-      if (tunnel.isActive()) {
+      if (await tunnel.isActive()) {
         tunnel.stop();
       }
     }
@@ -104,14 +110,14 @@ export class Pinggy {
    * @see {@link pinggy}
    */
   public setDebugLogging(enabled: boolean = false): void {
-    // enable libpinggy logs
-    Pinggy.addon.setLogEnable(enabled);
-
-    // Set debug state for native C code
-    Pinggy.addon.setDebugLogging(enabled);
+    // enable libpinggy logs for all active tunnels
+    Pinggy.debugEnabled = enabled;
 
     // Set debug state for JavaScript Logger
     Logger.setDebugEnabled(enabled);
+    for (const tunnel of this.tunnels) {
+      tunnel.setDebugLogging(enabled);
+    }
   }
 
   /**
