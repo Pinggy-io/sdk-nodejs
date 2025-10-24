@@ -4,7 +4,7 @@ import { Logger } from "../utils/logger";
 import { PinggyOptions } from "../pinggyOptions";
 import { PinggyError } from "../bindings/exception";
 import { v4 as uuidv4 } from 'uuid';
-import { WorkerMessages, workerMessageType } from "../types";
+import { WorkerMessage, workerMessageType } from "../types";
 
 type PendingCall = {
     resolve: (value: any) => void;
@@ -18,21 +18,28 @@ export class TunnelWorkerManager {
     private readyPromise: Promise<void>;
     private callbackHandler?: (event: string, data: any) => void;
 
-    constructor(options: PinggyOptions) {
+    constructor(pinggyOptions: PinggyOptions) {
         const workerPath = path.resolve(__dirname, "tunnel-worker.js").replace(/\\/g, "/");
-        this.worker = new Worker(workerPath, { workerData: { options } } as any);
+        this.worker = new Worker(workerPath, { workerData: { options: pinggyOptions } });
 
+        // First message from worker can either be Ready or InitError
         this.readyPromise = new Promise((resolve, reject) => {
-            const onMessage = (msg: WorkerMessages) => {
-                if (!msg || typeof msg !== "object") return;
-                if (msg.type === workerMessageType.Ready) {
-                    this.ready = true;
-                    resolve();
-                    this.worker.off("message", onMessage);
-                } else if (msg.type === workerMessageType.InitError) {
-                    reject(new Error(msg.error));
-                    this.worker.off("message", onMessage);
+            const onMessage = (msg: WorkerMessage) => {
+                if (msg?.type === workerMessageType.Init) {
+                    if (msg?.success) {
+                        Logger.info("TunnelWorker ready.");
+                        this.ready = true;
+                        resolve();
+                    } else {
+                        Logger.error(`Worker initialization failed:", ${msg?.error}`);
+                        reject(new Error(msg?.error || undefined))
+                    }
                 }
+                else {
+                    Logger.error(`Unexpected message from worker expected Init. Received:", ${msg}`);
+                    reject(new Error("Unexpected message"));
+                }
+                this.worker.off("message", onMessage);
             };
             this.worker.on("message", onMessage);
         });
@@ -53,7 +60,7 @@ export class TunnelWorkerManager {
         const id = uuidv4();
         return new Promise<any>((resolve, reject) => {
             this.pendingCalls.set(id, { resolve, reject });
-            const msg: Extract<WorkerMessages, { type: workerMessageType.Call }> = {
+            const msg: Extract<WorkerMessage, { type: workerMessageType.Call }> = {
                 type: workerMessageType.Call,
                 id,
                 target,
@@ -64,10 +71,10 @@ export class TunnelWorkerManager {
         });
     }
 
-    public async setDebugLoggingInWorker(enable:boolean){
-        const msg:Extract<WorkerMessages,{type:workerMessageType.enableLogger}>={
-            type:workerMessageType.enableLogger,
-            enabled:enable
+    public async setDebugLoggingInWorker(enable: boolean) {
+        const msg: Extract<WorkerMessage, { type: workerMessageType.enableLogger }> = {
+            type: workerMessageType.enableLogger,
+            enabled: enable
         }
         this.worker.postMessage(msg);
     }
@@ -88,22 +95,11 @@ export class TunnelWorkerManager {
      * Incoming messages from worker thread to main thread
      */
     private registerWorkerListeners(): void {
-        this.worker.on("message", (msg: WorkerMessages) => {
-            if (!msg || typeof msg !== "object") return;
-
-            switch (msg.type) {
-                case workerMessageType.Ready:
-                    this.ready = true;
-                    Logger.info("TunnelWorker ready.");
-                    break;
-
-                case workerMessageType.InitError:
-                    Logger.error(`Worker initialization failed:", ${msg.error}`);
-                    throw new PinggyError(msg.error);
-
+        this.worker.on("message", (msg: WorkerMessage) => {
+            switch (msg?.type) {
                 case workerMessageType.Response: {
                     const pending = this.pendingCalls.get(msg.id);
-                    if (!pending) return;
+                    if (!pending) { return };
                     this.pendingCalls.delete(msg.id);
                     if (msg.error) pending.reject(new Error(msg.error));
                     else pending.resolve(msg.result);

@@ -1,5 +1,5 @@
 import { parentPort, workerData } from "worker_threads";
-import { PinggyNative, WorkerMessages, workerMessageType } from "../types.js";
+import { PinggyNative, WorkerMessage, workerMessageType } from "../types.js";
 import { Config } from "../bindings/config.js";
 import { Tunnel } from "../bindings/tunnel.js";
 import { Logger } from "../utils/logger.js";
@@ -27,7 +27,7 @@ class TunnelWorker {
   /**
    * Initialize native addon, config, and tunnel
    */
-  private initialize(rawTunnelOptions: any): void {
+  private initialize(pinggyOptions: any): void {
     try {
       const addonPath = binary.find(path.resolve(path.join(__dirname, "../../package.json")));
       this.addon = require(addonPath);
@@ -36,7 +36,7 @@ class TunnelWorker {
       initExceptionHandling(this.addon);
       this.addon.setLogEnable(false);
 
-      const options = new PinggyOptions(rawTunnelOptions);
+      const options = new PinggyOptions(pinggyOptions);
       this.config = new Config(this.addon, options);
 
       if (!this.config.configRef) throw new Error("Failed to initialize config.");
@@ -49,13 +49,14 @@ class TunnelWorker {
       this.attachCallbacks();
 
       // Inform main thread initialization succeeded
-      this.postMessage({ type: workerMessageType.Ready });
+      this.postMessage({ type: workerMessageType.Init, success: true, error: null });
     } catch (e: any) {
 
       const pinggyError = this.convertToPinggyError(e);
       Logger.error("TunnelWorker init error:", pinggyError);
       this.postMessage({
-        type: workerMessageType.InitError,
+        type: workerMessageType.Init,
+        success: false,
         error: pinggyError.message,
       });
     }
@@ -74,7 +75,7 @@ class TunnelWorker {
    * Handle messages (method calls) from the main thread
    */
   private registerMessageHandlers(): void {
-    parentPort?.on("message", async (msg: WorkerMessages) => {
+    parentPort?.on("message", async (msg: WorkerMessage) => {
       if (!msg || typeof msg !== "object") {
         Logger.info(`Ignoring malformed message: ${JSON.stringify(msg)}`);
         return;
@@ -106,7 +107,7 @@ class TunnelWorker {
    * 
    */
 
-  private async handleMainThreadCall(msg: Extract<WorkerMessages, { type: workerMessageType.Call }>) {
+  private async handleMainThreadCall(msg: Extract<WorkerMessage, { type: workerMessageType.Call }>) {
     const { id, target, method, args } = msg;
 
     if (!this.tunnel || !this.config) {
@@ -189,7 +190,7 @@ class TunnelWorker {
   /**
    * Post a message safely to the main thread.
    */
-  private postMessage(msg: WorkerMessages): void {
+  private postMessage(msg: WorkerMessage): void {
     if (!parentPort) {
       Logger.error("Cannot post message: parentPort is null");
       return;

@@ -296,8 +296,7 @@ export enum TunnelStatus {
 }
 
 export enum workerMessageType {
-  Ready = "ready",
-  InitError = "initError",
+  Init = "init",
   Call = "call",
   Response = "response",
   Callback = "callback",
@@ -305,9 +304,8 @@ export enum workerMessageType {
   enableLogger = "enableLogger"
 }
 
-export type WorkerMessages =
-  | { type: workerMessageType.Ready }
-  | { type: workerMessageType.InitError; error: string }
+export type WorkerMessage =
+  | { type: workerMessageType.Init; success: boolean; error: string | null }
   | { type: workerMessageType.Call; id: string; target: "config" | "tunnel"; method: string; args: any[] }
   | { type: workerMessageType.Response; id: string; result?: any; error?: string }
   | { type: workerMessageType.Callback; event: string; data: any }

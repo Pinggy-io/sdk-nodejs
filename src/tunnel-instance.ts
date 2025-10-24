@@ -37,6 +37,8 @@ export class TunnelInstance {
     this.workerManager = new TunnelWorkerManager(options);
     this.workerManager.setCallbackHandler((event, data) => this.handleWorkerCallback(event, data));
 
+    // Create proxy for this.tunnel and this.config such that their methods will be executed within this.workerManager.call function.
+    // This allows us to call the tunnel and config methods without writing message passing code every time
     const tunnelMethods = Object.getOwnPropertyNames(Tunnel.prototype)
       .filter((prop) => typeof (Tunnel.prototype as any)[prop] === "function" && prop !== "constructor");
 
