@@ -1,4 +1,4 @@
-name: Build Native Binaries for macOS (arm64)
+name: Build Binaries for macOS (arm64)
 
 on:
   push:

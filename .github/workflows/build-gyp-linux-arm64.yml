@@ -1,8 +1,6 @@
-name: Build Native Binaries for linux arm64
+name: Build Binaries for linux arm64
 
 on:
-  release:
-    types: [created]
   push:
     branches:
       - main

@@ -1,4 +1,4 @@
-name: Release Native Binaries
+name: Release Binaries for linux
 
 on:
   release:

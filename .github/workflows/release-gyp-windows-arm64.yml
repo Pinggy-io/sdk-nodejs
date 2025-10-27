@@ -1,4 +1,4 @@
-name: Release Windows arm64 Binaries
+name: Release Binaries for Windows arm64
 
 on:
   release:

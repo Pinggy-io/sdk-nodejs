@@ -1,4 +1,4 @@
-name: Build Windows Binaries
+name: Build Binaries for Windows
 
 on:
   push:

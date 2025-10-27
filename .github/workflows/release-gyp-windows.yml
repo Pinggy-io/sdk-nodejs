@@ -1,4 +1,4 @@
-name: Release Windows Binaries
+name: Release Binaries for Windows
 
 on:
   release:

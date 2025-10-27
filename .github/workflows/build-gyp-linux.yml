@@ -1,4 +1,4 @@
-name: Build Native Binaries
+name: Build Binaries for linux
 
 on:
   push:

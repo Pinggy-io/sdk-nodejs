@@ -1,4 +1,4 @@
-name: Build Windows arm64 Binaries
+name: Build Binaries for Windows arm64
 
 on:
   push:
