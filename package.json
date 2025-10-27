@@ -1,12 +1,13 @@
 {
   "name": "@pinggy/pinggy",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Pinggy SDK for Nodejs",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
+    "build:tsc": "tsc --build tsconfig.json",
     "build": "tsup",
     "build-native": "node-gyp clean configure build && node ./copy.js",
     "package": "node-pre-gyp package",
@@ -40,8 +41,9 @@
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^2.0.0",
+    "node-gyp": "^11.4.1",
     "shlex": "^2.1.2",
-    "node-gyp": "^11.4.1"
+    "uuid": "^13.0.0"
   },
   "publishConfig": {
     "access": "public"

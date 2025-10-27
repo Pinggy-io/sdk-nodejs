@@ -1,14 +1,11 @@
-import { PinggyNative, TunnelStatus } from "./types";
-import { HeaderModification, PinggyOptionsType, PinggyOptions } from "./pinggyOptions"
-import { Config } from "./bindings/config";
+import { HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "./pinggyOptions"
+import { TunnelWorkerManager } from "./worker/tunnel-worker-manager";
+import { Logger } from "./utils/logger"
 import { Tunnel } from "./bindings/tunnel";
-import { Logger } from "./utils/logger";
-import {
-  getLastException,
-  PinggyError,
-  initExceptionHandling,
-} from "./bindings/exception";
+import { Config } from "./bindings/config";
 import { TunnelUsageType } from "./bindings/tunnel-usage";
+import { TunnelStatus } from "./types";
+
 
 /**
  * Represents a high-level tunnel instance, managing both configuration and tunnel lifecycle.
@@ -20,9 +17,11 @@ import { TunnelUsageType } from "./bindings/tunnel-usage";
  * @public
  */
 export class TunnelInstance {
-  private config: Config | null = null;
-  private tunnel: Tunnel | null = null;
-  private addon: PinggyNative;
+  // All tunnel/config operations are delegated to a worker manager
+  private workerManager: TunnelWorkerManager
+  public tunnel: Tunnel | null = null; // dynamic proxy
+  public config: Config | null = null; // dynamic proxy
+  private callbacks = new Map<string, Function>();
 
   /**
    * Creates a new TunnelInstance with the provided native addon and options.
@@ -32,34 +31,80 @@ export class TunnelInstance {
    * @param addon - The native addon instance.
    * @param options - The tunnel configuration options.
    */
-  constructor(addon: PinggyNative, options: PinggyOptions) {
-    this.addon = addon;
-    initExceptionHandling(this.addon);
 
-    // set debug logging to false initially
-    this.addon.setLogEnable(false);
+  constructor(options: PinggyOptions) {
+    // initialize worker manager
+    this.workerManager = new TunnelWorkerManager(options);
+    this.workerManager.setCallbackHandler((event, data) => this.handleWorkerCallback(event, data));
 
-    try {
-      this.config = new Config(this.addon, options);
-      if (!this.config.configRef)
-        throw new Error("Failed to initialize config.");
-      this.tunnel = new Tunnel(this.addon, this.config.configRef, options);
-    } catch (e) {
-      // If the error is already a proper Error object (like validation errors),
-      // preserve it instead of trying to convert it to PinggyError
-      if (e instanceof PinggyError) {
-        Logger.error("Tunnel init error:", e);
-        throw e;
+    // Create proxy for this.tunnel and this.config such that their methods will be executed within this.workerManager.call function.
+    // This allows us to call the tunnel and config methods without writing message passing code every time
+    const tunnelMethods = Object.getOwnPropertyNames(Tunnel.prototype)
+      .filter((prop) => typeof (Tunnel.prototype as any)[prop] === "function" && prop !== "constructor");
+
+    const configMethods = Object.getOwnPropertyNames(Config.prototype).filter((prop) => typeof (Config.prototype as any)[prop] === "function" && prop !== "constructor");
+
+    this.tunnel = new Proxy<Tunnel>(
+      {} as Tunnel,
+      {
+        get: (_, method: string) => {
+          if (!tunnelMethods.includes(method)) {
+            throw new Error(`Tunnel method "${method}" does not exist`);
+          }
+          return async (...args: any[]) => {
+            await this.ensureWorkerReady();
+            return this.workerManager.call("tunnel", method, ...args);
+          };
+        },
       }
+    );
 
-      // For other types of errors, check if there's a native exception
-      const lastEx = getLastException(this.addon);
-      const pinggyError = lastEx
-        ? new PinggyError(lastEx)
-        : new Error(String(e));
-      Logger.error("Tunnel init error:", pinggyError);
-      throw pinggyError;
+    this.config = new Proxy<Config>(
+      {} as Config,
+      {
+        get: (_, method: string) => {
+          if (!configMethods.includes(method)) {
+            throw new Error(`Config method "${method}" does not exist`);
+          }
+          return async (...args: any[]) => {
+            await this.ensureWorkerReady();
+            return this.workerManager.call("config", method, ...args);
+          };
+        },
+      }
+    );
+
+    if (!this.tunnel || !this.config) {
+      throw new Error("Failed to create TunnelInstance proxies.");
     }
+  }
+
+  private async ensureWorkerReady() {
+    await this.workerManager.ensureReady();
+  }
+
+  // ---------------- Callback Handling ---------------- //
+
+  private handleWorkerCallback(event: string, data: any): void {
+    const cb = this.callbacks.get(event);
+    if (cb) {
+      cb(...(Array.isArray(data) ? data : [data]));
+    }
+    Logger.info(`Handled worker callback: ${event}`);
+  }
+
+  private get activeTunnel(): Tunnel {
+    if (!this.tunnel) {
+      throw new Error("Tunnel not initialized or has been stopped");
+    }
+    return this.tunnel
+  }
+
+  private get activeConfig(): Config {
+    if (!this.config) {
+      throw new Error("Config not initialized or has been stopped.");
+    }
+    return this.config;
   }
 
   /**
@@ -71,8 +116,11 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized or fails to start.
    */
   public async start(): Promise<string[]> {
-    if (!this.tunnel) throw new Error("Tunnel not initialized");
-    return await this.tunnel.start();
+    return await this.activeTunnel.start();
+  }
+
+  public async setDebugLogging(enable: boolean): Promise<void> {
+    this.workerManager.setDebugLoggingInWorker(enable);
   }
 
   /**
@@ -82,8 +130,8 @@ export class TunnelInstance {
    *
    * @returns {string[]} The list of public tunnel URLs.
    */
-  public urls(): string[] {
-    return this.tunnel?.getUrls() ?? [];
+  public async urls(): Promise<string[]> {
+    return await this.activeTunnel.getUrls();
   }
 
   /**
@@ -94,11 +142,11 @@ export class TunnelInstance {
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
-  public stop(): void {
-    if (!this.tunnel) throw new Error("Tunnel not initialized");
-    this.tunnel.tunnelStop();
+  public async stop(): Promise<void> {
+    await this.activeTunnel.tunnelStop();
     this.tunnel = null;
     this.config = null;
+    await this.workerManager.terminate();
   }
 
   /**
@@ -109,9 +157,8 @@ export class TunnelInstance {
  * @returns {string[]} The greeting message.
  * @throws {Error} If the tunnel is not initialized.
  */
-  public getGreetMessage(): string[] {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    return this.tunnel.getTunnelGreetMessage();
+  public async getGreetMessage(): Promise<string[]> {
+    return await this.activeTunnel.getTunnelGreetMessage();
   }
 
   /**
@@ -121,8 +168,7 @@ export class TunnelInstance {
    * @returns void
    */
   public startUsageUpdate(): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.startTunnelUsageUpdate();
+    this.activeTunnel.startTunnelUsageUpdate();
   }
 
   /**
@@ -132,9 +178,8 @@ export class TunnelInstance {
    * @returns void
    */
 
-  public stopUsageUpdate(): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.stopTunnelUsageUpdate();
+  public async stopUsageUpdate(): Promise<void> {
+    await this.activeTunnel.stopTunnelUsageUpdate();
   }
 
   /**
@@ -146,9 +191,8 @@ export class TunnelInstance {
    * @returns The tunnel usages as a string, or null if no usages are available.
    * @throws {Error} If the tunnel or its tunnelRef is not initialized.
    */
-  public getUsages(): string | null {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    return this.tunnel.getTunnelUsages();
+  public async getUsages(): Promise<string | null> {
+    return await this.activeTunnel.getTunnelUsages();
   }
 
   /**
@@ -159,9 +203,8 @@ export class TunnelInstance {
    * @returns {Record<string, any> | null} The latest usage statistics, or null if unavailable.
    * @throws {Error} If the tunnel is not initialized.
    */
-  public getLatestUsage(): TunnelUsageType | null {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    return this.tunnel.getLatestUsage();
+  public async getLatestUsage(): Promise<TunnelUsageType | null> {
+    return await this.activeTunnel.getLatestUsage();
   }
 
   /**
@@ -174,8 +217,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setUsageUpdateCallback(callback: (usage: Record<string, any>) => void): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.setUsageUpdateCallback(callback);
+    this.callbacks.set("usageUpdate", callback);
+    this.workerManager.registerCallback("usageUpdate");
   }
 
   /**
@@ -188,8 +231,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setTunnelErrorCallback(callback: (errorNo: number, error: string, recoverable: boolean) => void): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.setTunnelErrorCallback(callback);
+    this.callbacks.set("tunnelError", callback);
+    this.workerManager.registerCallback("tunnelError");
   }
 
   /**
@@ -202,8 +245,8 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
-    if (!this.tunnel || !this.tunnel.tunnelRef) throw new Error("Tunnel not initialized");
-    this.tunnel.setTunnelDisconnectedCallback(callback);
+    this.callbacks.set("tunnelDisconnected", callback);
+    this.workerManager.registerCallback("tunnelDisconnected");
   }
 
   /**
@@ -213,9 +256,8 @@ export class TunnelInstance {
    *
    * @returns {boolean} True if the tunnel is active, false otherwise.
    */
-  public isActive(): boolean {
-    if (!this.tunnel) return false;
-    return this.tunnel.tunnelIsActive();
+  public async isActive(): Promise<boolean> {
+    return await this.activeTunnel.tunnelIsActive();
   }
 
   /**
@@ -225,8 +267,8 @@ export class TunnelInstance {
    *
    * @returns {"starting" | "live" | "closed"} The tunnel status.
    */
-  public getStatus(): TunnelStatus {
-    return this.tunnel?.status ?? TunnelStatus.CLOSED;
+  public async getStatus(): Promise<TunnelStatus> {
+    return await this.activeTunnel?.getStatus();
   }
 
   /**
@@ -236,8 +278,8 @@ export class TunnelInstance {
    *
    * @returns {string | null} The server address, or null if unavailable.
    */
-  public getServerAddress(): string | null {
-    return this.config?.getServerAddress() ?? null;
+  public async getServerAddress(): Promise<string | null> {
+    return await this.activeConfig?.getServerAddress() ?? null;
   }
 
   /**
@@ -247,8 +289,8 @@ export class TunnelInstance {
    *
    * @returns {string | null} The authentication token, or null if unavailable.
    */
-  public getToken(): string | null {
-    return this.config?.getToken() ?? null;
+  public async getToken(): Promise<string | null> {
+    return await this.activeConfig.getToken() ?? null;
   }
 
   /**
@@ -258,8 +300,8 @@ export class TunnelInstance {
    *
    * @returns {string | null} The SNI server name, or null if unavailable.
    */
-  public getSniServerName(): string | null {
-    return this.config?.getSniServerName() ?? null;
+  public async getSniServerName(): Promise<string | null> {
+    return await this.activeConfig.getSniServerName() ?? null;
   }
 
   /**
@@ -269,8 +311,8 @@ export class TunnelInstance {
    *
    * @returns {boolean | null} The force setting, or null if unavailable.
    */
-  public getForce(): boolean | null {
-    return this.config?.getForce() ?? null;
+  public async getForce(): Promise<boolean | null> {
+    return await this.config?.getForce() ?? null;
   }
 
   /**
@@ -283,8 +325,7 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public startWebDebugging(port: number): void {
-    if (!this.tunnel) throw new Error("Tunnel not initialized");
-    this.tunnel.startWebDebugging(port);
+    this.activeTunnel.startWebDebugging(port);
   }
 
   /**
@@ -297,12 +338,20 @@ export class TunnelInstance {
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
-  public tunnelRequestAdditionalForwarding(
+  public async tunnelRequestAdditionalForwarding(
     hostname: string,
     target: string
-  ): void {
-    if (!this.tunnel) throw new Error("Tunnel not initialized");
-    this.tunnel.tunnelRequestAdditionalForwarding(hostname, target);
+  ): Promise<void> {
+    await this.activeTunnel.tunnelRequestAdditionalForwarding(hostname, target);
+  }
+
+  /**
+   * Returns WebDebuggerPort configuration for this tunnel instance.
+   *
+   * @returns The WebDebuggerPort setting, or `null` if not configured.
+   */
+  public async getWebDebuggerPort(): Promise<number> {
+    return await this.activeTunnel.getWebDebuggerPort() ?? 0;
   }
 
   /**
@@ -312,8 +361,8 @@ export class TunnelInstance {
    *
    * @returns {string | null} The argument string, or null if unavailable.
    */
-  public getArgument(): string | null {
-    return this.config?.getArgument() ?? null;
+  public async getArgument(): Promise<string | null> {
+    return await this.config?.getArgument() ?? null;
   }
 
   /**
@@ -323,8 +372,8 @@ export class TunnelInstance {
    *
    * @returns {string | null} The tunnel type, or null if unavailable.
    */
-  public getTunnelType(): string | null {
-    return this.config?.getTunnelType() ?? null;
+  public async getTunnelType(): Promise<string | null> {
+    return await this.config?.getTunnelType() ?? null;
   }
 
   /**
@@ -334,8 +383,8 @@ export class TunnelInstance {
    *
    * @returns {string | null} The UDP type, or null if unavailable.
    */
-  public getUdpType(): string | null {
-    return this.config?.getUdpType() ?? null;
+  public async getUdpType(): Promise<string | null> {
+    return await this.config?.getUdpType() ?? null;
   }
 
   /**
@@ -345,8 +394,8 @@ export class TunnelInstance {
   *
   * @returns {boolean | null} The SSL setting, or null if unavailable.
   */
-  public getTunnelSsl(): boolean | null {
-    return this.config?.getTunnelSsl() ?? null;
+  public async getTunnelSsl(): Promise<boolean | null> {
+    return await this.config?.getTunnelSsl() ?? null;
   }
 
   /**
@@ -356,8 +405,8 @@ export class TunnelInstance {
   *
   * @returns {string | null} The TCP forward-to address, or null if unavailable.
   */
-  public getTcpForwardTo(): string | null {
-    return this.config?.getTcpForwardTo() ?? null;
+  public async getTcpForwardTo(): Promise<string | null> {
+    return await this.config?.getTcpForwardTo() ?? null;
   }
 
   /**
@@ -367,8 +416,8 @@ export class TunnelInstance {
   *
   * @returns {string | null} The UDP forward-to address, or null if unavailable.
   */
-  public getUdpForwardTo(): string | null {
-    return this.config?.getUdpForwardTo() ?? null;
+  public async getUdpForwardTo(): Promise<string | null> {
+    return await this.config?.getUdpForwardTo() ?? null;
   }
 
   /**
@@ -376,8 +425,8 @@ export class TunnelInstance {
    *
    * @returns {boolean | null} `true` if HTTPS-only mode is enabled, `false` if disabled, or `null` if the configuration is unavailable.
    */
-  public getHttpsOnly(): boolean | null {
-    return this.config?.getHttpsOnly() ?? null;
+  public async getHttpsOnly(): Promise<boolean | null> {
+    return await this.config?.getHttpsOnly() ?? null;
   }
 
   /**
@@ -385,17 +434,16 @@ export class TunnelInstance {
    *
    * @returns {string[]} An array of whitelisted IP addresses, or an empty array if no whitelist is configured.
    */
-  public getIpWhiteList(): string[] {
-    return this.config?.getIpWhiteList() ?? [];
+  public async getIpWhiteList(): Promise<string[]> {
+    return await this.config?.getIpWhiteList() ?? [];
   }
 
   /**
- * Retrieves Allow-Preflight configuration for this tunnel instance.
- *
- * @returns {boolean | null} The Allow-Preflight setting, or `null` if not configured.
- */
-  public getAllowPreflight(): boolean | null {
-    return this.config?.getAllowPreflight() ?? null;
+  * Retrieves Allow-Preflight configuration for this tunnel instance.
+  *
+  * @returns {boolean | null} The Allow-Preflight sconfig*/
+  public async getAllowPreflight(): Promise<boolean | null> {
+    return await this.config?.getAllowPreflight() ?? null;
   }
 
   /**
@@ -403,8 +451,8 @@ export class TunnelInstance {
  *
  * @returns {boolean | null} The No-Reverse-Proxy setting, or `null` if not configured.
  */
-  public getNoReverseProxy(): boolean | null {
-    return this.config?.getNoReverseProxy() ?? null;
+  public async getNoReverseProxy(): Promise<boolean | null> {
+    return await this.activeConfig.getNoReverseProxy();
   }
 
   /**
@@ -412,8 +460,8 @@ export class TunnelInstance {
  *
  * @returns {boolean | null} The X-Forwarded-For setting, or `null` if not configured.
  */
-  public getXForwardedFor(): boolean | null {
-    return this.config?.getXForwardedFor() ?? null;
+  public async getXForwardedFor(): Promise<boolean | null> {
+    return await this.activeConfig.getXForwardedFor();
   }
 
   /**
@@ -421,8 +469,8 @@ export class TunnelInstance {
  *
  * @returns {boolean | null} The Original-Request-URL setting, or `null` if not configured.
  */
-  public getOriginalRequestUrl(): boolean | null {
-    return this.config?.getOriginalRequestUrl() ?? null;
+  public async getOriginalRequestUrl(): Promise<boolean | null> {
+    return await this.activeConfig.getOriginalRequestUrl();
   }
 
   /**
@@ -430,8 +478,8 @@ export class TunnelInstance {
    *
    * @returns An array of basic auth credentials when configured, or null if none are set.
    */
-  public getBasicAuth(): string[] | null {
-    return this.config?.getBasicAuth() ?? null;
+  public async getBasicAuth(): Promise<string[] | null> {
+    return await this.activeConfig.getBasicAuth();
   }
 
   /**
@@ -439,8 +487,8 @@ export class TunnelInstance {
    *
    * @returns An array of bearer token strings if present; otherwise an empty array.
    */
-  public getBearerTokenAuth(): string[] {
-    return this.config?.getBearerTokenAuth() ?? [];
+  public async getBearerTokenAuth(): Promise<string[]> {
+    return await this.activeConfig.getBearerTokenAuth();
   }
 
   /**
@@ -448,8 +496,8 @@ export class TunnelInstance {
    *
    * @returns An array of header modification objects if present; otherwise null.
    */
-  public getHeaderModification(): string[] | null {
-    return this.config?.getHeaderModification() ?? null;
+  public async getHeaderModification(): Promise<string[] | null> {
+    return await this.activeConfig.getHeaderModification();
   }
 
   /**
@@ -457,8 +505,8 @@ export class TunnelInstance {
    *
    * @returns The local server TLS setting, or `null` if not configured.
    */
-  public getLocalServerTls(): string | null {
-    return this.config?.getLocalServerTls() ?? null;
+  public async getLocalServerTls(): Promise<string | null> {
+    return await this.activeConfig.getLocalServerTls();
   }
 
   /**
@@ -466,8 +514,8 @@ export class TunnelInstance {
    *
    * @returns The reconnect interval setting, or `null` if not configured.
    */
-  public getReconnectInterval(): number | null {
-    return this.config?.getReconnectInterval() ?? null;
+  public async getReconnectInterval(): Promise <number | null> {
+    return await this.activeConfig.getReconnectInterval() ?? null;
   }
 
   /**
@@ -475,8 +523,8 @@ export class TunnelInstance {
    *
    * @returns The auto-reconnect setting, or `null` if not configured.
    */
-  public getAutoReconnect(): boolean | null {
-    return this.config?.getAutoReconnect() ?? null;
+  public async getAutoReconnect(): Promise<boolean | null> {
+    return await this.activeConfig.getAutoReconnect();
   }
 
   /**
@@ -484,77 +532,69 @@ export class TunnelInstance {
    *
    * @returns The MaxReconnectAttempts setting, or `null` if not configured.
    */
-  public getMaxReconnectAttempts(): number | null {
-    return this.config?.getMaxReconnectAttempts() ?? null;
+  public async getMaxReconnectAttempts(): Promise<number | null> {
+    return await this.activeConfig.getMaxReconnectAttempts();
   }
 
-  /**
-   * Returns WebDebuggerPort configuration for this tunnel instance.
-   *
-   * @returns The WebDebuggerPort setting, or `null` if not configured.
-   */
-  public getWebDebuggerPort(): number {
-    return this.tunnel?.getWebDebuggerPort() ?? 0;
-  }
   /**
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
   * @returns {PinggyOptionsType | null} The tunnel configuration, or null if unavailable.
   */
-  public getConfig(): PinggyOptionsType | null {
+  public async getConfig(): Promise<PinggyOptionsType | null> {
     const options: PinggyOptionsType = { optional: {} };
 
     // Add directly accessible properties
-    const serverAddress = this.getServerAddress();
+    const serverAddress = await this.getServerAddress();
     options.serverAddress = serverAddress || "";
 
-    const token = this.getToken();
+    const token = await this.getToken();
     options.token = token || "";
 
-    const sniServerName = this.getSniServerName()
+    const sniServerName = await this.getSniServerName();
     options.optional!.sniServerName = sniServerName || "";
 
-    const force = this.getForce();
+    const force = await this.getForce();
     options.force = force || false;
 
-    const httpsOnly = this.getHttpsOnly();
+    const httpsOnly = await this.getHttpsOnly();
     options.httpsOnly = httpsOnly !== null ? httpsOnly : false;
 
-    const ipWhiteList = this.getIpWhiteList();
+    const ipWhiteList = await this.getIpWhiteList();
     options.ipWhitelist = ipWhiteList;
 
-    const allowPreflight = this.getAllowPreflight();
+    const allowPreflight = await this.getAllowPreflight();
     options.allowPreflight = allowPreflight !== null ? allowPreflight : false;
 
-    const noReverseProxy = this.getNoReverseProxy();
+    const noReverseProxy = await this.getNoReverseProxy();
     options.reverseProxy = noReverseProxy !== null ? noReverseProxy : false;
 
-    const xForwardedFor = this.getXForwardedFor();
+    const xForwardedFor = await this.getXForwardedFor();
     options.xForwardedFor = xForwardedFor !== null ? xForwardedFor : false;
 
-    const originalRequestUrl = this.getOriginalRequestUrl();
+    const originalRequestUrl = await this.getOriginalRequestUrl();
     options.originalRequestUrl = originalRequestUrl !== null ? originalRequestUrl : false;
 
-    const rawAuthValue = this.getBasicAuth();
+    const rawAuthValue = await this.getBasicAuth();
 
     options.basicAuth = normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
 
-    const bearerAuth = this.getBearerTokenAuth();
+    const bearerAuth = await this.getBearerTokenAuth();
     options.bearerTokenAuth = bearerAuth;
 
-    const reconnectInterval = this.getReconnectInterval();
+    const reconnectInterval = await this.getReconnectInterval();
     options.reconnectInterval = reconnectInterval !== null ? reconnectInterval : 0;
 
-    const maxReconnectAttempts = this.getMaxReconnectAttempts();
+    const maxReconnectAttempts = await this.getMaxReconnectAttempts();
     options.maxReconnectAttempts = maxReconnectAttempts !== null ? maxReconnectAttempts : 0;
 
-    const autoReconnect = this.getAutoReconnect();
+    const autoReconnect = await this.getAutoReconnect();
     options.autoReconnect = autoReconnect !== null ? autoReconnect : false;
 
-    const headerModificationRaw = this.getHeaderModification() as unknown as HeaderModification[];
+    const headerModificationRaw = await this.getHeaderModification() as unknown as HeaderModification[];
 
-    const webDebuggerPort = this.getWebDebuggerPort();
+    const webDebuggerPort = await this.getWebDebuggerPort();
     options.webDebugger = `localhost:${webDebuggerPort}`;
 
     options.headerModification = Array.isArray(headerModificationRaw)
@@ -572,27 +612,27 @@ export class TunnelInstance {
 
 
 
-    let type = this.getTunnelType() || this.getUdpType()
+    let type = (await this.getTunnelType()) || (await this.getUdpType());
 
     if (type === "tcp" || type === "tls" || type === "http" || type === "udp") {
       options.tunnelType = [type as any];
       if (type === "http" || type === "tcp" || type === "tls") {
-        const tcpForwardTo = this.getTcpForwardTo();
+        const tcpForwardTo = await this.getTcpForwardTo();
         options.forwarding = tcpForwardTo || "";
       } else if (type === "udp") {
-        const udpForwardTo = this.getUdpForwardTo();
+        const udpForwardTo = await this.getUdpForwardTo();
         options.forwarding = udpForwardTo || "";
       }
     } else {
-      options.tunnelType = ["http"] as any;
+      options.tunnelType = [TunnelType.Http];
       options.forwarding = "";
     }
 
-    const ssl = this.getTunnelSsl();
+    const ssl = await this.getTunnelSsl();
     options.optional!.ssl = ssl !== null ? ssl : false;
 
 
-    const argString = this.getArgument() || "";
+    const argString = await this.getArgument() || "";
     const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
     const argumentInParts: string[] = [];
     let match;

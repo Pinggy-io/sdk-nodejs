@@ -1,16 +1,18 @@
 const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
+  console.log("Starting");
   const options = {
     forwarding: "localhost:7878",
   };
 
   // Create and start tunnel using forward method
+  pinggy.setDebugLogging(true);
   const tunnel = await pinggy.forward(options);
 
-  console.log("Tunnel URLs:", tunnel.urls());
-  console.log("Status:", tunnel.getStatus());
-  console.log("Greet Message:", tunnel.getGreetMessage());
+  console.log("Tunnel URLs:", await tunnel.urls());
+  console.log("Status:", await tunnel.getStatus());
+  console.log("Greet Message:", await tunnel.getGreetMessage());
 
   // Start web debugging interface
   tunnel.startWebDebugging(8080);

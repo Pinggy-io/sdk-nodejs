@@ -574,7 +574,7 @@ typedef struct
 } AdditionalForwardingCallbackData;
 
 // C callback function that will be called by Pinggy
-void additional_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_const_char_p_t address, pinggy_const_char_p_t protocol)
+void additional_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_const_char_p_t bind_addr, pinggy_const_char_p_t forward_to_addr)
 {
     if (user_data == NULL)
     {
@@ -584,15 +584,15 @@ void additional_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_
     AdditionalForwardingCallbackData *cb_data = (AdditionalForwardingCallbackData *)user_data;
     napi_env env = cb_data->env;
 
-    napi_value js_callback, undefined, js_tunnel, js_address, js_protocol;
+    napi_value js_callback, undefined, js_tunnel, js_bind_address, js_forward_to_addr;
     napi_get_reference_value(env, cb_data->callback_ref, &js_callback);
     napi_get_undefined(env, &undefined);
 
     napi_create_int64(env, (int64_t)tunnel, &js_tunnel);
-    napi_create_string_utf8(env, address, NAPI_AUTO_LENGTH, &js_address);
-    napi_create_string_utf8(env, protocol, NAPI_AUTO_LENGTH, &js_protocol);
+    napi_create_string_utf8(env, bind_addr, NAPI_AUTO_LENGTH, &js_bind_address);
+    napi_create_string_utf8(env, forward_to_addr, NAPI_AUTO_LENGTH, &js_forward_to_addr);
 
-    napi_value args[3] = {js_tunnel, js_address, js_protocol};
+    napi_value args[3] = {js_tunnel, js_bind_address, js_forward_to_addr};
     napi_value result;
     napi_call_function(env, undefined, js_callback, 3, args, &result);
     PINGGY_DEBUG_RET(result);
@@ -1132,7 +1132,7 @@ typedef struct
     napi_env env;
 } AdditionalForwardingFailedCallbackData;
 
-void additional_forwarding_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_const_char_p_t remote_address, pinggy_const_char_p_t forward_to_addr, pinggy_const_char_p_t error_message)
+void additional_forwarding_failed_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_const_char_p_t bind_address, pinggy_const_char_p_t forward_to_addr, pinggy_const_char_p_t error_message)
 {
     AdditionalForwardingFailedCallbackData *cb_data = (AdditionalForwardingFailedCallbackData *)user_data;
     napi_handle_scope scope;
@@ -1146,7 +1146,7 @@ void additional_forwarding_failed_callback(pinggy_void_p_t user_data, pinggy_ref
 
     napi_value argv[3];
     napi_create_uint32(cb_data->env, (uint32_t)tunnel, &argv[0]);
-    napi_create_string_utf8(cb_data->env, remote_address, NAPI_AUTO_LENGTH, &argv[1]);
+    napi_create_string_utf8(cb_data->env, bind_address, NAPI_AUTO_LENGTH, &argv[1]);
     napi_create_string_utf8(cb_data->env, error_message, NAPI_AUTO_LENGTH, &argv[2]);
 
     napi_value undefined;

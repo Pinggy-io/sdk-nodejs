@@ -10,8 +10,8 @@ app.get("/", (req, res) => res.send("Hello from Express over Pinggy!"));
 
 listen(app, {
   /* you can add PinggyOptions here, e.g. token: "..." */
-}).then((server) => {
-  console.log("Tunnel public URL:", server.tunnel.urls()[0]);
+}).then(async (server) => {
+  console.log("Tunnel public URL:", await server.tunnel.urls());
   console.log("Local server port:", server.address().port);
 
   // Clean up when done

@@ -27,7 +27,7 @@ describe("Pinggy", () => {
   });
 
   test("should get SNI server name", () => {
-    const sniServerName = tunnel.config?.getSniServerName();
+    const sniServerName = tunnel.getSniServerName();
     expect(sniServerName).toBe("a.pinggy.io");
   });
 
