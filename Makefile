@@ -21,7 +21,7 @@ clean-install: clean install
 build:
 	npx node-gyp clean configure build
 	node ./copy.js
-	npm run build
+	npm run build:tsc
 	npm pack
 
 clean-lib:
