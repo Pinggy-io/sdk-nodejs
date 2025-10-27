@@ -451,8 +451,8 @@ export class TunnelInstance {
  *
  * @returns {boolean | null} The No-Reverse-Proxy setting, or `null` if not configured.
  */
-  public getNoReverseProxy(): boolean | null {
-    return this.activeConfig.getNoReverseProxy();
+  public async getNoReverseProxy(): Promise<boolean | null> {
+    return await this.activeConfig.getNoReverseProxy();
   }
 
   /**
@@ -460,8 +460,8 @@ export class TunnelInstance {
  *
  * @returns {boolean | null} The X-Forwarded-For setting, or `null` if not configured.
  */
-  public getXForwardedFor(): boolean | null {
-    return this.activeConfig.getXForwardedFor();
+  public async getXForwardedFor(): Promise<boolean | null> {
+    return await this.activeConfig.getXForwardedFor();
   }
 
   /**
@@ -469,8 +469,8 @@ export class TunnelInstance {
  *
  * @returns {boolean | null} The Original-Request-URL setting, or `null` if not configured.
  */
-  public getOriginalRequestUrl(): boolean | null {
-    return this.activeConfig.getOriginalRequestUrl();
+  public async getOriginalRequestUrl(): Promise<boolean | null> {
+    return await this.activeConfig.getOriginalRequestUrl();
   }
 
   /**
@@ -478,8 +478,8 @@ export class TunnelInstance {
    *
    * @returns An array of basic auth credentials when configured, or null if none are set.
    */
-  public getBasicAuth(): string[] | null {
-    return this.activeConfig.getBasicAuth();
+  public async getBasicAuth(): Promise<string[] | null> {
+    return await this.activeConfig.getBasicAuth();
   }
 
   /**
@@ -487,8 +487,8 @@ export class TunnelInstance {
    *
    * @returns An array of bearer token strings if present; otherwise an empty array.
    */
-  public getBearerTokenAuth(): string[] {
-    return this.activeConfig.getBearerTokenAuth();
+  public async getBearerTokenAuth(): Promise<string[]> {
+    return await this.activeConfig.getBearerTokenAuth();
   }
 
   /**
@@ -496,8 +496,8 @@ export class TunnelInstance {
    *
    * @returns An array of header modification objects if present; otherwise null.
    */
-  public getHeaderModification(): string[] | null {
-    return this.activeConfig.getHeaderModification();
+  public async getHeaderModification(): Promise<string[] | null> {
+    return await this.activeConfig.getHeaderModification();
   }
 
   /**
@@ -505,8 +505,8 @@ export class TunnelInstance {
    *
    * @returns The local server TLS setting, or `null` if not configured.
    */
-  public getLocalServerTls(): string | null {
-    return this.activeConfig.getLocalServerTls();
+  public async getLocalServerTls(): Promise<string | null> {
+    return await this.activeConfig.getLocalServerTls();
   }
 
   /**
@@ -514,8 +514,8 @@ export class TunnelInstance {
    *
    * @returns The reconnect interval setting, or `null` if not configured.
    */
-  public getReconnectInterval(): number | null {
-    return this.activeConfig.getReconnectInterval() ?? null;
+  public async getReconnectInterval(): Promise <number | null> {
+    return await this.activeConfig.getReconnectInterval() ?? null;
   }
 
   /**
@@ -523,8 +523,8 @@ export class TunnelInstance {
    *
    * @returns The auto-reconnect setting, or `null` if not configured.
    */
-  public getAutoReconnect(): boolean | null {
-    return this.activeConfig.getAutoReconnect();
+  public async getAutoReconnect(): Promise<boolean | null> {
+    return await this.activeConfig.getAutoReconnect();
   }
 
   /**
@@ -532,8 +532,8 @@ export class TunnelInstance {
    *
    * @returns The MaxReconnectAttempts setting, or `null` if not configured.
    */
-  public getMaxReconnectAttempts(): number | null {
-    return this.activeConfig.getMaxReconnectAttempts();
+  public async getMaxReconnectAttempts(): Promise<number | null> {
+    return await this.activeConfig.getMaxReconnectAttempts();
   }
 
   /**
