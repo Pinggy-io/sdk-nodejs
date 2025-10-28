@@ -335,7 +335,7 @@ export class Tunnel implements ITunnel {
       let shouldContinue: boolean;
       try {
         // tunnelResume returns boolean
-        const ret = this.addon.tunnelResume(this.tunnelRef);
+        const ret = this.addon.tunnelResumeWithTimeout(this.tunnelRef, 100);
         if (!ret) {
           // Only log error if tunnel was not intentionally stopped
           if (!this.intentionallyStopped) {

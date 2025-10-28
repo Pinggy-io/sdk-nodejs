@@ -64,25 +64,29 @@ export class TunnelWorkerManager {
         if (!this.ready) await this.readyPromise;
     }
 
-    public async call(target: "config" | "tunnel", method: string, ...args: any[]) {
+    public async call(target: "config" | "tunnel", method: string, type?: workerMessageType, ...args: any[]) {
         await this.ensureReady();
         const id = uuidv4();
+        let msgType: workerMessageType = workerMessageType.Call
+        if (type) {
+            msgType = type;
+        }
         return new Promise<any>((resolve, reject) => {
             this.pendingCalls.set(id, { resolve, reject });
-            const msg: Extract<WorkerMessage, { type: workerMessageType.Call }> = {
-                type: workerMessageType.Call,
+            const msg = {
+                type: msgType,
                 id,
                 target,
                 method,
                 args,
-            };
+            } as WorkerMessage;
             this.worker.postMessage(msg);
         });
     }
 
     public async setDebugLoggingInWorker(enable: boolean) {
-        const msg: Extract<WorkerMessage, { type: workerMessageType.enableLogger }> = {
-            type: workerMessageType.enableLogger,
+        const msg: Extract<WorkerMessage, { type: workerMessageType.EnableLogger }> = {
+            type: workerMessageType.EnableLogger,
             enabled: enable
         }
         this.worker.postMessage(msg);

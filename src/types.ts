@@ -7,6 +7,8 @@
  * @packageDocumentation
  */
 
+import { PinggyOptions } from ".";
+
 
 /**
  * Interface for the native Pinggy addon methods.
@@ -120,6 +122,8 @@ export interface PinggyNative {
   tunnelConnect(tunnelRef: number): boolean;
   /** Resume a tunnel. */
   tunnelResume(tunnelRef: number): boolean;
+  /** Resume a tunnel with timeout */
+  tunnelResumeWithTimeout(tunnelRef: number, timeout: number): boolean;
   /** Start web debugging for a tunnel. */
   tunnelStartWebDebugging(tunnelRef: number, port: number): number;
   /** Request primary forwarding for a tunnel. */
@@ -301,7 +305,8 @@ export enum workerMessageType {
   Response = "response",
   Callback = "callback",
   RegisterCallback = "registerCallback",
-  enableLogger = "enableLogger"
+  EnableLogger = "enableLogger",
+  GetTunnelConfig = "getConfig"
 }
 
 export type WorkerMessage =
@@ -310,9 +315,12 @@ export type WorkerMessage =
   | { type: workerMessageType.Response; id: string; result?: any; error?: string }
   | { type: workerMessageType.Callback; event: string; data: any }
   | { type: workerMessageType.RegisterCallback; event: string }
-  | { type: workerMessageType.enableLogger; enabled: boolean };
+  | { type: workerMessageType.EnableLogger; enabled: boolean }
+  | { type: workerMessageType.GetTunnelConfig; id: string };
 
 export type PendingCall = {
   resolve: (value: any) => void;
   reject: (reason?: any) => void;
 };
+
+export type BasicAuthItem = { username: string; password: string };
