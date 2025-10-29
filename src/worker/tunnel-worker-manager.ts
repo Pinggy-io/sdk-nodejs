@@ -3,7 +3,7 @@ import path from "path/win32";
 import { Logger } from "../utils/logger";
 import { PinggyOptions } from "../pinggyOptions";
 import { v4 as uuidv4 } from 'uuid';
-import { PendingCall, WorkerMessage, workerMessageType } from "../types";
+import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types";
 
 /**
  * Manages the dedicated worker thread responsible for running a single Pinggy tunnel instance.
@@ -25,7 +25,7 @@ export class TunnelWorkerManager {
     private pendingCalls = new Map<string, PendingCall>();
     private ready = false;
     private readyPromise: Promise<void>;
-    private callbackHandler?: (event: string, data: any) => void;
+    private callbackHandler?: (event: CallbackType, data: any) => void;
 
     constructor(pinggyOptions: PinggyOptions) {
         const workerPath = path.resolve(__dirname, "tunnel-worker.js").replace(/\\/g, "/");
@@ -56,7 +56,7 @@ export class TunnelWorkerManager {
         this.registerWorkerListeners();
     }
 
-    public setCallbackHandler(fn: (event: string, data: any) => void) {
+    public setCallbackHandler(fn: (event: CallbackType, data: any) => void) {
         this.callbackHandler = fn;
     }
 
@@ -92,7 +92,7 @@ export class TunnelWorkerManager {
         this.worker.postMessage(msg);
     }
 
-    public registerCallback(event: string) {
+    public registerCallback(event: CallbackType) {
         this.worker.postMessage({ type: workerMessageType.RegisterCallback, event });
     }
 

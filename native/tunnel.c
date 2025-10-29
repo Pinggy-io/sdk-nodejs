@@ -211,8 +211,8 @@ napi_value TunnelResumeWithTimeout(napi_env env, napi_callback_info info)
     }
 
     // Convert the second argument to an integer (timeout). Allow negative values (e.g. -1).
-    int64_t timeout;
-    status = napi_get_value_int64(env, args[1], &timeout);
+    int32_t timeout;
+    status = napi_get_value_int32(env, args[1], &timeout);
     if (status != napi_ok)
     {
         char error_message[256];

@@ -7,7 +7,6 @@
  * @packageDocumentation
  */
 
-import { PinggyOptions } from ".";
 
 
 /**
@@ -313,8 +312,8 @@ export type WorkerMessage =
   | { type: workerMessageType.Init; success: boolean; error: string | null }
   | { type: workerMessageType.Call; id: string; target: "config" | "tunnel"; method: string; args: any[] }
   | { type: workerMessageType.Response; id: string; result?: any; error?: string }
-  | { type: workerMessageType.Callback; event: string; data: any }
-  | { type: workerMessageType.RegisterCallback; event: string }
+  | { type: workerMessageType.Callback; event: CallbackType; data: any }
+  | { type: workerMessageType.RegisterCallback; event: CallbackType }
   | { type: workerMessageType.EnableLogger; enabled: boolean }
   | { type: workerMessageType.GetTunnelConfig; id: string };
 
@@ -323,4 +322,26 @@ export type PendingCall = {
   reject: (reason?: any) => void;
 };
 
-export type BasicAuthItem = { username: string; password: string };
+export enum CallbackType {
+  TunnelDisconnected = "tunnelDisconnected",
+  TunnelError = "tunnelError",
+  TunnelUsageUpdate = "tunnelUsage",
+  TunnelAdditionalForwarding = "tunnelAdditionalForwarding",
+  TunnelPrimaryForwarding = "tunnelPrimaryForwarding",
+  TunnelAuthenticated = "tunnelAuthenticated"
+}
+
+export interface CallbackMap {
+  [CallbackType.TunnelDisconnected]: (error: string, messages: string[]) => void;
+  [CallbackType.TunnelError]: (errorNo: number, error: string, recoverable: boolean) => void;
+  [CallbackType.TunnelUsageUpdate]: (usage: any) => void;
+  [CallbackType.TunnelAdditionalForwarding]: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void;
+  [CallbackType.TunnelPrimaryForwarding]: (message: string, address: string[]) => void;
+  [CallbackType.TunnelAuthenticated]: (message: string) => void;
+}
+
+export type Callback<K extends CallbackType> = CallbackMap[K];
+
+
+
+

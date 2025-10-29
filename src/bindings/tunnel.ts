@@ -77,6 +77,9 @@ export class Tunnel implements ITunnel {
   private onUsageUpdateCallback: ((usage: TunnelUsage) => void) | null = null;
   private onTunnelErrorCallback: ((errorNo: number, error: string, recoverable: boolean) => void) | null = null;
   private onTunnelDisconnectedCallback: ((error: string, messages: string[]) => void) | null = null;
+  private onAdditionalForwardingCallback: ((bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void) | null = null;
+  private onAuthenticatedCallback: ((messsage: string) => void) | null = null;
+  private onPrimaryForwardingCallback: ((message: string, address?: string[],) => void) | null = null;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -161,13 +164,28 @@ export class Tunnel implements ITunnel {
           this.functionQueue.enqueue(() => {
             this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
           });
+          if (this.onAuthenticatedCallback) {
+            try {
+              this.onAuthenticatedCallback("Tunnel authenticated succesfully")
+            } catch (error) {
+              Logger.error("Error in authenticated callback", error as Error)
+            }
+          }
         }
       },
       {
         setter: 'tunnelSetAuthenticationFailedCallback',
         callback: (tunnelRef: number, errorMessage: string) => {
           Logger.error(`Authentication failed for tunnel ${tunnelRef}: ${errorMessage}`);
+          if (this.onAuthenticatedCallback) {
+            try {
+              this.onAuthenticatedCallback(`Tunnel authenticated Failed:${errorMessage}`)
+            } catch (error) {
+              Logger.error("Error in authenticated callback", error as Error)
+            }
+          }
           if (this.rejectAuth) this.rejectAuth(new PinggyError("Authentication failed: " + errorMessage));
+
         }
       },
       {
@@ -176,12 +194,26 @@ export class Tunnel implements ITunnel {
           this.primaryForwardingDone = true;
           this._urls = addresses;
           if (this.resolveForwarding) this.resolveForwarding(addresses);
+          if (this.onPrimaryForwardingCallback) {
+            try {
+              this.onPrimaryForwardingCallback("Primary forwarding succeeded", addresses)
+            } catch (error) {
+              Logger.error("Error in primary forwarding", error as Error)
+            }
+          }
         }
       },
       {
         setter: 'tunnelSetPrimaryForwardingFailedCallback',
         callback: (tunnelRef: number, errorMessage: string) => {
           Logger.error(`Primary forwarding failed for tunnel ${tunnelRef}: ${errorMessage}`);
+          if (this.onPrimaryForwardingCallback) {
+            try {
+              this.onPrimaryForwardingCallback("Primary forwarding Failed")
+            } catch (error) {
+              Logger.error("Error in primary forwarding", error as Error)
+            }
+          }
           if (this.rejectForwarding) this.rejectForwarding(new PinggyError("Primary forwarding failed: " + errorMessage));
         }
       },
@@ -191,6 +223,13 @@ export class Tunnel implements ITunnel {
           Logger.info(`Additional forwarding succeeded for tunnel ${tunnelRef}: ${bindAddr} -> ${forwardToAddr}`);
           // Resolve the oldest pending promise for this bindAddr (remote) + forwardToAddr (local)
           this.additionalForwardingPending.resolveOne(bindAddr, forwardToAddr);
+          if (this.onAdditionalForwardingCallback) {
+            try {
+              this.onAdditionalForwardingCallback(bindAddr, forwardToAddr, null);
+            } catch (error) {
+              Logger.error("Error in additionalforwardingCallback", error as Error);
+            }
+          }
         }
       },
       {
@@ -203,6 +242,13 @@ export class Tunnel implements ITunnel {
             forwardToAddr,
             new PinggyError(`Additional forwarding failed for ${bindAddress} -> ${forwardToAddr}: ${errorMessage}`)
           );
+          if (this.onAdditionalForwardingCallback) {
+            try {
+              this.onAdditionalForwardingCallback(bindAddress, forwardToAddr, errorMessage);
+            } catch (error) {
+              Logger.error("Error in additionalforwardingCallback", error as Error);
+            }
+          }
         }
       },
       {
@@ -532,6 +578,18 @@ export class Tunnel implements ITunnel {
 
   public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
     this.onTunnelDisconnectedCallback = callback;
+  }
+
+  public setAdditionalForwardingCallback(callback: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void): void {
+    this.onAdditionalForwardingCallback = callback;
+  }
+
+  public setAuthenticatedCallback(callback: (message: string) => void) {
+    this.onAuthenticatedCallback = callback;
+  }
+
+  public setPrimaryForwardingCallback(callback: (message: string, address?: string[]) => void) {
+    this.onPrimaryForwardingCallback = callback;
   }
 
   public getStatus(): TunnelStatus {

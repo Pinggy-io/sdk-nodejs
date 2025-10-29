@@ -70,6 +70,8 @@ export const enum TunnelType {
   Udp = "udp",
   TlsTcp = "tlstcp",
 }
+
+export type BasicAuthItem = { username: string; password: string };
 /**
  * Configuration options for creating Pinggy tunnels.
  *
@@ -120,7 +122,7 @@ export type PinggyOptionsType = {
    * Basic authentication credentials (username: password).
    * @example [{ username: "user", password: "pass" }]
    */
-  basicAuth?: { username: string; password: string }[];
+  basicAuth?: BasicAuthItem[];
   /**
    * List of bearer authentication tokens.
    * @example ["token123", "token456"]

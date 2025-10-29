@@ -1,5 +1,5 @@
 import { parentPort, workerData } from "worker_threads";
-import { BasicAuthItem, PinggyNative, WorkerMessage, workerMessageType } from "../types.js";
+import { CallbackType, PinggyNative, WorkerMessage, workerMessageType } from "../types.js";
 import { Config } from "../bindings/config.js";
 import { Tunnel } from "../bindings/tunnel.js";
 import { Logger } from "../utils/logger.js";
@@ -8,7 +8,8 @@ import {
   PinggyError,
   initExceptionHandling,
 } from "../bindings/exception.js";
-import { HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "../pinggyOptions.js";
+import { BasicAuthItem, HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "../pinggyOptions.js";
+import { TunnelUsageType } from "../bindings/tunnel-usage.js";
 const binary = require("@mapbox/node-pre-gyp");
 const path = require("path");
 
@@ -17,7 +18,7 @@ class TunnelWorker {
   private addon: PinggyNative | null = null;
   private config: Config | null = null;
   private tunnel: Tunnel | null = null;
-  private registeredCallbacks: Set<string> = new Set();
+  private registeredCallbacks: Set<CallbackType> = new Set();
 
   constructor(rawTunnelOptions: any) {
     this.initialize(rawTunnelOptions);
@@ -137,23 +138,32 @@ class TunnelWorker {
     if (!this.tunnel) return;
 
     const callbacks = {
-      usageUpdate: (usage: any) =>
-        this.forwardCallback("usageUpdate", usage),
+      usageUpdate: (usage: TunnelUsageType) =>
+        this.forwardCallback(CallbackType.TunnelUsageUpdate, usage),
       tunnelError: (errorNo: number, error: string, recoverable: boolean) =>
-        this.forwardCallback("tunnelError", { errorNo, error, recoverable }),
+        this.forwardCallback(CallbackType.TunnelError, { errorNo, error, recoverable }),
       tunnelDisconnected: (error: string, messages: string[]) =>
-        this.forwardCallback("tunnelDisconnected", { error, messages }),
+        this.forwardCallback(CallbackType.TunnelDisconnected, { error, messages }),
+      tunnelAuthenticated: (message: string) =>
+        this.forwardCallback(CallbackType.TunnelAuthenticated, message),
+      tunnelPrimaryForwarding: (message: string, address?: string[]) =>
+        this.forwardCallback(CallbackType.TunnelPrimaryForwarding, { message, address }),
+      tunnelAdditionalForwarding: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) =>
+        this.forwardCallback(CallbackType.TunnelAdditionalForwarding, { bindAddress, forwardToAddr, errorMessage }),
     };
 
     this.tunnel.setUsageUpdateCallback(callbacks.usageUpdate);
     this.tunnel.setTunnelErrorCallback(callbacks.tunnelError);
     this.tunnel.setTunnelDisconnectedCallback(callbacks.tunnelDisconnected);
+    this.tunnel.setAdditionalForwardingCallback(callbacks.tunnelAdditionalForwarding)
+    this.tunnel.setAuthenticatedCallback(callbacks.tunnelAuthenticated)
+    this.tunnel.setPrimaryForwardingCallback(callbacks.tunnelPrimaryForwarding);
   }
 
   /**
    * Send a callback event to the main thread only if registered.
    */
-  private forwardCallback(event: string, data: any) {
+  private forwardCallback(event: CallbackType, data: any) {
     if (!this.registeredCallbacks.has(event)) return;
     this.postMessage({
       type: workerMessageType.Callback,
@@ -294,7 +304,7 @@ class TunnelWorker {
 
     // Determine tunnel type and forwarding
     const type = tunnelType || udpType;
-    if (type && (["tcp", "tls", "http", "udp"].includes(type))) {
+    if (type && ([TunnelType.Http, TunnelType.Tcp, TunnelType.Tls, TunnelType.Udp, TunnelType.TlsTcp].includes(type as TunnelType))) {
       options.tunnelType = [type as any];
       if (type === "udp") {
         options.forwarding = udpForwardTo || "";
@@ -335,7 +345,7 @@ class TunnelWorker {
         parsed = null;
       }
     } else {
-      parsed = input ?? null;
+      parsed = input || []
     }
 
     if (!Array.isArray(parsed) || parsed.length === 0) {

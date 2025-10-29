@@ -1,10 +1,10 @@
-import { HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "./pinggyOptions"
+import { PinggyOptions, PinggyOptionsType } from "./pinggyOptions"
 import { TunnelWorkerManager } from "./worker/tunnel-worker-manager";
 import { Logger } from "./utils/logger"
 import { Tunnel } from "./bindings/tunnel";
 import { Config } from "./bindings/config";
 import { TunnelUsageType } from "./bindings/tunnel-usage";
-import { TunnelStatus, workerMessageType } from "./types";
+import { Callback, CallbackType, TunnelStatus, workerMessageType } from "./types";
 
 
 /**
@@ -21,7 +21,7 @@ export class TunnelInstance {
   private workerManager: TunnelWorkerManager
   public tunnel: Tunnel | null = null; // dynamic proxy
   public config: Config | null = null; // dynamic proxy
-  private callbacks = new Map<string, Function>();
+  private callbacks = new Map<CallbackType, Function>();
 
   /**
    * Creates a new TunnelInstance with the provided native addon and options.
@@ -80,7 +80,7 @@ export class TunnelInstance {
 
   // ---------------- Callback Handling ---------------- //
 
-  private handleWorkerCallback(event: string, data: any): void {
+  private handleWorkerCallback(event: CallbackType, data: any): void {
     const cb = this.callbacks.get(event);
     if (cb) {
       if (Array.isArray(data)) {
@@ -110,6 +110,11 @@ export class TunnelInstance {
       throw new Error("Config not initialized or has been stopped.");
     }
     return this.config;
+  }
+
+  private setCallback<K extends CallbackType>(type: K, callback: Callback<K>): void {
+    this.callbacks.set(type, callback);
+    this.workerManager.registerCallback(type);
   }
 
   /**
@@ -222,8 +227,7 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setUsageUpdateCallback(callback: (usage: Record<string, any>) => void): void {
-    this.callbacks.set("usageUpdate", callback);
-    this.workerManager.registerCallback("usageUpdate");
+    this.setCallback(CallbackType.TunnelUsageUpdate, callback);
   }
 
   /**
@@ -236,8 +240,7 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setTunnelErrorCallback(callback: (errorNo: number, error: string, recoverable: boolean) => void): void {
-    this.callbacks.set("tunnelError", callback);
-    this.workerManager.registerCallback("tunnelError");
+    this.setCallback(CallbackType.TunnelError, callback);
   }
 
   /**
@@ -250,8 +253,19 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
-    this.callbacks.set("tunnelDisconnected", callback);
-    this.workerManager.registerCallback("tunnelDisconnected");
+    this.setCallback(CallbackType.TunnelDisconnected, callback)
+  }
+
+  public setAdditionalForwardingCallback(callback: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void): void {
+    this.setCallback(CallbackType.TunnelAdditionalForwarding, callback)
+  }
+
+  public setPrimaryForwardingCallback(callback: (message: string, address: string[]) => void): void {
+    this.setCallback(CallbackType.TunnelPrimaryForwarding, callback)
+  }
+
+  public setAuthenticatedCallback(callback: (message: string) => void): void {
+    this.setCallback(CallbackType.TunnelAuthenticated, callback);
   }
 
   /**
@@ -551,26 +565,4 @@ export class TunnelInstance {
     const result = await this.workerManager.call("tunnel", "", workerMessageType.GetTunnelConfig);
     return result as PinggyOptions | null;
   }
-}
-
-type BasicAuthItem = { username: string; password: string };
-
-function normalizeBasicAuth(input: string | BasicAuthItem[] | null): BasicAuthItem[] {
-  let parsed: BasicAuthItem[] | null = null;
-
-  if (typeof input === "string") {
-    try {
-      parsed = JSON.parse(input);
-    } catch {
-      parsed = null;
-    }
-  } else {
-    parsed = input ?? null;
-  }
-
-  if (!Array.isArray(parsed) || parsed.length === 0) {
-    return [];
-  }
-
-  return parsed.filter(({ username, password }) => !!username && !!password);
 }
