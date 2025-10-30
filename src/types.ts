@@ -8,6 +8,7 @@
  */
 
 
+
 /**
  * Interface for the native Pinggy addon methods.
  * This interface defines all the low-level methods for interacting with the native Pinggy library.
@@ -120,6 +121,8 @@ export interface PinggyNative {
   tunnelConnect(tunnelRef: number): boolean;
   /** Resume a tunnel. */
   tunnelResume(tunnelRef: number): boolean;
+  /** Resume a tunnel with timeout */
+  tunnelResumeWithTimeout(tunnelRef: number, timeout: number): boolean;
   /** Start web debugging for a tunnel. */
   tunnelStartWebDebugging(tunnelRef: number, port: number): number;
   /** Request primary forwarding for a tunnel. */
@@ -301,18 +304,44 @@ export enum workerMessageType {
   Response = "response",
   Callback = "callback",
   RegisterCallback = "registerCallback",
-  enableLogger = "enableLogger"
+  EnableLogger = "enableLogger",
+  GetTunnelConfig = "getConfig"
 }
 
 export type WorkerMessage =
   | { type: workerMessageType.Init; success: boolean; error: string | null }
   | { type: workerMessageType.Call; id: string; target: "config" | "tunnel"; method: string; args: any[] }
   | { type: workerMessageType.Response; id: string; result?: any; error?: string }
-  | { type: workerMessageType.Callback; event: string; data: any }
-  | { type: workerMessageType.RegisterCallback; event: string }
-  | { type: workerMessageType.enableLogger; enabled: boolean };
+  | { type: workerMessageType.Callback; event: CallbackType; data: any }
+  | { type: workerMessageType.RegisterCallback; event: CallbackType }
+  | { type: workerMessageType.EnableLogger; enabled: boolean }
+  | { type: workerMessageType.GetTunnelConfig; id: string };
 
 export type PendingCall = {
   resolve: (value: any) => void;
   reject: (reason?: any) => void;
 };
+
+export enum CallbackType {
+  TunnelDisconnected = "tunnelDisconnected",
+  TunnelError = "tunnelError",
+  TunnelUsageUpdate = "tunnelUsage",
+  TunnelAdditionalForwarding = "tunnelAdditionalForwarding",
+  TunnelPrimaryForwarding = "tunnelPrimaryForwarding",
+  TunnelAuthenticated = "tunnelAuthenticated"
+}
+
+export interface CallbackMap {
+  [CallbackType.TunnelDisconnected]: (error: string, messages: string[]) => void;
+  [CallbackType.TunnelError]: (errorNo: number, error: string, recoverable: boolean) => void;
+  [CallbackType.TunnelUsageUpdate]: (usage: any) => void;
+  [CallbackType.TunnelAdditionalForwarding]: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void;
+  [CallbackType.TunnelPrimaryForwarding]: (message: string, address: string[]) => void;
+  [CallbackType.TunnelAuthenticated]: (message: string) => void;
+}
+
+export type Callback<K extends CallbackType> = CallbackMap[K];
+
+
+
+

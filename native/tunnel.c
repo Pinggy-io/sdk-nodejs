@@ -185,16 +185,16 @@ napi_value TunnelResume(napi_env env, napi_callback_info info)
 
 napi_value TunnelResumeWithTimeout(napi_env env, napi_callback_info info)
 {
-    size_t argc = 1;
-    napi_value args[1];
+    size_t argc = 2;
+    napi_value args[2];
     napi_status status;
 
-    // Parse the arguments
+    // Parse the arguments: expect tunnelRef and timeout
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok || argc < 1)
+    if (status != napi_ok || argc < 2)
     {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel ref)", __FILE__, __LINE__);
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected two arguments (tunnel ref, timeout)", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
         return NULL;
     }
@@ -205,13 +205,24 @@ napi_value TunnelResumeWithTimeout(napi_env env, napi_callback_info info)
     if (status != napi_ok)
     {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected first argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
         return NULL;
     }
 
-    // Call the pinggy_tunnel_resume function
-    pinggy_bool_t ret = pinggy_tunnel_resume_timeout((pinggy_ref_t)tunnel_ref, -1);
+    // Convert the second argument to an integer (timeout). Allow negative values (e.g. -1).
+    int32_t timeout;
+    status = napi_get_value_int32(env, args[1], &timeout);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected second argument to be an integer (timeout)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+
+    // Call the native function with provided timeout
+    pinggy_bool_t ret = pinggy_tunnel_resume_timeout((pinggy_ref_t)tunnel_ref, (pinggy_int_t)timeout);
     PINGGY_DEBUG_INT(ret);
 
     // Return the result as a JavaScript boolean

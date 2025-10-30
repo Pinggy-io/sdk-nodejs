@@ -1,10 +1,10 @@
-import { HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "./pinggyOptions"
+import { PinggyOptions, PinggyOptionsType } from "./pinggyOptions"
 import { TunnelWorkerManager } from "./worker/tunnel-worker-manager";
 import { Logger } from "./utils/logger"
 import { Tunnel } from "./bindings/tunnel";
 import { Config } from "./bindings/config";
 import { TunnelUsageType } from "./bindings/tunnel-usage";
-import { TunnelStatus } from "./types";
+import { Callback, CallbackType, TunnelStatus, workerMessageType } from "./types";
 
 
 /**
@@ -21,7 +21,7 @@ export class TunnelInstance {
   private workerManager: TunnelWorkerManager
   public tunnel: Tunnel | null = null; // dynamic proxy
   public config: Config | null = null; // dynamic proxy
-  private callbacks = new Map<string, Function>();
+  private callbacks = new Map<CallbackType, Function>();
 
   /**
    * Creates a new TunnelInstance with the provided native addon and options.
@@ -52,7 +52,6 @@ export class TunnelInstance {
             throw new Error(`Tunnel method "${method}" does not exist`);
           }
           return async (...args: any[]) => {
-            await this.ensureWorkerReady();
             return this.workerManager.call("tunnel", method, ...args);
           };
         },
@@ -67,7 +66,6 @@ export class TunnelInstance {
             throw new Error(`Config method "${method}" does not exist`);
           }
           return async (...args: any[]) => {
-            await this.ensureWorkerReady();
             return this.workerManager.call("config", method, ...args);
           };
         },
@@ -79,17 +77,24 @@ export class TunnelInstance {
     }
   }
 
-  private async ensureWorkerReady() {
-    await this.workerManager.ensureReady();
-  }
 
   // ---------------- Callback Handling ---------------- //
 
-  private handleWorkerCallback(event: string, data: any): void {
+  private handleWorkerCallback(event: CallbackType, data: any): void {
     const cb = this.callbacks.get(event);
     if (cb) {
-      cb(...(Array.isArray(data) ? data : [data]));
+      if (Array.isArray(data)) {
+        // Already an array: spread it
+        cb(...data);
+      } else if (data && typeof data === "object") {
+        // Object: spread its values as separate arguments
+        cb(...Object.values(data));
+      } else {
+        // Primitive: pass as single argument
+        cb(data);
+      }
     }
+
     Logger.info(`Handled worker callback: ${event}`);
   }
 
@@ -105,6 +110,11 @@ export class TunnelInstance {
       throw new Error("Config not initialized or has been stopped.");
     }
     return this.config;
+  }
+
+  private setCallback<K extends CallbackType>(type: K, callback: Callback<K>): void {
+    this.callbacks.set(type, callback);
+    this.workerManager.registerCallback(type);
   }
 
   /**
@@ -217,8 +227,7 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setUsageUpdateCallback(callback: (usage: Record<string, any>) => void): void {
-    this.callbacks.set("usageUpdate", callback);
-    this.workerManager.registerCallback("usageUpdate");
+    this.setCallback(CallbackType.TunnelUsageUpdate, callback);
   }
 
   /**
@@ -231,8 +240,7 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setTunnelErrorCallback(callback: (errorNo: number, error: string, recoverable: boolean) => void): void {
-    this.callbacks.set("tunnelError", callback);
-    this.workerManager.registerCallback("tunnelError");
+    this.setCallback(CallbackType.TunnelError, callback);
   }
 
   /**
@@ -245,8 +253,19 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
-    this.callbacks.set("tunnelDisconnected", callback);
-    this.workerManager.registerCallback("tunnelDisconnected");
+    this.setCallback(CallbackType.TunnelDisconnected, callback)
+  }
+
+  public setAdditionalForwardingCallback(callback: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void): void {
+    this.setCallback(CallbackType.TunnelAdditionalForwarding, callback)
+  }
+
+  public setPrimaryForwardingCallback(callback: (message: string, address: string[]) => void): void {
+    this.setCallback(CallbackType.TunnelPrimaryForwarding, callback)
+  }
+
+  public setAuthenticatedCallback(callback: (message: string) => void): void {
+    this.setCallback(CallbackType.TunnelAuthenticated, callback);
   }
 
   /**
@@ -514,7 +533,7 @@ export class TunnelInstance {
    *
    * @returns The reconnect interval setting, or `null` if not configured.
    */
-  public async getReconnectInterval(): Promise <number | null> {
+  public async getReconnectInterval(): Promise<number | null> {
     return await this.activeConfig.getReconnectInterval() ?? null;
   }
 
@@ -543,132 +562,7 @@ export class TunnelInstance {
   * @returns {PinggyOptionsType | null} The tunnel configuration, or null if unavailable.
   */
   public async getConfig(): Promise<PinggyOptionsType | null> {
-    const options: PinggyOptionsType = { optional: {} };
-
-    // Add directly accessible properties
-    const serverAddress = await this.getServerAddress();
-    options.serverAddress = serverAddress || "";
-
-    const token = await this.getToken();
-    options.token = token || "";
-
-    const sniServerName = await this.getSniServerName();
-    options.optional!.sniServerName = sniServerName || "";
-
-    const force = await this.getForce();
-    options.force = force || false;
-
-    const httpsOnly = await this.getHttpsOnly();
-    options.httpsOnly = httpsOnly !== null ? httpsOnly : false;
-
-    const ipWhiteList = await this.getIpWhiteList();
-    options.ipWhitelist = ipWhiteList;
-
-    const allowPreflight = await this.getAllowPreflight();
-    options.allowPreflight = allowPreflight !== null ? allowPreflight : false;
-
-    const noReverseProxy = await this.getNoReverseProxy();
-    options.reverseProxy = noReverseProxy !== null ? noReverseProxy : false;
-
-    const xForwardedFor = await this.getXForwardedFor();
-    options.xForwardedFor = xForwardedFor !== null ? xForwardedFor : false;
-
-    const originalRequestUrl = await this.getOriginalRequestUrl();
-    options.originalRequestUrl = originalRequestUrl !== null ? originalRequestUrl : false;
-
-    const rawAuthValue = await this.getBasicAuth();
-
-    options.basicAuth = normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
-
-    const bearerAuth = await this.getBearerTokenAuth();
-    options.bearerTokenAuth = bearerAuth;
-
-    const reconnectInterval = await this.getReconnectInterval();
-    options.reconnectInterval = reconnectInterval !== null ? reconnectInterval : 0;
-
-    const maxReconnectAttempts = await this.getMaxReconnectAttempts();
-    options.maxReconnectAttempts = maxReconnectAttempts !== null ? maxReconnectAttempts : 0;
-
-    const autoReconnect = await this.getAutoReconnect();
-    options.autoReconnect = autoReconnect !== null ? autoReconnect : false;
-
-    const headerModificationRaw = await this.getHeaderModification() as unknown as HeaderModification[];
-
-    const webDebuggerPort = await this.getWebDebuggerPort();
-    options.webDebugger = `localhost:${webDebuggerPort}`;
-
-    options.headerModification = Array.isArray(headerModificationRaw)
-      ? headerModificationRaw.map(h => {
-        if (h.type === "remove") {
-          return { key: h.key, type: "remove" as const };
-        }
-        return {
-          key: h.key,
-          type: h.type,
-          value: Array.isArray(h.value) ? h.value : [],
-        };
-      })
-      : [];
-
-
-
-    let type = (await this.getTunnelType()) || (await this.getUdpType());
-
-    if (type === "tcp" || type === "tls" || type === "http" || type === "udp") {
-      options.tunnelType = [type as any];
-      if (type === "http" || type === "tcp" || type === "tls") {
-        const tcpForwardTo = await this.getTcpForwardTo();
-        options.forwarding = tcpForwardTo || "";
-      } else if (type === "udp") {
-        const udpForwardTo = await this.getUdpForwardTo();
-        options.forwarding = udpForwardTo || "";
-      }
-    } else {
-      options.tunnelType = [TunnelType.Http];
-      options.forwarding = "";
-    }
-
-    const ssl = await this.getTunnelSsl();
-    options.optional!.ssl = ssl !== null ? ssl : false;
-
-
-    const argString = await this.getArgument() || "";
-    const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
-    const argumentInParts: string[] = [];
-    let match;
-    while ((match = regex.exec(argString)) !== null) {
-      argumentInParts.push(match[1] || match[2] || match[0]);
-    }
-
-    if (argumentInParts.length > 0 && !argumentInParts[0].startsWith("w:") &&
-      !argumentInParts[0].startsWith("b:") && !argumentInParts[0].startsWith("k:") &&
-      !argumentInParts[0].startsWith("a:") && !argumentInParts[0].startsWith("r:") &&
-      !argumentInParts[0].startsWith("u:") && !argumentInParts[0].startsWith("x:")
-    ) {
-      options.optional!.additionalArguments = argumentInParts[0];
-    }
-    return options;
+    const result = await this.workerManager.call("tunnel", "", workerMessageType.GetTunnelConfig);
+    return result as PinggyOptions | null;
   }
-}
-
-type BasicAuthItem = { username: string; password: string };
-
-function normalizeBasicAuth(input: string | BasicAuthItem[] | null): BasicAuthItem[] {
-  let parsed: BasicAuthItem[] | null = null;
-
-  if (typeof input === "string") {
-    try {
-      parsed = JSON.parse(input);
-    } catch {
-      parsed = null;
-    }
-  } else {
-    parsed = input ?? null;
-  }
-
-  if (!Array.isArray(parsed) || parsed.length === 0) {
-    return [];
-  }
-
-  return parsed.filter(({ username, password }) => !!username && !!password);
 }

@@ -3,7 +3,7 @@ import path from "path/win32";
 import { Logger } from "../utils/logger";
 import { PinggyOptions } from "../pinggyOptions";
 import { v4 as uuidv4 } from 'uuid';
-import { PendingCall, WorkerMessage, workerMessageType } from "../types";
+import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types";
 
 /**
  * Manages the dedicated worker thread responsible for running a single Pinggy tunnel instance.
@@ -25,7 +25,7 @@ export class TunnelWorkerManager {
     private pendingCalls = new Map<string, PendingCall>();
     private ready = false;
     private readyPromise: Promise<void>;
-    private callbackHandler?: (event: string, data: any) => void;
+    private callbackHandler?: (event: CallbackType, data: any) => void;
 
     constructor(pinggyOptions: PinggyOptions) {
         const workerPath = path.resolve(__dirname, "tunnel-worker.js").replace(/\\/g, "/");
@@ -56,7 +56,7 @@ export class TunnelWorkerManager {
         this.registerWorkerListeners();
     }
 
-    public setCallbackHandler(fn: (event: string, data: any) => void) {
+    public setCallbackHandler(fn: (event: CallbackType, data: any) => void) {
         this.callbackHandler = fn;
     }
 
@@ -64,31 +64,35 @@ export class TunnelWorkerManager {
         if (!this.ready) await this.readyPromise;
     }
 
-    public async call(target: "config" | "tunnel", method: string, ...args: any[]) {
+    public async call(target: "config" | "tunnel", method: string, type?: workerMessageType, ...args: any[]) {
         await this.ensureReady();
         const id = uuidv4();
+        let msgType: workerMessageType = workerMessageType.Call
+        if (type) {
+            msgType = type;
+        }
         return new Promise<any>((resolve, reject) => {
             this.pendingCalls.set(id, { resolve, reject });
-            const msg: Extract<WorkerMessage, { type: workerMessageType.Call }> = {
-                type: workerMessageType.Call,
+            const msg = {
+                type: msgType,
                 id,
                 target,
                 method,
                 args,
-            };
+            } as WorkerMessage;
             this.worker.postMessage(msg);
         });
     }
 
     public async setDebugLoggingInWorker(enable: boolean) {
-        const msg: Extract<WorkerMessage, { type: workerMessageType.enableLogger }> = {
-            type: workerMessageType.enableLogger,
+        const msg: Extract<WorkerMessage, { type: workerMessageType.EnableLogger }> = {
+            type: workerMessageType.EnableLogger,
             enabled: enable
         }
         this.worker.postMessage(msg);
     }
 
-    public registerCallback(event: string) {
+    public registerCallback(event: CallbackType) {
         this.worker.postMessage({ type: workerMessageType.RegisterCallback, event });
     }
 
