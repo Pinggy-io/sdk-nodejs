@@ -256,14 +256,41 @@ export class TunnelInstance {
     this.setCallback(CallbackType.TunnelDisconnected, callback)
   }
 
+  /**
+    * Sets a callback function to receive AdditionalForwarding events.
+    *
+    * Delegates to {@link Tunnel#setAdditionalForwardingCallback}.
+    *
+    * @param {function} callback - The callback function to receive AdditionalForwarding events.
+    * @returns {void}
+    * @throws {Error} If the tunnel is not initialized.
+    */
   public setAdditionalForwardingCallback(callback: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void): void {
     this.setCallback(CallbackType.TunnelAdditionalForwarding, callback)
   }
 
+    /**
+    * Sets a callback function to receive PrimaryForwarding events.
+    *
+    * Delegates to {@link Tunnel#setPrimaryForwardingCallback}.
+    *
+    * @param {function} callback - The callback function to receive PrimaryForwarding events.
+    * @returns {void}
+    * @throws {Error} If the tunnel is not initialized.
+    */
   public setPrimaryForwardingCallback(callback: (message: string, address: string[]) => void): void {
     this.setCallback(CallbackType.TunnelPrimaryForwarding, callback)
   }
 
+    /**
+    * Sets a callback function to receive Authenticated events.
+    *
+    * Delegates to {@link Tunnel#setAuthenticatedCallback}.
+    *
+    * @param {function} callback - The callback function to receive Authenticated events.
+    * @returns {void}
+    * @throws {Error} If the tunnel is not initialized.
+    */
   public setAuthenticatedCallback(callback: (message: string) => void): void {
     this.setCallback(CallbackType.TunnelAuthenticated, callback);
   }

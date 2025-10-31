@@ -285,7 +285,7 @@ class TunnelWorker {
     options.reverseProxy = noReverseProxy ?? false;
     options.xForwardedFor = xForwardedFor ?? false;
     options.originalRequestUrl = originalRequestUrl ?? false;
-    options.basicAuth = this.normalizeBasicAuth(rawAuthValue as string | BasicAuthItem[] | null);
+    options.basicAuth = this.normalizeBasicAuth(rawAuthValue as BasicAuthItem[] | null);
     options.bearerTokenAuth = bearerAuth;
     options.reconnectInterval = reconnectInterval ?? 0;
     options.maxReconnectAttempts = maxReconnectAttempts ?? 0;
@@ -335,23 +335,12 @@ class TunnelWorker {
   }
 
 
-  private normalizeBasicAuth(input: string | BasicAuthItem[] | null): BasicAuthItem[] {
+  private normalizeBasicAuth(input: BasicAuthItem[] | null): BasicAuthItem[] {
     let parsed: BasicAuthItem[] | null = null;
-
-    if (typeof input === "string") {
-      try {
-        parsed = JSON.parse(input);
-      } catch {
-        parsed = null;
-      }
-    } else {
-      parsed = input || []
-    }
-
+    parsed = input || []
     if (!Array.isArray(parsed) || parsed.length === 0) {
       return [];
     }
-
     return parsed.filter(({ username, password }) => !!username && !!password);
   }
 
