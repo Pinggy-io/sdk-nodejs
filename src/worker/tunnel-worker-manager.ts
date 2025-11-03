@@ -26,6 +26,7 @@ export class TunnelWorkerManager {
     private ready = false;
     private readyPromise: Promise<void>;
     private callbackHandler?: (event: CallbackType, data: any) => void;
+    public workerErrorCallback?: Function;
 
     constructor(pinggyOptions: PinggyOptions) {
         const workerPath = path.resolve(__dirname, "tunnel-worker.js").replace(/\\/g, "/");
@@ -129,10 +130,17 @@ export class TunnelWorkerManager {
         });
 
         this.worker.on("error", (err) => {
+            if (this.workerErrorCallback) {
+                this.workerErrorCallback(err)
+            }
             Logger.error("TunnelWorker crashed:", err);
         });
 
         this.worker.on("exit", (code) => {
+            if (this.workerErrorCallback) {
+                const error = new Error(`Tunnel Worker exited with error code ${code}`)
+                this.workerErrorCallback(error);
+            }
             Logger.info(`TunnelWorker exited with code ${code}`);
         });
     }

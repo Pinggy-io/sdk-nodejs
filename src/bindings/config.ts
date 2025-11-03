@@ -76,7 +76,7 @@ export class Config implements IConfig {
 
       // Apply user-defined values or set defaults
       const serverAddress = options.serverAddress || "a.pinggy.io:443";
-      const sniServerName = options.getSniServerName() || "a.pinggy.io";
+      const sniServerName = options.getSniServerName();
       let forwardTo = options.getForwardingPrimary() || "localhost:80";
       const ssl = options.getSsl() ?? true; // Default to true if not specified
       const type = options.tunnelType?.[0] || "http"; // Default to "http" if not specified
