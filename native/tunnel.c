@@ -222,7 +222,7 @@ napi_value TunnelResumeWithTimeout(napi_env env, napi_callback_info info)
     }
 
     // Call the native function with provided timeout
-    pinggy_bool_t ret = pinggy_tunnel_resume_timeout((pinggy_ref_t)tunnel_ref, (pinggy_int_t)timeout);
+    pinggy_bool_t ret = pinggy_tunnel_resume_timeout((pinggy_ref_t)tunnel_ref, (pinggy_int32_t)timeout);
 
     // Return the result as a JavaScript boolean
     napi_value result;
