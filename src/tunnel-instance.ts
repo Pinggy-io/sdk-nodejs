@@ -132,6 +132,15 @@ export class TunnelInstance {
   public async setDebugLogging(enable: boolean): Promise<void> {
     this.workerManager.setDebugLoggingInWorker(enable);
   }
+  /**
+   * Registers a callback function to receive errors from the tunnel worker.
+   * It is recommended to always set this callback to ensure your program exits gracefully,
+   * since if the tunnel worker exits, the tunnel is no longer active.
+   * @param {function} callback - The callback function to receive errors.
+   */
+  public setWorkerErrorCallback(fn: Function) {
+    this.workerManager.workerErrorCallback = fn;
+  }
 
   /**
    * Gets the list of public URLs for the tunnel.

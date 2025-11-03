@@ -251,8 +251,12 @@ export class PinggyOptions implements PinggyOptionsType {
    * @returns SNI server name from advanced options
    */
   getSniServerName(): string | undefined {
-    return this.optional?.sniServerName;
+    if (this.optional?.sniServerName) {
+      return this.optional?.sniServerName;
+    }
+    return this.getSniFromServerAddress();
   }
+
 
   /**
    * Get additional arguments configuration.
@@ -473,5 +477,15 @@ export class PinggyOptions implements PinggyOptionsType {
       // Check if it's a valid host:port format
       return this.hostPortRegex.test(address);
     }
+  }
+
+  private getSniFromServerAddress(): string | undefined {
+    if (this.serverAddress?.endsWith("a.pinggy.io")) {
+      return "a.pinggy.io";
+    }
+    if (this.serverAddress?.endsWith("t.pinggy.io")) {
+      return "t.pinggy.io";
+    }
+    return "a.pinggy.io";
   }
 }
