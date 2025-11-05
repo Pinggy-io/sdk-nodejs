@@ -586,6 +586,7 @@ typedef struct
 // C callback function that will be called by Pinggy
 void additional_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_ref_t tunnel, pinggy_const_char_p_t bind_addr, pinggy_const_char_p_t forward_to_addr)
 {
+    napi_status status;
     if (user_data == NULL)
     {
         return;
@@ -595,16 +596,54 @@ void additional_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_
     napi_env env = cb_data->env;
 
     napi_value js_callback, undefined, js_tunnel, js_bind_address, js_forward_to_addr;
-    napi_get_reference_value(env, cb_data->callback_ref, &js_callback);
+    status = napi_get_reference_value(env, cb_data->callback_ref, &js_callback);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to get callback reference", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
     napi_get_undefined(env, &undefined);
 
-    napi_create_int64(env, (int64_t)tunnel, &js_tunnel);
-    napi_create_string_utf8(env, bind_addr, NAPI_AUTO_LENGTH, &js_bind_address);
-    napi_create_string_utf8(env, forward_to_addr, NAPI_AUTO_LENGTH, &js_forward_to_addr);
+    // convert from the C int64_t type to the JavaScript number type
+    status = napi_create_int64(env, (int64_t)tunnel, &js_tunnel);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create tunnel value", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
 
+    // Convert UTF-8 encoded c string to JS string
+    status = napi_create_string_utf8(env, bind_addr, NAPI_AUTO_LENGTH, &js_bind_address);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create bind address value", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
+    // Convert UTF-8 encoded c string to JS string
+    status = napi_create_string_utf8(env, forward_to_addr, NAPI_AUTO_LENGTH, &js_forward_to_addr);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create forward to address value", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
     napi_value args[3] = {js_tunnel, js_bind_address, js_forward_to_addr};
     napi_value result;
-    napi_call_function(env, undefined, js_callback, 3, args, &result);
+    status = napi_call_function(env, undefined, js_callback, 3, args, &result);
+    if (status != napi_ok)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to call JavaScript callback", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return;
+    }
     PINGGY_DEBUG_RET(result);
 }
 

@@ -81,6 +81,9 @@ class TunnelWorker {
         Logger.info(`Ignoring malformed message: ${JSON.stringify(msg)}`);
         return;
       }
+      console.log("Worker about to call Logger.info()");
+      Logger.info(`[Worker] method invoke request recived inside worker ${JSON.stringify(msg)}`);
+
       switch (msg.type) {
         case workerMessageType.RegisterCallback:
           this.registeredCallbacks.add(msg.event);
@@ -164,6 +167,7 @@ class TunnelWorker {
    * Send a callback event to the main thread only if registered.
    */
   private forwardCallback(event: CallbackType, data: any) {
+   Logger.info(`[Worker] Callback recived. Callbackname: ${event},data:${JSON.stringify(data)}`)
     if (!this.registeredCallbacks.has(event)) return;
     this.postMessage({
       type: workerMessageType.Callback,
@@ -176,6 +180,7 @@ class TunnelWorker {
    * Send a response back to the main thread
    */
   private sendResponse(id: string, result: any, error?: string): void {
+    Logger.info(`[Worker]Sending response back to main thread. ID:${id}`)
     this.postMessage({
       type: workerMessageType.Response,
       id,
@@ -212,6 +217,7 @@ class TunnelWorker {
   private setDebugLogging(enabled: boolean = false): void {
     this.addon?.setLogEnable(enabled)
     this.addon?.setDebugLogging(enabled)
+    Logger.setDebugEnabled(enabled)
   }
 
   private async getTunnelConfig(msg: Extract<WorkerMessage, { type: workerMessageType.GetTunnelConfig }>) {
