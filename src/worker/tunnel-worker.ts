@@ -2,7 +2,7 @@ import { parentPort, workerData } from "worker_threads";
 import { CallbackType, PinggyNative, WorkerMessage, workerMessageType } from "../types.js";
 import { Config } from "../bindings/config.js";
 import { Tunnel } from "../bindings/tunnel.js";
-import { Logger } from "../utils/logger.js";
+import { Logger, LogLevel } from "../utils/logger.js";
 import {
   getLastException,
   PinggyError,
@@ -78,9 +78,11 @@ class TunnelWorker {
   private registerMessageHandlers(): void {
     parentPort?.on("message", async (msg: WorkerMessage) => {
       if (!msg || typeof msg !== "object") {
-        Logger.info(`Ignoring malformed message: ${JSON.stringify(msg)}`);
+        Logger.debug(`Ignoring malformed message: ${JSON.stringify(msg)}`);
         return;
       }
+      Logger.debug(`[Worker] method invoke request recived inside worker ${JSON.stringify(msg)}`);
+
       switch (msg.type) {
         case workerMessageType.RegisterCallback:
           this.registeredCallbacks.add(msg.event);
@@ -92,7 +94,7 @@ class TunnelWorker {
           return;
 
         case workerMessageType.EnableLogger:
-          this.setDebugLogging(msg.enabled);
+          this.setDebugLogging(msg.enabled, msg.logLevel);
           return
         case workerMessageType.GetTunnelConfig:
           this.getTunnelConfig(msg);
@@ -164,6 +166,7 @@ class TunnelWorker {
    * Send a callback event to the main thread only if registered.
    */
   private forwardCallback(event: CallbackType, data: any) {
+    Logger.debug(`[Worker] Callback recived. Callbackname: ${event},data:${JSON.stringify(data)}`)
     if (!this.registeredCallbacks.has(event)) return;
     this.postMessage({
       type: workerMessageType.Callback,
@@ -176,6 +179,7 @@ class TunnelWorker {
    * Send a response back to the main thread
    */
   private sendResponse(id: string, result: any, error?: string): void {
+    Logger.debug(`[Worker]Sending response back to main thread. ID:${id}`)
     this.postMessage({
       type: workerMessageType.Response,
       id,
@@ -209,9 +213,11 @@ class TunnelWorker {
     parentPort.postMessage(msg);
   }
 
-  private setDebugLogging(enabled: boolean = false): void {
+  private setDebugLogging(enabled: boolean = false, logLevel: LogLevel = LogLevel.INFO): void {
     this.addon?.setLogEnable(enabled)
     this.addon?.setDebugLogging(enabled)
+    Logger.setDebugEnabled(enabled)
+    Logger.setLevel(logLevel);
   }
 
   private async getTunnelConfig(msg: Extract<WorkerMessage, { type: workerMessageType.GetTunnelConfig }>) {

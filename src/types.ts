@@ -7,6 +7,8 @@
  * @packageDocumentation
  */
 
+import { LogLevel } from "./utils/logger";
+
 
 
 /**
@@ -314,7 +316,7 @@ export type WorkerMessage =
   | { type: workerMessageType.Response; id: string; result?: any; error?: string }
   | { type: workerMessageType.Callback; event: CallbackType; data: any }
   | { type: workerMessageType.RegisterCallback; event: CallbackType }
-  | { type: workerMessageType.EnableLogger; enabled: boolean }
+  | { type: workerMessageType.EnableLogger; enabled: boolean, logLevel: LogLevel }
   | { type: workerMessageType.GetTunnelConfig; id: string };
 
 export type PendingCall = {

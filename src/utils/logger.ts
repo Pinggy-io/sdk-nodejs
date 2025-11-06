@@ -1,6 +1,12 @@
 import fs from "fs";
 import path from "path";
 
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  ERROR = 2,
+}
+
 export class Logger {
   private static logFilePath: string = path.join(
     __dirname,
@@ -10,6 +16,11 @@ export class Logger {
 
   // Debug state management
   private static debugEnabled: boolean = false;
+  private static level: LogLevel = LogLevel.INFO; // Default: INFO
+
+  public static setLevel(level: LogLevel = LogLevel.INFO): void {
+    Logger.level = level;
+  }
 
   public static setDebugEnabled(enabled: boolean): void {
     Logger.debugEnabled = enabled;
@@ -36,10 +47,14 @@ export class Logger {
   }
 
   private static log(
-    level: "info" | "error",
+    level: LogLevel,
     message: string,
     error: Error | null = null
   ): void {
+
+    // Log only if debugEnabled and matches the current log level
+    if (!Logger.debugEnabled || level < Logger.level) return;
+
     const timestamp = Logger.getISTTimestamp();
     const errorMessage = error
       ? `\nError: ${error.stack || error.message}`
@@ -56,7 +71,8 @@ export class Logger {
         location = stack[3].trim();
       }
     }
-    const logMessage = `[${timestamp}] [${level.toUpperCase()}] [${location}] ${message}${errorMessage}\n`;
+    const levelName = LogLevel[level];
+    const logMessage = `[${timestamp}] [${levelName.toUpperCase()}] [${location}] ${message}${errorMessage}\n`;
 
     // Ensure log directory exists before writing
     Logger.ensureLogDirectory();
@@ -64,21 +80,44 @@ export class Logger {
     fs.appendFile(Logger.logFilePath, logMessage, (err) => {
       if (err) console.error("Failed to write to log file:", err);
     });
-    console[level](`[${location}] ${message}`, error || "");
+
+    const color = Logger.getColor(level);
+    const reset = "\x1b[0m";
+    const coloredLevel = color(`[${levelName}]`);
+    console.log(`${coloredLevel} ${message}${reset}`);
+
+    if (error) console.error(color(error.message));
+  }
+
+  private static getColor(level: LogLevel): (msg: string) => string {
+    const reset = "\x1b[0m";
+    const colors: Record<LogLevel, string> = {
+      [LogLevel.DEBUG]: "\x1b[33m", // cyan
+      [LogLevel.INFO]: "\x1b[36m",  // yellow
+      [LogLevel.ERROR]: "\x1b[31m", // red
+    };
+    const colorCode = colors[level] || "\x1b[0m";
+    return (msg: string) => `${colorCode}${msg}${reset}`;
   }
 
   public static info(message: string): void {
     // Only log info messages if debug logging is enabled
     if (Logger.isDebugEnabled()) {
-      this.log("info", message);
+      this.log(LogLevel.INFO, message);
+    }
+  }
+
+  public static debug(message: string): void {
+    // Only log info messages if debug logging is enabled
+    if (Logger.isDebugEnabled()) {
+      this.log(LogLevel.DEBUG, message);
     }
   }
 
   public static error(message: string, error?: Error): void {
-    // Always log error messages regardless of debug state
-    if(Logger.isDebugEnabled()) {
-      this.log("error", message, error || null);
+    if (Logger.isDebugEnabled()) {
+      this.log(LogLevel.ERROR, message, error || null);
     }
-    
+
   }
 }

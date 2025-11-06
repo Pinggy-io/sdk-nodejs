@@ -1,7 +1,7 @@
 import { PinggyNative } from "./types";
 import { PinggyOptionsType, PinggyOptions } from "./pinggyOptions";
 import { TunnelInstance } from "./tunnel-instance";
-import { Logger } from "./utils/logger";
+import { Logger, LogLevel } from "./utils/logger";
 const binary = require("@mapbox/node-pre-gyp");
 const path = require("path");
 
@@ -20,6 +20,7 @@ const path = require("path");
 export class Pinggy {
   private static _instance: Pinggy;
   private static debugEnabled = false;
+  private static logLevel: LogLevel = LogLevel.INFO;
   private static addon: PinggyNative = require(binary.find(
     path.resolve(path.join(__dirname, "../package.json"))
   ));
@@ -57,7 +58,7 @@ export class Pinggy {
     this.tunnels.add(tunnel);
     // If debug was previously enabled, enable it inside this tunnel’s worker
     if (Pinggy.debugEnabled) {
-      tunnel.setDebugLogging(true);
+      tunnel.setDebugLogging(true, Pinggy.logLevel);
     }
     return tunnel;
   }
@@ -109,14 +110,18 @@ export class Pinggy {
    * @returns {void}
    * @see {@link pinggy}
    */
-  public setDebugLogging(enabled: boolean = false): void {
+  public setDebugLogging(enabled: boolean = false, logLevel?: LogLevel): void {
     // enable libpinggy logs for all active tunnels
     Pinggy.debugEnabled = enabled;
 
     // Set debug state for JavaScript Logger
     Logger.setDebugEnabled(enabled);
+
+    Pinggy.logLevel = logLevel ?? LogLevel.INFO;
+    Logger.setLevel(logLevel);
+
     for (const tunnel of this.tunnels) {
-      tunnel.setDebugLogging(enabled);
+      tunnel.setDebugLogging(enabled, logLevel);
     }
   }
 

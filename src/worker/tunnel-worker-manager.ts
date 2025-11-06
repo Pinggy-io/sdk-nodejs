@@ -1,6 +1,6 @@
 import { Worker } from "worker_threads";
 import path from "path/win32";
-import { Logger } from "../utils/logger";
+import { Logger, LogLevel } from "../utils/logger";
 import { PinggyOptions } from "../pinggyOptions";
 import { v4 as uuidv4 } from 'uuid';
 import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types";
@@ -72,6 +72,7 @@ export class TunnelWorkerManager {
         if (type) {
             msgType = type;
         }
+        Logger.info(`[Main] Sending method call to worker thread method:${method},target:${target},type:${type},args${args},Id:${id}`)
         return new Promise<any>((resolve, reject) => {
             this.pendingCalls.set(id, { resolve, reject });
             const msg = {
@@ -85,10 +86,11 @@ export class TunnelWorkerManager {
         });
     }
 
-    public async setDebugLoggingInWorker(enable: boolean) {
+    public async setDebugLoggingInWorker(enable: boolean, logLevel: LogLevel) {
         const msg: Extract<WorkerMessage, { type: workerMessageType.EnableLogger }> = {
             type: workerMessageType.EnableLogger,
-            enabled: enable
+            enabled: enable,
+            logLevel: logLevel
         }
         this.worker.postMessage(msg);
     }
@@ -110,6 +112,7 @@ export class TunnelWorkerManager {
      */
     private registerWorkerListeners(): void {
         this.worker.on("message", (msg: WorkerMessage) => {
+            Logger.debug(`[Main] Recived msg from worker ${JSON.stringify(msg)}`)
             switch (msg?.type) {
                 case workerMessageType.Response: {
                     const pending = this.pendingCalls.get(msg.id);
