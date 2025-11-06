@@ -53,7 +53,7 @@ export class Logger {
   ): void {
 
     // Log only if debugEnabled and matches the current log level
-    if (!Logger.debugEnabled || level !== Logger.level) return;
+    if (!Logger.debugEnabled || level < Logger.level) return;
 
     const timestamp = Logger.getISTTimestamp();
     const errorMessage = error
@@ -92,8 +92,8 @@ export class Logger {
   private static getColor(level: LogLevel): (msg: string) => string {
     const reset = "\x1b[0m";
     const colors: Record<LogLevel, string> = {
-      [LogLevel.DEBUG]: "\x1b[36m", // cyan
-      [LogLevel.INFO]: "\x1b[33m",  // yellow
+      [LogLevel.DEBUG]: "\x1b[33m", // cyan
+      [LogLevel.INFO]: "\x1b[36m",  // yellow
       [LogLevel.ERROR]: "\x1b[31m", // red
     };
     const colorCode = colors[level] || "\x1b[0m";
