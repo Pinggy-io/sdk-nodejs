@@ -1,6 +1,6 @@
 import { PinggyOptions, PinggyOptionsType } from "./pinggyOptions"
 import { TunnelWorkerManager } from "./worker/tunnel-worker-manager";
-import { Logger } from "./utils/logger"
+import { Logger, LogLevel } from "./utils/logger"
 import { Tunnel } from "./bindings/tunnel";
 import { Config } from "./bindings/config";
 import { TunnelUsageType } from "./bindings/tunnel-usage";
@@ -128,8 +128,8 @@ export class TunnelInstance {
     return await this.activeTunnel.start();
   }
 
-  public async setDebugLogging(enable: boolean): Promise<void> {
-    this.workerManager.setDebugLoggingInWorker(enable);
+  public async setDebugLogging(enable: boolean, logLevel: LogLevel = LogLevel.INFO): Promise<void> {
+    this.workerManager.setDebugLoggingInWorker(enable, logLevel);
   }
   /**
    * Registers a callback function to receive errors from the tunnel worker.
