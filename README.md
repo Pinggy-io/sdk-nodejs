@@ -23,21 +23,25 @@ npm i @pinggy/pinggy
 
 ## Quick Start
 
-### Import the SDK
 
 ```ts
 import { pinggy } from "@pinggy/pinggy";
-```
 
-### Create and Start a Tunnel
 
-```ts
 const tunnel = pinggy.createTunnel({ forwarding: "localhost:3000" });
 await tunnel.start();
-console.log("Tunnel URLs:", tunnel.urls()); // Get all public addresses
+console.log("Tunnel URLs:", await tunnel.urls()); // Get all public addresses
 ```
 
-Find complete examples at [examples](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples)
+Or use the convenient `forward` method:
+
+```ts
+const tunnel = await pinggy.forward({ forwarding: "localhost:5000" });
+console.log("Tunnel URLs:", await tunnel.urls());
+```
+
+
+Find complete examples at [examples](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples).
 
 
 ## Managing Multiple Tunnels
@@ -49,16 +53,10 @@ const tunnel1 = pinggy.createTunnel({ forwarding: "localhost:3000" });
 const tunnel2 = pinggy.createTunnel({ forwarding: "localhost:4000" });
 await tunnel1.start();
 await tunnel2.start();
-console.log("Tunnel 1 URLs:", tunnel1.urls());
-console.log("Tunnel 2 URLs:", tunnel2.urls());
+console.log("Tunnel 1 URLs:", await tunnel1.urls());
+console.log("Tunnel 2 URLs:", await tunnel2.urls());
 ```
 
-Or use the convenient `forward` method:
-
-```ts
-const tunnel = await pinggy.forward({ forwarding: "localhost:5000" });
-console.log("Tunnel URLs:", tunnel.urls());
-```
 
 ---
 
@@ -75,7 +73,9 @@ npm i
 For example:
 
 ```bash
-npx degit github:Pinggy-io/sdk-nodejs/examples/express express && cd express && npm i
+npx degit github:Pinggy-io/sdk-nodejs/examples/express express
+cd express && npm i
+node express-listen-example.js
 ```
 
 ### Available Examples
@@ -91,6 +91,7 @@ npx degit github:Pinggy-io/sdk-nodejs/examples/express express && cd express && 
   ```bash
   npx degit github:Pinggy-io/sdk-nodejs/examples/js js-example
   cd js-example && npm i
+  node index.js
   ```
 
 - **[TypeScript](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/ts)** - TypeScript examples with full type safety

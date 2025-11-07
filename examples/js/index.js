@@ -1,13 +1,12 @@
 const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
-  console.log("Starting");
+  console.log("Starting Pinggy tunnel forwarding to localhost:7878");
   const options = {
     forwarding: "localhost:7878",
   };
 
   // Create and start tunnel using forward method
-  pinggy.setDebugLogging(true);
   const tunnel = await pinggy.forward(options);
 
   console.log("Tunnel URLs:", await tunnel.urls());
@@ -18,6 +17,7 @@ const { pinggy } = require("@pinggy/pinggy");
   tunnel.startWebDebugging(8080);
   console.log("Web debugging available at: http://localhost:8080");
 
+  // Stop tunnel after 20 seconds
   setTimeout(() => {
     try {
       console.log("Stopping tunnel...");
@@ -26,7 +26,7 @@ const { pinggy } = require("@pinggy/pinggy");
     } catch (err) {
       console.error("Failed to close tunnel:", err);
     }
-  }, 10000);
+  }, 20000);
 })();
 
 // Additional configurations can be passed to the "options" object, such as:
