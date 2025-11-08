@@ -2,6 +2,9 @@ libpinggy.so
 lib/
 lib/addon.node
 
+# Ignore package-lock.json files of examples
+examples/**/package-lock.json
+
 .prebuild*
 /build*
 
