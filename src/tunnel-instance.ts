@@ -28,13 +28,12 @@ export class TunnelInstance {
    *
    * Internally creates a {@link Config} and a {@link Tunnel}.
    *
-   * @param addon - The native addon instance.
-   * @param options - The tunnel configuration options.
+   * @param {PinggyOptionsType} options - The tunnel configuration options.
    */
 
-  constructor(options: PinggyOptions) {
+  constructor(options: PinggyOptionsType) {
     // initialize worker manager
-    this.workerManager = new TunnelWorkerManager(options);
+    this.workerManager = new TunnelWorkerManager(new PinggyOptions(options));
     this.workerManager.setCallbackHandler((event, data) => this.handleWorkerCallback(event, data));
 
     // Create proxy for this.tunnel and this.config such that their methods will be executed within this.workerManager.call function.
@@ -137,8 +136,8 @@ export class TunnelInstance {
    * since if the tunnel worker exits, the tunnel is no longer active.
    * @param {function} callback - The callback function to receive errors.
    */
-  public setWorkerErrorCallback(fn: Function) {
-    this.workerManager.workerErrorCallback = fn;
+  public setWorkerErrorCallback(callback: Function) {
+    this.workerManager.workerErrorCallback = callback;
   }
 
   /**

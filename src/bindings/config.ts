@@ -1,6 +1,6 @@
 import { Logger } from "../utils/logger";
 import { PinggyNative, Config as IConfig } from "../types";
-import { PinggyOptions } from "../pinggyOptions";
+import { PinggyOptions, PinggyOptionsType } from "../pinggyOptions";
 import { PinggyError } from "./exception";
 
 /**
@@ -19,11 +19,11 @@ export class Config implements IConfig {
   /**
    * Creates a new Config instance and initializes it with the provided options.
    * @param addon - The native addon instance.
-   * @param {PinggyOptions} [options={}] - The tunnel configuration options.
+   * @param {PinggyOptionsType} [options={}] - The tunnel configuration options.
    */
-  constructor(addon: PinggyNative, options: PinggyOptions) {
+  constructor(addon: PinggyNative, options: PinggyOptionsType) {
     this.addon = addon;
-    this.configRef = this.initialize(options);
+    this.configRef = this.initialize(new PinggyOptions(options));
   }
 
   /**

@@ -33,7 +33,7 @@ export { pinggy, TunnelInstance, Config, Tunnel };
  * @see {@link PinggyOptionsType}
  * @see {@link HeaderModification}
  */
-export type { PinggyOptionsType as PinggyOptions, HeaderModification, ForwardingEntry } from "./pinggyOptions";
+export type { PinggyOptionsType as PinggyOptions, HeaderModification, ForwardingEntry, BasicAuthItem, Optional } from "./pinggyOptions";
 export { TunnelType } from "./pinggyOptions"
 export type { TunnelUsageType } from "./bindings/tunnel-usage";
 export type { TunnelStatus, PinggyNative } from "./types";
