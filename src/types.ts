@@ -289,8 +289,6 @@ export interface Tunnel {
 }
 /**
  * Tunnel lifecycle statuses.
- *
- * @group Enums
  * @public
  */
 export enum TunnelStatus {

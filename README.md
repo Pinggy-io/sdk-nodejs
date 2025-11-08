@@ -10,13 +10,13 @@ This guide will help you get started with installation, creating tunnels, managi
 Install the SDK via npm:
 
 ```bash
-npm i @pinggy/pinggy
+npm install @pinggy/pinggy
 ```
 
 > **Compatibility Note:**
 >
 > - The Pinggy SDK only works on:
->   - **Node.js 18 or newer** for **Linux x64**, **Linux arm64**, and **Windows x64**
+>   - **Node.js 18 or newer** for **Linux x64 and arm 64**, **Mac OS x64 and arm64**, and **Windows x64**
 >   - **Node.js 19 or newer** for **Windows arm64**
 > - Other platforms and Node.js versions are not supported as of now.
 
@@ -40,6 +40,12 @@ const tunnel = await pinggy.forward({ forwarding: "localhost:5000" });
 console.log("Tunnel URLs:", await tunnel.urls());
 ```
 
+**Authorization:** Create persistent tunnels with your own domains by using tokens obtained from <a href="https://dashboard.pinggy.io" target="_blank">dashboard.pinggy.io</a>.
+
+```ts
+const tunnel = await pinggy.forward({ forwarding: "localhost:5000", token: "YOUR_TOKEN" });
+console.log("Tunnel URLs:", await tunnel.urls());
+```
 
 Find complete examples at [examples](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples).
 
@@ -62,23 +68,7 @@ console.log("Tunnel 2 URLs:", await tunnel2.urls());
 
 ## Examples
 
-[Degit](https://www.npmjs.com/package/degit) can be used for cloning and running an example directory like this:
-
-```bash
-npx degit github:Pinggy-io/sdk-nodejs/examples/<example> <folder-name>
-cd <folder-name>
-npm i
-```
-
-For example:
-
-```bash
-npx degit github:Pinggy-io/sdk-nodejs/examples/express express
-cd express && npm i
-node express-listen-example.js
-```
-
-### Available Examples
+[Degit](https://www.npmjs.com/package/degit) can be used for cloning and running an example directory for the following available examples:
 
 - **[Next.js](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/nextjs)** - Next.js with Pinggy tunneling
   ```bash
@@ -145,14 +135,14 @@ node express-listen-example.js
 
 ## Advanced Features
 
-- **Start web debugging:**
+- **Start web debugger:**
   ```ts
-  tunnel.startWebDebugging(8080); // Starts web debugging on localhost:8080
+  tunnel.startWebDebugging(4300); // Starts web debugger on localhost:4300
   ```
-- **Request additional forwarding:**
+- **Request additional forwarding:** If you have multiple domains, you can route different domains to different ports as follows:
   ```ts
   await tunnel.tunnelRequestAdditionalForwarding(
-    "custom.pinggy.io:443",
+    "mydomain.com:443",
     "localhost:6000"
   );
   ```

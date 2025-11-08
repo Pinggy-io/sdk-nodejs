@@ -47,8 +47,8 @@ export interface ForwardingEntry {
 
 export interface Optional {
   /**
-   * SNI server name for SSL/TLS.
-   * @example "example.com"
+   * SNI server name for the Pinggy servers.
+   * @example "a.pinggy.io"
    */
   sniServerName?: string;
   /**
@@ -71,7 +71,13 @@ export const enum TunnelType {
   TlsTcp = "tlstcp",
 }
 
+/** Basic authentication item with username and password.
+ *
+ * @group Types
+ * @public
+ */
 export type BasicAuthItem = { username: string; password: string };
+
 /**
  * Configuration options for creating Pinggy tunnels.
  *
@@ -121,6 +127,7 @@ export type PinggyOptionsType = {
   /**
    * Basic authentication credentials (username: password).
    * @example [{ username: "user", password: "pass" }]
+   * @see {@link BasicAuthItem}
    */
   basicAuth?: BasicAuthItem[];
   /**

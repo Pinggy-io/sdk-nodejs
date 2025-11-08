@@ -1,7 +1,7 @@
 import { Logger } from "../utils/logger";
 import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
 import { PinggyError } from "./exception";
-import { TunnelUsage } from "./tunnel-usage";
+import { TunnelUsageType, TunnelUsage } from "./tunnel-usage";
 import { PinggyOptions } from "..";
 import { AdditionalForwardingManager } from "../utils/additionalForwardingManager";
 
@@ -558,12 +558,12 @@ export class Tunnel implements ITunnel {
     });
   }
 
-  public getLatestUsage(): TunnelUsage | null {
+  public getLatestUsage(): TunnelUsageType | null {
     if (!this.tunnelRef) return null;
     return this._latestUsage;
   }
 
-  public setUsageUpdateCallback(callback: (usage: TunnelUsage) => void): void {
+  public setUsageUpdateCallback(callback: (usage: TunnelUsageType) => void): void {
     this.onUsageUpdateCallback = callback;
     this.startTunnelUsageUpdate();
   }
