@@ -1,12 +1,4 @@
-
-export type TunnelUsageType = {
-  elapsedTime: number;
-  numLiveConnections: number;
-  numTotalConnections: number;
-  numTotalReqBytes: number;
-  numTotalResBytes: number;
-  numTotalTxBytes: number;
-};
+import { TunnelUsageType } from "../types";
 
 export class TunnelUsage implements TunnelUsageType {
   elapsedTime: number;

@@ -101,23 +101,15 @@ export class Logger {
   }
 
   public static info(message: string): void {
-    // Only log info messages if debug logging is enabled
-    if (Logger.isDebugEnabled()) {
       this.log(LogLevel.INFO, message);
-    }
   }
 
   public static debug(message: string): void {
-    // Only log info messages if debug logging is enabled
-    if (Logger.isDebugEnabled()) {
       this.log(LogLevel.DEBUG, message);
-    }
   }
 
   public static error(message: string, error?: Error): void {
-    if (Logger.isDebugEnabled()) {
       this.log(LogLevel.ERROR, message, error || null);
-    }
 
   }
 }

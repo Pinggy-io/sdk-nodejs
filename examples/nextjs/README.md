@@ -49,6 +49,9 @@ if (makeListener) {
     });
 }
 ```
+## Detailed documentation
+
+For detailed usage, API reference, and examples, see the Pinggy Node.js SDK documentation: [Pinggy SDK for Node.js](https://pinggy-io.github.io/sdk-nodejs/).
 
 ---
 

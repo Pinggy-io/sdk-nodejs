@@ -339,6 +339,18 @@ export interface CallbackMap {
   [CallbackType.TunnelPrimaryForwarding]: (message: string, address: string[]) => void;
   [CallbackType.TunnelAuthenticated]: (message: string) => void;
 }
+/**
+ * @group Types
+ * @public
+ */
+export type TunnelUsageType = {
+  elapsedTime: number;
+  numLiveConnections: number;
+  numTotalConnections: number;
+  numTotalReqBytes: number;
+  numTotalResBytes: number;
+  numTotalTxBytes: number;
+};
 
 export type Callback<K extends CallbackType> = CallbackMap[K];
 

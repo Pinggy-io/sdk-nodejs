@@ -1,7 +1,7 @@
 import { Logger } from "../utils/logger";
-import { PinggyNative, Tunnel as ITunnel, TunnelStatus } from "../types";
+import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType } from "../types";
 import { PinggyError } from "./exception";
-import { TunnelUsageType, TunnelUsage } from "./tunnel-usage";
+import { TunnelUsage } from "./tunnel-usage";
 import { PinggyOptions } from "..";
 import { AdditionalForwardingManager } from "../utils/additionalForwardingManager";
 

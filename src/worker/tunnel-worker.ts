@@ -1,5 +1,5 @@
 import { parentPort, workerData } from "worker_threads";
-import { CallbackType, PinggyNative, WorkerMessage, workerMessageType } from "../types.js";
+import { CallbackType, PinggyNative, TunnelUsageType, WorkerMessage, workerMessageType } from "../types.js";
 import { Config } from "../bindings/config.js";
 import { Tunnel } from "../bindings/tunnel.js";
 import { Logger, LogLevel } from "../utils/logger.js";
@@ -9,7 +9,6 @@ import {
   initExceptionHandling,
 } from "../bindings/exception.js";
 import { BasicAuthItem, HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "../pinggyOptions.js";
-import { TunnelUsageType } from "../bindings/tunnel-usage.js";
 const binary = require("@mapbox/node-pre-gyp");
 const path = require("path");
 

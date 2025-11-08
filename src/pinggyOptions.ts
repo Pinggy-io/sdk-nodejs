@@ -3,7 +3,7 @@ import { PinggyError } from "./bindings/exception";
 /**
  * Configuration for modifying HTTP headers in tunnel requests.
  *
- * @group Interfaces
+ * @group Types
  * @public
  *
  * @example
@@ -18,7 +18,7 @@ import { PinggyError } from "./bindings/exception";
  * { key: "User-Agent", value: "MyApp/1.0", action: "update" }
  * ```
  */
-export interface HeaderModification {
+export type HeaderModification = {
   /** The header key. */
   key: string;
 
@@ -32,8 +32,12 @@ export interface HeaderModification {
    */
   type: "add" | "remove" | "update";
 }
+/**
+ * @group Types
+ * @public
+ */
 
-export interface ForwardingEntry {
+export type ForwardingEntry = {
   listenAddress?: string; // empty or undefined means default forwarding
   address: string;        // e.g., http://localhost:80 or https://localhost:5555 or host:port
 }
@@ -41,11 +45,11 @@ export interface ForwardingEntry {
 /**
  * Advanced SSL and additional options for Pinggy tunnels.
  * 
- * @group Interfaces
+ * @group Types
  * @public
  */
 
-export interface Optional {
+export type Optional = {
   /**
    * SNI server name for the Pinggy servers.
    * @example "a.pinggy.io"

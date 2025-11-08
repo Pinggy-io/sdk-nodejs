@@ -88,104 +88,6 @@ import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
 })();
 ```
 
-## TypeScript Types
-
-### Main Interfaces
-
-```typescript
-interface PinggyOptions {
-  forwardTo?: string;
-  token?: string;
-  serverAddress?: string;
-  sniServerName?: string;
-  type?: "http" | "tcp" | "udp";
-  ssl?: boolean;
-  httpsOnly?: boolean;
-  fullRequestUrl?: boolean;
-  allowPreflight?: boolean;
-  noReverseProxy?: boolean;
-  xff?: boolean;
-  ipWhitelist?: string[];
-  basicAuth?: Record<string, string>;
-  bearerAuth?: string[];
-  headerModification?: HeaderModification[];
-  cmd?: string;
-}
-
-interface HeaderModification {
-  action: "add" | "remove" | "update";
-  key: string;
-  value?: string;
-}
-
-interface TunnelInstance {
-  start(): Promise<string[]>;
-  stop(): void;
-  urls(): string[];
-  isActive(): boolean;
-  getStatus(): "starting" | "live" | "closed";
-  getServerAddress(): string | null;
-  getToken(): string | null;
-  startWebDebugging(port: number): void;
-  tunnelRequestAdditionalForwarding(hostname: string, target: string): void;
-}
-```
-
-## Configuration Options
-
-### Basic Options
-
-| Option          | Type                       | Default             | Description                               |
-| --------------- | -------------------------- | ------------------- | ----------------------------------------- |
-| `forwardTo`     | `string`                   | `"localhost:4000"`  | Local address to forward traffic to       |
-| `token`         | `string`                   | -                   | Authentication token for premium features |
-| `serverAddress` | `string`                   | `"a.pinggy.io:443"` | Pinggy server address                     |
-| `sniServerName` | `string`                   | `"a.pinggy.io"`     | SNI server name for SSL                   |
-| `type`          | `"http" \| "tcp" \| "udp"` | `"http"`            | Tunnel type with type safety              |
-| `ssl`           | `boolean`                  | `true`              | Enable/disable SSL                        |
-
-### Security Options
-
-| Option        | Type                     | Description                                            |
-| ------------- | ------------------------ | ------------------------------------------------------ |
-| `ipWhitelist` | `string[]`               | List of allowed IP addresses                           |
-| `basicAuth`   | `Record<string, string>` | Basic HTTP authentication with username/password pairs |
-| `bearerAuth`  | `string[]`               | Bearer token authentication                            |
-
-### HTTP Options
-
-| Option           | Type      | Default | Description                   |
-| ---------------- | --------- | ------- | ----------------------------- |
-| `httpsOnly`      | `boolean` | `false` | Force HTTPS only              |
-| `fullRequestUrl` | `boolean` | `false` | Include full URL in requests  |
-| `allowPreflight` | `boolean` | `false` | Allow preflight CORS requests |
-| `noReverseProxy` | `boolean` | `false` | Disable reverse proxy         |
-| `xff`            | `boolean` | `false` | Add X-Forwarded-For header    |
-
-### Header Modification (Typed)
-
-```typescript
-interface HeaderModification {
-  action: "add" | "remove" | "update"; // Strongly typed actions
-  key: string;
-  value?: string; // Optional for "remove" action
-}
-
-// Usage
-const options: PinggyOptions = {
-  headerModification: [
-    { action: "add", key: "X-Custom-Header", value: "custom-value" },
-    { action: "remove", key: "X-Unwanted" },
-    { action: "update", key: "X-Updated", value: "new-value" },
-  ],
-};
-```
-
-### Command Options
-
-| Option | Type     | Description                            |
-| ------ | -------- | -------------------------------------- |
-| `cmd`  | `string` | Custom command to prepend to arguments |
 
 ## Complete TypeScript Example
 
@@ -268,54 +170,9 @@ import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
 
 ## API Reference
 
-### Main API
+### `TunnelInstance` Methods
+To learn more about the methods available on `TunnelInstance` objects—used for managing the lifecycle of tunnels and performing common operations such as creating, closing, and handling tunnel events—please visit the [documentation](https://pinggy-io.github.io/sdk-nodejs/classes/TunnelInstance.html)
 
-```typescript
-// Create a tunnel instance (not started)
-function createTunnel(options?: PinggyOptions): TunnelInstance;
-
-// Create and start a tunnel
-function forward(options?: PinggyOptions): Promise<TunnelInstance>;
-
-// Get all active tunnels
-function getAllTunnels(): TunnelInstance[];
-
-// Stop all active tunnels
-function closeAllTunnels(): void;
-```
-
-### TunnelInstance Methods
-
-```typescript
-interface TunnelInstance {
-  // Start the tunnel, returns public URLs when ready
-  start(): Promise<string[]>;
-
-  // Stop the tunnel and clean up resources
-  stop(): void;
-
-  // Get current public URLs
-  urls(): string[];
-
-  // Check if tunnel is currently active
-  isActive(): boolean;
-
-  // Get tunnel status with type safety
-  getStatus(): "starting" | "live" | "closed";
-
-  // Get Pinggy server address
-  getServerAddress(): string | null;
-
-  // Get tunnel authentication token
-  getToken(): string | null;
-
-  // Start web debugging interface on specified port
-  startWebDebugging(port: number): void;
-
-  // Request additional forwarding configuration
-  tunnelRequestAdditionalForwarding(hostname: string, target: string): void;
-}
-```
 
 ## Troubleshooting
 
