@@ -98,6 +98,7 @@ node express-listen-example.js
   ```bash
   npx degit github:Pinggy-io/sdk-nodejs/examples/ts ts-example
   cd ts-example && npm i
+  npm run start
   ```
 
 - **[Express](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/express)** - Using `pinggy.listen` with Express

@@ -18,7 +18,7 @@ const { pinggy } = require("@pinggy/pinggy");
 (async () => {
   // Create and start a tunnel
   const tunnel = await pinggy.forward({ forwardTo: "localhost:3000" });
-  console.log("Tunnel URLs:", tunnel.urls());
+  console.log("Tunnel URLs:", await tunnel.urls());
 
   // Stop the tunnel when done
   setTimeout(() => {
@@ -40,8 +40,8 @@ const { pinggy } = require("@pinggy/pinggy");
   await tunnel1.start();
   await tunnel2.start();
 
-  console.log("Tunnel 1 URLs:", tunnel1.urls());
-  console.log("Tunnel 2 URLs:", tunnel2.urls());
+  console.log("Tunnel 1 URLs:", await tunnel1.urls());
+  console.log("Tunnel 2 URLs:", await tunnel2.urls());
 
   // Get all active tunnels
   const allTunnels = pinggy.getAllTunnels();

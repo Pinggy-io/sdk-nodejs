@@ -14,7 +14,7 @@ async function setupPinggy() {
   const tunnel = await pinggy.forward({
     forwarding: `${host}:${port}`,
   });
-  const urls = tunnel.urls();
+  const urls = await tunnel.urls();
   console.log(
     `Forwarding to: ${host}:${port} from ingress at: ${
       urls.length ? urls[0] : "(no url)"
