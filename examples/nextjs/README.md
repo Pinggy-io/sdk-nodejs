@@ -45,7 +45,7 @@ if (makeListener) {
       // basicAuth: { admin: "password123" }, // Add basic auth
     })
     .then((tunnel) => {
-      console.log("Tunnel URLs:", tunnel.urls());
+      console.log("Tunnel URLs:", await tunnel.urls());
     });
 }
 ```
