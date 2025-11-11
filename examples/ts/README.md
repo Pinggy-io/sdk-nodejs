@@ -49,7 +49,7 @@ import { pinggy } from "@pinggy/pinggy";
 (async () => {
   // Create and start a tunnel
   const tunnel = await pinggy.forward({ forwardTo: "localhost:3000" });
-  console.log("Tunnel URLs:", tunnel.urls());
+  console.log("Tunnel URLs:", await tunnel.urls());
 
   // Stop the tunnel when done
   setTimeout(() => {
@@ -74,8 +74,8 @@ import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
   await tunnel1.start();
   await tunnel2.start();
 
-  console.log("Tunnel 1 URLs:", tunnel1.urls());
-  console.log("Tunnel 2 URLs:", tunnel2.urls());
+  console.log("Tunnel 1 URLs:", await tunnel1.urls());
+  console.log("Tunnel 2 URLs:", await tunnel2.urls());
 
   // Get all active tunnels with type safety
   const allTunnels: TunnelInstance[] = pinggy.getAllTunnels();
@@ -89,84 +89,7 @@ import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
 ```
 
 
-## Complete TypeScript Example
 
-```typescript
-import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
-
-(async () => {
-  // Fully typed configuration
-  const options: PinggyOptions = {
-    forwardTo: "localhost:3000",
-    token: "your-premium-token",
-    type: "http", // TypeScript will ensure this is a valid type
-    ssl: true,
-    httpsOnly: true,
-    xff: true,
-    ipWhitelist: ["192.168.1.0/24", "10.0.0.1"],
-    basicAuth: {
-      admin: "password123",
-      user: "userpass",
-    },
-    bearerAuth: ["bearer-token-1", "bearer-token-2"],
-    headerModification: [
-      { action: "add", key: "X-Custom", value: "myapp" },
-      { action: "remove", key: "X-Unwanted" },
-      { action: "update", key: "X-Version", value: "1.0.0" },
-    ],
-  };
-
-  try {
-    const tunnel: TunnelInstance = await pinggy.forward(options);
-
-    // Type-safe method calls
-    const urls: string[] = tunnel.urls();
-    const status: "starting" | "live" | "closed" = tunnel.getStatus();
-
-    console.log("Tunnel URLs:", urls);
-    console.log("Server Address:", serverAddress);
-    console.log("Status:", status);
-
-    // Start web debugging interface
-    tunnel.startWebDebugging(8080);
-    console.log("Web debugging available at: http://localhost:8080");
-
-    // Request additional forwarding
-    tunnel.tunnelRequestAdditionalForwarding(
-      "custom.pinggy.io:443",
-      "localhost:6000"
-    );
-
-    // Monitor tunnel status with type safety
-    const monitorInterval = setInterval(() => {
-      const isActive: boolean = tunnel.isActive();
-      const currentStatus: "starting" | "live" | "closed" = tunnel.getStatus();
-
-      console.log("Tunnel active:", isActive);
-      console.log("Tunnel status:", currentStatus);
-
-      if (!isActive) {
-        clearInterval(monitorInterval);
-      }
-    }, 5000);
-
-    // Graceful shutdown after 30 seconds
-    setTimeout(() => {
-      console.log("Shutting down tunnel...");
-      tunnel.stop();
-      console.log("Tunnel stopped.");
-      clearInterval(monitorInterval);
-    }, 30000);
-  } catch (error: unknown) {
-    // Type-safe error handling
-    if (error instanceof Error) {
-      console.error("Failed to start tunnel:", error.message);
-    } else {
-      console.error("Unknown error:", error);
-    }
-  }
-})();
-```
 
 ## API Reference
 
