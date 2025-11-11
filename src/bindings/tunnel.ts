@@ -1,9 +1,9 @@
-import { Logger } from "../utils/logger";
-import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType } from "../types";
-import { PinggyError } from "./exception";
-import { TunnelUsage } from "./tunnel-usage";
-import { PinggyOptions } from "..";
-import { AdditionalForwardingManager } from "../utils/additionalForwardingManager";
+import { Logger } from "../utils/logger.js";
+import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType } from "../types.js";
+import { PinggyError } from "./exception.js";
+import { TunnelUsage } from "./tunnel-usage.js";
+import { PinggyOptions } from "../pinggyOptions.js";
+import { AdditionalForwardingManager } from "../utils/additionalForwardingManager.js";
 
 type Task = () => void;
 class FunctionQueue {

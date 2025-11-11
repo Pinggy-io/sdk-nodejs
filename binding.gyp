@@ -15,7 +15,7 @@
                     "inputs": [],
                     "outputs": ["<(module_root_dir)/.prebuild-step-done"],
                     "action": [
-                        "node", "./install.js"
+                        "node", "./install.cjs"
                     ]
                 }
             ],

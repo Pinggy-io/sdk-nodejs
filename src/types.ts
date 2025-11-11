@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import { LogLevel } from "./utils/logger";
+import { LogLevel } from "./utils/logger.js";
 
 
 

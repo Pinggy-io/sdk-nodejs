@@ -1,4 +1,4 @@
-import { PinggyError } from "./bindings/exception";
+import { PinggyError } from "./bindings/exception.js";
 
 /**
  * Configuration for modifying HTTP headers in tunnel requests.
