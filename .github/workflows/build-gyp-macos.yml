@@ -44,7 +44,7 @@ jobs:
           node-gyp clean
           node-gyp configure
           node-gyp build
-          node ./copy.js
+          node ./copy.cjs
 
       - name: Package native binary
         run: npm run package
