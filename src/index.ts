@@ -35,8 +35,7 @@ export { pinggy, TunnelInstance, Config, Tunnel };
  */
 export type { PinggyOptionsType as PinggyOptions, HeaderModification, ForwardingEntry, BasicAuthItem, Optional } from "./pinggyOptions";
 export { TunnelType } from "./pinggyOptions"
-export type { TunnelUsageType } from "./bindings/tunnel-usage";
-export type { TunnelStatus, PinggyNative } from "./types";
+export type { TunnelStatus, PinggyNative, TunnelUsageType } from "./types";
 export { LogLevel } from "./utils/logger"
 
 export { listen } from "./utils/listen";

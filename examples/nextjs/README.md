@@ -45,10 +45,13 @@ if (makeListener) {
       // basicAuth: { admin: "password123" }, // Add basic auth
     })
     .then((tunnel) => {
-      console.log("Tunnel URLs:", tunnel.urls());
+      console.log("Tunnel URLs:", await tunnel.urls());
     });
 }
 ```
+## Detailed documentation
+
+For detailed usage, API reference, and examples, see the Pinggy Node.js SDK documentation: [Pinggy SDK for Node.js](https://pinggy-io.github.io/sdk-nodejs/).
 
 ---
 

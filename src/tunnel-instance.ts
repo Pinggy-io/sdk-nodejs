@@ -3,8 +3,7 @@ import { TunnelWorkerManager } from "./worker/tunnel-worker-manager";
 import { Logger, LogLevel } from "./utils/logger"
 import { Tunnel } from "./bindings/tunnel";
 import { Config } from "./bindings/config";
-import { TunnelUsageType } from "./bindings/tunnel-usage";
-import { Callback, CallbackType, TunnelStatus, workerMessageType } from "./types";
+import { Callback, CallbackType, TunnelStatus, TunnelUsageType, workerMessageType } from "./types";
 
 
 /**
