@@ -1,9 +1,10 @@
 import { Worker } from "worker_threads";
 import path from "path/win32";
-import { Logger, LogLevel } from "../utils/logger";
-import { PinggyOptions } from "../pinggyOptions";
-import { v4 as uuidv4 } from 'uuid';
-import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types";
+import { Logger, LogLevel } from "../utils/logger.js";
+import { PinggyOptions } from "../pinggyOptions.js";
+import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types.js";
+import { getUuid } from "../utils/uuid.js";
+
 
 /**
  * Manages the dedicated worker thread responsible for running a single Pinggy tunnel instance.
@@ -29,7 +30,7 @@ export class TunnelWorkerManager {
     public workerErrorCallback?: Function;
 
     constructor(pinggyOptions: PinggyOptions) {
-        const workerPath = path.resolve(__dirname, "tunnel-worker.js").replace(/\\/g, "/");
+        const workerPath = new URL('./worker/tunnel-worker.js', import.meta.url).pathname;
         this.worker = new Worker(workerPath, { workerData: { options: pinggyOptions } });
 
         // First message from worker can either be Ready or InitError
@@ -67,7 +68,8 @@ export class TunnelWorkerManager {
 
     public async call(target: "config" | "tunnel", method: string, type?: workerMessageType, ...args: any[]) {
         await this.ensureReady();
-        const id = uuidv4();
+     
+        const id = await getUuid();
         let msgType: workerMessageType = workerMessageType.Call
         if (type) {
             msgType = type;

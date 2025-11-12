@@ -10,11 +10,11 @@
  * @see {@link HeaderModification} for header modification configuration.
  * @see {@link listen} for the utility to expose servers via tunnels.
  */
-import { Pinggy } from "./pinggy";
-import { PinggyOptionsType, HeaderModification } from "./pinggyOptions";
-import { TunnelInstance } from "./tunnel-instance";
-import { Config } from "./bindings/config";
-import { Tunnel } from "./bindings/tunnel";
+import { Pinggy } from "./pinggy.js";
+import { PinggyOptionsType, HeaderModification } from "./pinggyOptions.js";
+import { TunnelInstance } from "./tunnel-instance.js";
+import { Config } from "./bindings/config.js";
+import { Tunnel } from "./bindings/tunnel.js";
 
 /**
  * The main Pinggy tunnel manager singleton.
@@ -33,9 +33,9 @@ export { pinggy, TunnelInstance, Config, Tunnel };
  * @see {@link PinggyOptionsType}
  * @see {@link HeaderModification}
  */
-export type { PinggyOptionsType as PinggyOptions, HeaderModification, ForwardingEntry, BasicAuthItem, Optional } from "./pinggyOptions";
-export { TunnelType } from "./pinggyOptions"
-export type { TunnelStatus, PinggyNative, TunnelUsageType } from "./types";
-export { LogLevel } from "./utils/logger"
+export type { PinggyOptionsType as PinggyOptions, HeaderModification, ForwardingEntry, BasicAuthItem, Optional } from "./pinggyOptions.js";
+export { TunnelType } from "./pinggyOptions.js"
+export type { TunnelStatus, PinggyNative, TunnelUsageType } from "./types.js";
+export { LogLevel } from "./utils/logger.js"
 
-export { listen } from "./utils/listen";
+export { listen } from "./utils/listen.js";

@@ -9,8 +9,16 @@ import {
   initExceptionHandling,
 } from "../bindings/exception.js";
 import { BasicAuthItem, HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "../pinggyOptions.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import { createRequire } from "module";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+
+
 const binary = require("@mapbox/node-pre-gyp");
-const path = require("path");
+
 
 
 class TunnelWorker {

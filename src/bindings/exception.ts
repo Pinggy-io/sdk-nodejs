@@ -1,4 +1,4 @@
-import { PinggyNative } from "../types";
+import { PinggyNative } from "../types.js";
 
 /**
  * Custom error class for Pinggy-related errors.

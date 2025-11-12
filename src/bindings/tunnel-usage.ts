@@ -1,4 +1,4 @@
-import { TunnelUsageType } from "../types";
+import { TunnelUsageType } from "../types.js";
 
 export class TunnelUsage implements TunnelUsageType {
   elapsedTime: number;

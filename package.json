@@ -1,21 +1,34 @@
 {
   "name": "@pinggy/pinggy",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Pinggy SDK for Nodejs",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "type": "module",
+  "main": "./dist/index.cjs",  
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+
   "scripts": {
+    "clean":"rm -rf dist",
     "install": "node-pre-gyp install --fallback-to-build",
     "build:tsc": "tsc --build tsconfig.json",
     "build": "tsup",
-    "build-native": "node-gyp clean configure build && node ./copy.js",
+    "build-native": "node-gyp clean configure build && node ./copy.cjs",
     "package": "node-pre-gyp package",
     "publish-binary": "node-pre-gyp publish",
     "test": "jest",
     "start": "node dist/index.js",
     "docs": "typedoc --options typedoc.config.json"
   },
+
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  
   "repository": {
     "type": "git",
     "url": "https://github.com/Pinggy-io/sdk-nodejs.git"

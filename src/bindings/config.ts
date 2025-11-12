@@ -1,7 +1,7 @@
-import { Logger } from "../utils/logger";
-import { PinggyNative, Config as IConfig } from "../types";
-import { PinggyOptions, PinggyOptionsType } from "../pinggyOptions";
-import { PinggyError } from "./exception";
+import { Logger } from "../utils/logger.js";
+import { PinggyNative, Config as IConfig } from "../types.js";
+import { PinggyOptions, PinggyOptionsType } from "../pinggyOptions.js";
+import { PinggyError } from "./exception.js";
 
 /**
  * Represents the configuration for a Pinggy tunnel.

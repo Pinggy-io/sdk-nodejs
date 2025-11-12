@@ -1,4 +1,4 @@
-import { pinggy, PinggyOptions, TunnelInstance } from "../index";
+import { pinggy, PinggyOptions, TunnelInstance } from "../index.js";
 import * as http from "http";
 
 /**

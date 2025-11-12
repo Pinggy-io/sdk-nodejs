@@ -1,9 +1,9 @@
-import { PinggyOptions, PinggyOptionsType } from "./pinggyOptions"
-import { TunnelWorkerManager } from "./worker/tunnel-worker-manager";
-import { Logger, LogLevel } from "./utils/logger"
-import { Tunnel } from "./bindings/tunnel";
-import { Config } from "./bindings/config";
-import { Callback, CallbackType, TunnelStatus, TunnelUsageType, workerMessageType } from "./types";
+import { PinggyOptions, PinggyOptionsType } from "./pinggyOptions.js"
+import { TunnelWorkerManager } from "./worker/tunnel-worker-manager.js";
+import { Logger, LogLevel } from "./utils/logger.js"
+import { Tunnel } from "./bindings/tunnel.js";
+import { Config } from "./bindings/config.js";
+import { Callback, CallbackType, TunnelStatus, TunnelUsageType, workerMessageType } from "./types.js";
 
 
 /**
