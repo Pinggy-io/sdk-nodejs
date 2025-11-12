@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["./src/index.ts", "./src/worker/tunnel-worker.ts"], // add worker entry
+  entry: ["./src/index.ts", "./src/worker/tunnel-worker.ts"],
   format: ["cjs", "esm"],
   dts: true,
   shims: true,
