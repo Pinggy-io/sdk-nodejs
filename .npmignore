@@ -10,7 +10,7 @@ node_modules/
 
 .prebuild*
 binding.gyp
-copy.js
+copy.cjs
 demo.ts
 index-test.js
 install.js
