@@ -1,4 +1,8 @@
+let uuidModule: typeof import("uuid") | null = null;
+
 export async function getUuid() {
-  const { v4 } = await import("uuid");
-  return v4();
+    if (!uuidModule) {
+        uuidModule = await import("uuid");
+    }
+    return uuidModule.v4();
 }
