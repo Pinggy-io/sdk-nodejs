@@ -4,6 +4,7 @@ import { Logger, LogLevel } from "../utils/logger.js";
 import { PinggyOptions } from "../pinggyOptions.js";
 import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types.js";
 import { getUuid } from "../utils/uuid.js";
+import {fileURLToPath} from "url";
 
 
 /**
@@ -30,7 +31,7 @@ export class TunnelWorkerManager {
     public workerErrorCallback?: Function;
 
     constructor(pinggyOptions: PinggyOptions) {
-        const workerPath = new URL('./worker/tunnel-worker.js', import.meta.url).pathname;
+        const workerPath = fileURLToPath(new URL('./worker/tunnel-worker.js', import.meta.url));
         this.worker = new Worker(workerPath, { workerData: { options: pinggyOptions } });
 
         // First message from worker can either be Ready or InitError
