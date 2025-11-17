@@ -4,7 +4,7 @@ import { Logger, LogLevel } from "../utils/logger.js";
 import { PinggyOptions } from "../pinggyOptions.js";
 import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types.js";
 import { getUuid } from "../utils/uuid.js";
-import {fileURLToPath} from "url";
+import { fileURLToPath } from "url";
 
 
 /**
@@ -69,7 +69,7 @@ export class TunnelWorkerManager {
 
     public async call(target: "config" | "tunnel", method: string, type?: workerMessageType, ...args: any[]) {
         await this.ensureReady();
-     
+
         const id = await getUuid();
         let msgType: workerMessageType = workerMessageType.Call
         if (type) {
@@ -89,11 +89,12 @@ export class TunnelWorkerManager {
         });
     }
 
-    public async setDebugLoggingInWorker(enable: boolean, logLevel: LogLevel) {
+    public async setDebugLoggingInWorker(enable: boolean, logLevel: LogLevel, logFilePath: string | null) {
         const msg: Extract<WorkerMessage, { type: workerMessageType.EnableLogger }> = {
             type: workerMessageType.EnableLogger,
             enabled: enable,
-            logLevel: logLevel
+            logLevel: logLevel,
+            logFilePath: logFilePath
         }
         this.worker.postMessage(msg);
     }

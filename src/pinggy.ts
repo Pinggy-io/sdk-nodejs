@@ -26,6 +26,7 @@ const binary = require("@mapbox/node-pre-gyp");
 export class Pinggy {
   private static _instance: Pinggy;
   private static debugEnabled = false;
+  private static logFilePath: string | null = null;
   private static logLevel: LogLevel = LogLevel.INFO;
   private static addon: PinggyNative = require(binary.find(
     path.resolve(path.join(__dirname, "../package.json"))
@@ -64,7 +65,7 @@ export class Pinggy {
     this.tunnels.add(tunnel);
     // If debug was previously enabled, enable it inside this tunnel’s worker
     if (Pinggy.debugEnabled) {
-      tunnel.setDebugLogging(true, Pinggy.logLevel);
+      tunnel.setDebugLogging(true, Pinggy.logLevel, Pinggy.logFilePath);
     }
     return tunnel;
   }
@@ -110,24 +111,26 @@ export class Pinggy {
   }
 
   /**
-   * Enables or disables debug logging for both native and JavaScript code.
-   *
-   * @param {boolean} enabled - Whether to enable debug logging.
-   * @returns {void}
+   * Enable or disable debug logging for both the native library (libpinggy)
+   * @param enabled - Whether to enable debug logging (default: false).
+   * @param logLevel - Optional logging level to apply (default: LogLevel.INFO).
+   * @param logFilePath - Optional file path to write logs to; pass null to disable file logging.
+   * @returns void
    * @see {@link pinggy}
    */
-  public setDebugLogging(enabled: boolean = false, logLevel?: LogLevel): void {
+  public setDebugLogging(enabled: boolean = false, logLevel?: LogLevel, logFilePath?: string | null): void {
     // enable libpinggy logs for all active tunnels
     Pinggy.debugEnabled = enabled;
+    Pinggy.logFilePath = logFilePath ?? null;
 
     // Set debug state for JavaScript Logger
-    Logger.setDebugEnabled(enabled);
+    Logger.setDebugEnabled(enabled, logFilePath);
 
     Pinggy.logLevel = logLevel ?? LogLevel.INFO;
     Logger.setLevel(logLevel);
 
     for (const tunnel of this.tunnels) {
-      tunnel.setDebugLogging(enabled, logLevel);
+      tunnel.setDebugLogging(enabled, logLevel, logFilePath!);
     }
   }
 

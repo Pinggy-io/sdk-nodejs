@@ -126,8 +126,8 @@ export class TunnelInstance {
     return await this.activeTunnel.start();
   }
 
-  public async setDebugLogging(enable: boolean, logLevel: LogLevel = LogLevel.INFO): Promise<void> {
-    this.workerManager.setDebugLoggingInWorker(enable, logLevel);
+  public async setDebugLogging(enable: boolean, logLevel: LogLevel = LogLevel.INFO, logFilePath: string | null): Promise<void> {
+    this.workerManager.setDebugLoggingInWorker(enable, logLevel, logFilePath);
   }
   /**
    * Registers a callback function to receive errors from the tunnel worker.
