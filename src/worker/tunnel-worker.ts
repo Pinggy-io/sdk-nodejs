@@ -17,10 +17,6 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 
-const binary = require("@mapbox/node-pre-gyp");
-
-
-
 class TunnelWorker {
   private addon: PinggyNative | null = null;
   private config: Config | null = null;
@@ -37,7 +33,7 @@ class TunnelWorker {
    */
   private initialize(pinggyOptions: any): void {
     try {
-      const addonPath = binary.find(path.resolve(path.join(__dirname, "../../package.json")));
+      const addonPath = path.join(__dirname, "../../lib/addon.node");
       this.addon = require(addonPath);
       if (!this.addon) throw new Error("Failed to load native addon.");
 

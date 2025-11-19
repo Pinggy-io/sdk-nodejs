@@ -9,8 +9,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
-const binary = require("@mapbox/node-pre-gyp");
-
 /**
  * Main entry point for managing Pinggy tunnels.
  *
@@ -28,9 +26,7 @@ export class Pinggy {
   private static debugEnabled = false;
   private static logFilePath: string | null = null;
   private static logLevel: LogLevel = LogLevel.INFO;
-  private static addon: PinggyNative = require(binary.find(
-    path.resolve(path.join(__dirname, "../package.json"))
-  ));
+  private static addon: PinggyNative = require(path.join(__dirname, "../lib/addon.node"));
   private tunnels: Set<TunnelInstance> = new Set();
 
   /**
