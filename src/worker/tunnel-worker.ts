@@ -101,7 +101,7 @@ class TunnelWorker {
           return;
 
         case workerMessageType.EnableLogger:
-          this.setDebugLogging(msg.enabled, msg.logLevel);
+          this.setDebugLogging(msg.enabled, msg.logLevel, msg.logFilePath);
           return
         case workerMessageType.GetTunnelConfig:
           this.getTunnelConfig(msg);
@@ -220,10 +220,10 @@ class TunnelWorker {
     parentPort.postMessage(msg);
   }
 
-  private setDebugLogging(enabled: boolean = false, logLevel: LogLevel = LogLevel.INFO): void {
+  private setDebugLogging(enabled: boolean = false, logLevel: LogLevel = LogLevel.INFO, logFilePath: string | null): void {
     this.addon?.setLogEnable(enabled)
     this.addon?.setDebugLogging(enabled)
-    Logger.setDebugEnabled(enabled)
+    Logger.setDebugEnabled(enabled, logFilePath)
     Logger.setLevel(logLevel);
   }
 

@@ -314,7 +314,7 @@ export type WorkerMessage =
   | { type: workerMessageType.Response; id: string; result?: any; error?: string }
   | { type: workerMessageType.Callback; event: CallbackType; data: any }
   | { type: workerMessageType.RegisterCallback; event: CallbackType }
-  | { type: workerMessageType.EnableLogger; enabled: boolean, logLevel: LogLevel }
+  | { type: workerMessageType.EnableLogger; enabled: boolean, logLevel: LogLevel, logFilePath: string | null }
   | { type: workerMessageType.GetTunnelConfig; id: string };
 
 export type PendingCall = {

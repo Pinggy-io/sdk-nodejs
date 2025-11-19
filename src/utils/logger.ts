@@ -22,7 +22,12 @@ export class Logger {
     Logger.level = level;
   }
 
-  public static setDebugEnabled(enabled: boolean): void {
+  public static setDebugEnabled(enabled: boolean, logFilePath?: string | null): void {
+    // If a logfile path is provided, overwrite current one and update directory
+    if (typeof logFilePath === "string" && logFilePath.length > 0) {
+      Logger.logFilePath = path.resolve(logFilePath);
+      Logger.logDir = path.dirname(Logger.logFilePath);
+    }
     Logger.debugEnabled = enabled;
   }
 
@@ -101,15 +106,15 @@ export class Logger {
   }
 
   public static info(message: string): void {
-      this.log(LogLevel.INFO, message);
+    this.log(LogLevel.INFO, message);
   }
 
   public static debug(message: string): void {
-      this.log(LogLevel.DEBUG, message);
+    this.log(LogLevel.DEBUG, message);
   }
 
   public static error(message: string, error?: Error): void {
-      this.log(LogLevel.ERROR, message, error || null);
+    this.log(LogLevel.ERROR, message, error || null);
 
   }
 }
