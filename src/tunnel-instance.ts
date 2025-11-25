@@ -80,18 +80,9 @@ export class TunnelInstance {
   private handleWorkerCallback(event: CallbackType, data: any): void {
     const cb = this.callbacks.get(event);
     if (cb) {
-      if (Array.isArray(data)) {
-        // Already an array: spread it
-        cb(...data);
-      } else if (data && typeof data === "object") {
-        // Object: spread its values as separate arguments
-        cb(...Object.values(data));
-      } else {
         // Primitive: pass as single argument
         cb(data);
-      }
     }
-
     Logger.info(`Handled worker callback: ${event}`);
   }
 

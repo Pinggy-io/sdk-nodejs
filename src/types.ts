@@ -352,6 +352,29 @@ export type TunnelUsageType = {
   numTotalTxBytes: number;
 };
 
+export type CallbackPayloadMap = {
+  [CallbackType.TunnelUsageUpdate]: TunnelUsageType;
+  [CallbackType.TunnelError]: {
+    errorNo: number;
+    error: string;
+    recoverable: boolean;
+  };
+  [CallbackType.TunnelDisconnected]: {
+    error: string;
+    messages: string[];
+  };
+  [CallbackType.TunnelAuthenticated]: string;
+  [CallbackType.TunnelPrimaryForwarding]: {
+    message: string;
+    address?: string[];
+  };
+  [CallbackType.TunnelAdditionalForwarding]: {
+    bindAddress: string;
+    forwardToAddr: string;
+    errorMessage: string | null;
+  };
+};
+
 export type Callback<K extends CallbackType> = CallbackMap[K];
 
 

@@ -483,17 +483,17 @@ void primary_forwarding_succeeded_callback(pinggy_void_p_t user_data, pinggy_ref
     // Create a JavaScript array to hold the addresses
     napi_create_array_with_length(env, address_len, &js_addresses_array);
 
-    for (int i = 0; i < address_len; i++)
+    for (pinggy_len_t i = 0; i < address_len; i++)
     {
         napi_value js_address;
-        napi_create_string_utf8(env, addresses[i], NAPI_AUTO_LENGTH, &js_address);
+        napi_create_string_utf8(env, addresses[i] ? addresses[i] : "", NAPI_AUTO_LENGTH, &js_address);
         napi_set_element(env, js_addresses_array, i, js_address);
     }
 
     // Call the JavaScript callback with the array of addresses
     napi_value result;
     napi_call_function(env, undefined, js_callback, 1, &js_addresses_array, &result);
-    PINGGY_DEBUG_INT(result);
+    PINGGY_DEBUG_RET(result);
 }
 
 napi_value SetPrimaryForwardingCallback(napi_env env, napi_callback_info info)

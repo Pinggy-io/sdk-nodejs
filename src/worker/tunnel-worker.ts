@@ -1,5 +1,5 @@
 import { parentPort, workerData } from "worker_threads";
-import { CallbackType, PinggyNative, TunnelUsageType, WorkerMessage, workerMessageType } from "../types.js";
+import { CallbackPayloadMap, CallbackType, PinggyNative, TunnelUsageType, WorkerMessage, workerMessageType } from "../types.js";
 import { Config } from "../bindings/config.js";
 import { Tunnel } from "../bindings/tunnel.js";
 import { Logger, LogLevel } from "../utils/logger.js";
@@ -168,7 +168,7 @@ class TunnelWorker {
   /**
    * Send a callback event to the main thread only if registered.
    */
-  private forwardCallback(event: CallbackType, data: any) {
+  private forwardCallback<K extends CallbackType>(event: K, data:CallbackPayloadMap[K]) {
     Logger.debug(`[Worker] Callback recived. Callbackname: ${event},data:${JSON.stringify(data)}`)
     if (!this.registeredCallbacks.has(event)) return;
     this.postMessage({
