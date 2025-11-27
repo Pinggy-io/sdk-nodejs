@@ -529,7 +529,6 @@ export class Tunnel implements ITunnel {
         }
       },
       operationName: "getting tunnel greet message",
-      logResult: (message) => Logger.info(`Tunnel greet message: ${message}`),
     });
   }
 

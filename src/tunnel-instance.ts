@@ -30,10 +30,9 @@ export class TunnelInstance {
    * @param {PinggyOptionsType} options - The tunnel configuration options.
    */
 
-  constructor(options: PinggyOptionsType) {
+  constructor(workerManager: TunnelWorkerManager) {
     // initialize worker manager
-    this.workerManager = new TunnelWorkerManager(new PinggyOptions(options));
-    this.workerManager.setCallbackHandler((event, data) => this.handleWorkerCallback(event, data));
+    this.workerManager = workerManager;
 
     // Create proxy for this.tunnel and this.config such that their methods will be executed within this.workerManager.call function.
     // This allows us to call the tunnel and config methods without writing message passing code every time
@@ -72,6 +71,21 @@ export class TunnelInstance {
     if (!this.tunnel || !this.config) {
       throw new Error("Failed to create TunnelInstance proxies.");
     }
+  }
+
+  public static async create(options: PinggyOptionsType): Promise<TunnelInstance> {
+
+    // If the worker fails, TunnelWorkerManager.create will throw, and the error 
+    // will be caught by the outer 'try/catch'.
+    const workerManager = await TunnelWorkerManager.create(new PinggyOptions(options));
+
+    // Now that the worker is guaranteed to be ready
+    const instance = new TunnelInstance(workerManager);
+
+    // Set up the async handler
+    instance.workerManager.setCallbackHandler((event, data) => instance.handleWorkerCallback(event, data));
+
+    return instance;
   }
 
 

@@ -30,7 +30,14 @@ export class TunnelWorkerManager {
     private callbackHandler?: (event: CallbackType, data: any) => void;
     public workerErrorCallback?: Function;
 
-    constructor(pinggyOptions: PinggyOptions) {
+    public static async create(pinggyOptions: PinggyOptions): Promise<TunnelWorkerManager> {
+        const manager = new TunnelWorkerManager(pinggyOptions);
+        // Wait for the worker to signal it's ready or throw an error.
+        await manager.ensureReady(); 
+        return manager;
+    }
+
+    private constructor(pinggyOptions: PinggyOptions) {
         const workerPath = fileURLToPath(new URL('./worker/tunnel-worker.js', import.meta.url));
         this.worker = new Worker(workerPath, { workerData: { options: pinggyOptions } });
 

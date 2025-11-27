@@ -101,7 +101,8 @@ class TunnelWorker {
           return
         case workerMessageType.GetTunnelConfig:
           this.getTunnelConfig(msg);
-
+          return;
+          
         default:
           Logger.info(`Unhandled message type from main thread: ${msg.type}`);
       }

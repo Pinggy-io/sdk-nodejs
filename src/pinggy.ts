@@ -55,9 +55,9 @@ export class Pinggy {
    * @see {@link TunnelInstance}
    * @see {@link pinggy}
    */
-  public createTunnel(options: PinggyOptionsType): TunnelInstance {
+  public async createTunnel(options: PinggyOptionsType): Promise<TunnelInstance> {
     const pinggyOptions = new PinggyOptions(options);
-    const tunnel = new TunnelInstance(pinggyOptions);
+    const tunnel = await TunnelInstance.create(pinggyOptions);
     this.tunnels.add(tunnel);
     // If debug was previously enabled, enable it inside this tunnel’s worker
     if (Pinggy.debugEnabled) {
@@ -75,7 +75,7 @@ export class Pinggy {
    * @see {@link pinggy}
    */
   public async forward(options: PinggyOptionsType): Promise<TunnelInstance> {
-    const tunnel = this.createTunnel(options);
+    const tunnel = await this.createTunnel(options);
     return await tunnel.start().then(() => tunnel);
   }
 
