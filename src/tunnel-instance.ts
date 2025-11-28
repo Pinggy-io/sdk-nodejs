@@ -3,7 +3,7 @@ import { TunnelWorkerManager } from "./worker/tunnel-worker-manager.js";
 import { Logger, LogLevel } from "./utils/logger.js"
 import { Tunnel } from "./bindings/tunnel.js";
 import { Config } from "./bindings/config.js";
-import { Callback, CallbackType, TunnelStatus, TunnelUsageType, workerMessageType } from "./types.js";
+import { Callback, CallbackPayloadMap, CallbackType, TunnelStatus, TunnelUsageType, workerMessageType } from "./types.js";
 
 
 /**
@@ -91,14 +91,56 @@ export class TunnelInstance {
 
   // ---------------- Callback Handling ---------------- //
 
-  private handleWorkerCallback(event: CallbackType, data: any): void {
-    const cb = this.callbacks.get(event);
-    if (cb) {
-        // Primitive: pass as single argument
-        cb(data);
+  private handleWorkerCallback<K extends CallbackType>(
+    event: K,
+    data: CallbackPayloadMap[K]
+  ): void {
+
+    const cb = this.callbacks.get(event) as Callback<K> | undefined;
+    if (!cb) return;
+
+    let args: any[] = [];
+
+    switch (event) {
+      case CallbackType.TunnelUsageUpdate:
+        args = [data as TunnelUsageType];
+        break;
+
+      case CallbackType.TunnelAuthenticated:
+        args = [data as string];
+        break;
+
+      case CallbackType.TunnelError: {
+        const d = data as CallbackPayloadMap[CallbackType.TunnelError];
+        args = [d.errorNo, d.error, d.recoverable];
+        break;
+      }
+
+      case CallbackType.TunnelDisconnected: {
+        const d = data as CallbackPayloadMap[CallbackType.TunnelDisconnected];
+        args = [d.error, d.messages];
+        break;
+      }
+
+      case CallbackType.TunnelPrimaryForwarding: {
+        const d = data as CallbackPayloadMap[CallbackType.TunnelPrimaryForwarding];
+        args = [d.message, d.address ?? []];
+        break;
+      }
+
+      case CallbackType.TunnelAdditionalForwarding: {
+        const d = data as CallbackPayloadMap[CallbackType.TunnelAdditionalForwarding];
+        args = [d.bindAddress, d.forwardToAddr, d.errorMessage];
+        break;
+      }
     }
+
+    // Spread into callback in correct order
+    (cb as any)(...args);
+
     Logger.info(`Handled worker callback: ${event}`);
   }
+
 
   private get activeTunnel(): Tunnel {
     if (!this.tunnel) {
