@@ -331,14 +331,6 @@ export enum CallbackType {
   TunnelAuthenticated = "tunnelAuthenticated"
 }
 
-export interface CallbackMap {
-  [CallbackType.TunnelDisconnected]: (error: string, messages: string[]) => void;
-  [CallbackType.TunnelError]: (errorNo: number, error: string, recoverable: boolean) => void;
-  [CallbackType.TunnelUsageUpdate]: (usage: any) => void;
-  [CallbackType.TunnelAdditionalForwarding]: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void;
-  [CallbackType.TunnelPrimaryForwarding]: (message: string, address: string[]) => void;
-  [CallbackType.TunnelAuthenticated]: (message: string) => void;
-}
 /**
  * @group Types
  * @public
@@ -373,6 +365,13 @@ export type CallbackPayloadMap = {
     forwardToAddr: string;
     errorMessage: string | null;
   };
+};
+
+
+// Callback Signatures
+
+export type CallbackMap = {
+  [K in CallbackType]: (payload: CallbackPayloadMap[K]) => void;
 };
 
 export type Callback<K extends CallbackType> = CallbackMap[K];

@@ -3,7 +3,7 @@ import { TunnelWorkerManager } from "./worker/tunnel-worker-manager.js";
 import { Logger, LogLevel } from "./utils/logger.js"
 import { Tunnel } from "./bindings/tunnel.js";
 import { Config } from "./bindings/config.js";
-import { Callback, CallbackPayloadMap, CallbackType, TunnelStatus, TunnelUsageType, workerMessageType } from "./types.js";
+import { Callback, CallbackMap, CallbackPayloadMap, CallbackType, TunnelStatus, TunnelUsageType, workerMessageType } from "./types.js";
 
 
 /**
@@ -99,44 +99,7 @@ export class TunnelInstance {
     const cb = this.callbacks.get(event) as Callback<K> | undefined;
     if (!cb) return;
 
-    let args: any[] = [];
-
-    switch (event) {
-      case CallbackType.TunnelUsageUpdate:
-        args = [data as TunnelUsageType];
-        break;
-
-      case CallbackType.TunnelAuthenticated:
-        args = [data as string];
-        break;
-
-      case CallbackType.TunnelError: {
-        const d = data as CallbackPayloadMap[CallbackType.TunnelError];
-        args = [d.errorNo, d.error, d.recoverable];
-        break;
-      }
-
-      case CallbackType.TunnelDisconnected: {
-        const d = data as CallbackPayloadMap[CallbackType.TunnelDisconnected];
-        args = [d.error, d.messages];
-        break;
-      }
-
-      case CallbackType.TunnelPrimaryForwarding: {
-        const d = data as CallbackPayloadMap[CallbackType.TunnelPrimaryForwarding];
-        args = [d.message, d.address ?? []];
-        break;
-      }
-
-      case CallbackType.TunnelAdditionalForwarding: {
-        const d = data as CallbackPayloadMap[CallbackType.TunnelAdditionalForwarding];
-        args = [d.bindAddress, d.forwardToAddr, d.errorMessage];
-        break;
-      }
-    }
-
-    // Spread into callback in correct order
-    (cb as any)(...args);
+    (cb as any)(data);
 
     Logger.info(`Handled worker callback: ${event}`);
   }
@@ -279,7 +242,7 @@ export class TunnelInstance {
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
-  public setUsageUpdateCallback(callback: (usage: Record<string, any>) => void): void {
+  public setUsageUpdateCallback(callback: CallbackMap[CallbackType.TunnelUsageUpdate]): void {
     this.setCallback(CallbackType.TunnelUsageUpdate, callback);
   }
 
@@ -292,7 +255,7 @@ export class TunnelInstance {
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
-  public setTunnelErrorCallback(callback: (errorNo: number, error: string, recoverable: boolean) => void): void {
+  public setTunnelErrorCallback(callback: CallbackMap[CallbackType.TunnelError]): void {
     this.setCallback(CallbackType.TunnelError, callback);
   }
 
@@ -305,7 +268,7 @@ export class TunnelInstance {
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
-  public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
+  public setTunnelDisconnectedCallback(callback: CallbackMap[CallbackType.TunnelDisconnected]): void {
     this.setCallback(CallbackType.TunnelDisconnected, callback)
   }
 
@@ -318,7 +281,7 @@ export class TunnelInstance {
     * @returns {void}
     * @throws {Error} If the tunnel is not initialized.
     */
-  public setAdditionalForwardingCallback(callback: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void): void {
+  public setAdditionalForwardingCallback(callback: CallbackMap[CallbackType.TunnelAdditionalForwarding]): void {
     this.setCallback(CallbackType.TunnelAdditionalForwarding, callback)
   }
 
@@ -331,7 +294,7 @@ export class TunnelInstance {
   * @returns {void}
   * @throws {Error} If the tunnel is not initialized.
   */
-  public setPrimaryForwardingCallback(callback: (message: string, address: string[]) => void): void {
+  public setPrimaryForwardingCallback(callback: CallbackMap[CallbackType.TunnelPrimaryForwarding]): void {
     this.setCallback(CallbackType.TunnelPrimaryForwarding, callback)
   }
 
@@ -344,7 +307,7 @@ export class TunnelInstance {
   * @returns {void}
   * @throws {Error} If the tunnel is not initialized.
   */
-  public setAuthenticatedCallback(callback: (message: string) => void): void {
+  public setAuthenticatedCallback(callback: CallbackMap[CallbackType.TunnelAuthenticated]): void {
     this.setCallback(CallbackType.TunnelAuthenticated, callback);
   }
 
