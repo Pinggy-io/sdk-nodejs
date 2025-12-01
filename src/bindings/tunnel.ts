@@ -195,6 +195,9 @@ export class Tunnel implements ITunnel {
           this._urls = addresses;
           if (this.resolveForwarding) this.resolveForwarding(addresses);
           if (this.onPrimaryForwardingCallback) {
+            if (this.status === TunnelStatus.STARTING) {
+              this.status = TunnelStatus.LIVE;
+            }
             try {
               this.onPrimaryForwardingCallback("Primary forwarding succeeded", addresses)
             } catch (error) {
@@ -389,9 +392,6 @@ export class Tunnel implements ITunnel {
           }
           this.status = TunnelStatus.CLOSED;
           return; // STOP polling
-        }
-        if (this.status === TunnelStatus.STARTING) {
-          this.status = TunnelStatus.LIVE;
         }
         this.functionQueue.dequeueAndRun();
         shouldContinue = true;
