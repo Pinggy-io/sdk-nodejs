@@ -19,6 +19,6 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@pinggy/pinggy": "^0.2.4"
+    "@pinggy/pinggy": "^0.2.13"
   }
 }
