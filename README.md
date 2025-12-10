@@ -28,7 +28,7 @@ npm install @pinggy/pinggy
 import { pinggy } from "@pinggy/pinggy";
 
 
-const tunnel = pinggy.createTunnel({ forwarding: "localhost:3000" });
+const tunnel = await pinggy.createTunnel({ forwarding: "localhost:3000" });
 await tunnel.start();
 console.log("Tunnel URLs:", await tunnel.urls()); // Get all public addresses
 ```
@@ -55,8 +55,8 @@ Find complete examples at [examples](https://github.com/Pinggy-io/sdk-nodejs/tre
 You can create and manage multiple tunnels simultaneously:
 
 ```ts
-const tunnel1 = pinggy.createTunnel({ forwarding: "localhost:3000" });
-const tunnel2 = pinggy.createTunnel({ forwarding: "localhost:4000" });
+const tunnel1 = await pinggy.createTunnel({ forwarding: "localhost:3000" });
+const tunnel2 = await pinggy.createTunnel({ forwarding: "localhost:4000" });
 await tunnel1.start();
 await tunnel2.start();
 console.log("Tunnel 1 URLs:", await tunnel1.urls());

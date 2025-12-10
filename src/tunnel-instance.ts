@@ -23,11 +23,9 @@ export class TunnelInstance {
   private callbacks = new Map<CallbackType, Function>();
 
   /**
-   * Creates a new TunnelInstance with the provided native addon and options.
-   *
+   * Internal constructor - use TunnelInstance.create() instead.
    * Internally creates a {@link Config} and a {@link Tunnel}.
-   *
-   * @param {PinggyOptionsType} options - The tunnel configuration options.
+   * @internal
    */
 
   constructor(workerManager: TunnelWorkerManager) {
@@ -72,6 +70,13 @@ export class TunnelInstance {
       throw new Error("Failed to create TunnelInstance proxies.");
     }
   }
+  /**
+   * Creates a new TunnelInstance with the specified options.
+   * Internally creates a {@link TunnelWorkerManager}, {@link Config}, and {@link Tunnel}.
+   * @param options 
+   * @public
+   * @returns 
+   */
 
   public static async create(options: PinggyOptionsType): Promise<TunnelInstance> {
 
