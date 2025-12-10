@@ -59,7 +59,8 @@
       "Tunnel.tunnelIsActive": "#",
       "Tunnel.status": "#",
       "Tunnel.startWebDebugging": "#",
-      "Tunnel.tunnelRequestAdditionalForwarding": "#"
+      "Tunnel.tunnelRequestAdditionalForwarding": "#",
+      "TunnelWorkerManager": "#"
     }
   }
 }

@@ -68,8 +68,8 @@ import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
   const options1: PinggyOptions = { forwardTo: "localhost:3000" };
   const options2: PinggyOptions = { forwardTo: "localhost:4000" };
 
-  const tunnel1: TunnelInstance = pinggy.createTunnel(options1);
-  const tunnel2: TunnelInstance = pinggy.createTunnel(options2);
+  const tunnel1: TunnelInstance = await pinggy.createTunnel(options1);
+  const tunnel2: TunnelInstance = await pinggy.createTunnel(options2);
 
   await tunnel1.start();
   await tunnel2.start();

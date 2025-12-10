@@ -19,7 +19,7 @@ console.log("Pinggy version:", version);
     // ipWhitelist: [""],
     // headerModification: ["x-custom-header: value"],
   };
-  const tunnel = pinggy.createTunnel(options);
+  const tunnel = await pinggy.createTunnel(options);
 
   await tunnel.start();
 

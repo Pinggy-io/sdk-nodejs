@@ -34,8 +34,8 @@ const { pinggy } = require("@pinggy/pinggy");
 
 (async () => {
   // Create multiple tunnels
-  const tunnel1 = pinggy.createTunnel({ forwardTo: "localhost:3000" });
-  const tunnel2 = pinggy.createTunnel({ forwardTo: "localhost:4000" });
+  const tunnel1 = await pinggy.createTunnel({ forwardTo: "localhost:3000" });
+  const tunnel2 = await pinggy.createTunnel({ forwardTo: "localhost:4000" });
 
   await tunnel1.start();
   await tunnel2.start();
