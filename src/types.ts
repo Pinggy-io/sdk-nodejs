@@ -31,14 +31,6 @@ export interface PinggyNative {
   configSetServerAddress(configRef: number, address: string): void;
   /** Set the SNI server name for a config. */
   configSetSniServerName(configRef: number, name: string): void;
-  /** Set the TCP forwarding address for a config. */
-  configSetTcpForwardTo(configRef: number, address: string): void;
-  /** Set the UDP forwarding address for a config. */
-  configSetUdpForwardTo(configRef: number, address: string): void;
-  /** Set the tunnel type for a config. */
-  configSetType(configRef: number, type: string): void;
-  /** Set the UDP tunnel type for a config. */
-  configSetUdpType(configRef: number, type: string): void;
   /** Set SSL configuration for a config. */
   configSetSsl(configRef: number, ssl: boolean): void;
   /** Set force configuration for a config. */
@@ -63,14 +55,6 @@ export interface PinggyNative {
   configGetServerAddress(configRef: number): string;
   /** Get the SNI server name for a config. */
   configGetSniServerName(configRef: number): string;
-  /** Get the TCP forwarding address for a config. */
-  configGetTcpForwardTo(configRef: number): string;
-  /** Get the UDP forwarding address for a config. */
-  configGetUdpForwardTo(configRef: number): string;
-  /** Get the tunnel type for a config. */
-  configGetType(configRef: number): string;
-  /** Get the UDP tunnel type for a config. */
-  configGetUdpType(configRef: number): string;
   /** Get SSL configuration for a config. */
   configGetSsl(configRef: number): boolean;
   /** Set HTTPS-only configuration for a config. */

@@ -348,78 +348,7 @@ napi_value ConfigSetToken(napi_env env, napi_callback_info info)
     return result;
 }
 
-// Set the tunnel type. the value must be among `tcp`, `http` or `tls`
-napi_value ConfigSetType(napi_env env, napi_callback_info info)
-{
-    // Declare variables to hold our function arguments
-    size_t argc = 2;
-    napi_value args[2];
-    napi_status status;
-
-    // Step 1: Retrieve the function arguments
-    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
-
-    // Step 2: Check if we received the correct number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Wrong number of arguments. Expected 2 (config, type)");
-        return NULL;
-    }
-
-    // Step 3: Extract the first argument (config) as a uint32
-    pinggy_ref_t config;
-    status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
-
-    // Step 4: Extract the second argument (type) as a string
-    size_t type_length;
-    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &type_length);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid type argument");
-        return NULL;
-    }
-
-    // Step 5: Allocate memory for the type string
-    pinggy_char_p_t type = malloc(type_length + 1);
-    if (type == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
-
-    // Step 6: Copy the type string from the JavaScript value
-    status = napi_get_value_string_utf8(env, args[1], type, type_length + 1, &type_length);
-    if (status != napi_ok)
-    {
-        free(type);
-        napi_throw_type_error(env, NULL, "Failed to get type string");
-        return NULL;
-    }
-
-    // Step 7: Call the Pinggy SDK function
-    pinggy_config_set_type(config, type);
-
-    // Step 8: Free the allocated memory
-    free(type);
-
-    // Step 9: Return undefined (as the C function returns void)
-    napi_value result;
-    napi_get_undefined(env, &result);
-    return result;
-}
-
-// Set the tunnel udp type
-napi_value ConfigSetUdpType(napi_env env, napi_callback_info info)
+napi_value ConfigAddForwardingSimple(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
     napi_value args[2];
@@ -436,7 +365,7 @@ napi_value ConfigSetUdpType(napi_env env, napi_callback_info info)
     // Validate the number of arguments
     if (argc < 2)
     {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, udp_type)");
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, forward_to)");
         return NULL;
     }
 
@@ -449,35 +378,35 @@ napi_value ConfigSetUdpType(napi_env env, napi_callback_info info)
         return NULL;
     }
 
-    // Get the second argument: udp_type (string)
-    size_t udp_type_length;
-    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &udp_type_length);
+    // Get the second argument: forward_to (string)
+    size_t forward_to_length;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &forward_to_length);
     if (status != napi_ok)
     {
-        napi_throw_type_error(env, NULL, "Invalid udp_type argument");
+        napi_throw_type_error(env, NULL, "Invalid forward_to argument");
         return NULL;
     }
 
-    pinggy_char_p_t udp_type = malloc(udp_type_length + 1);
-    if (udp_type == NULL)
+    pinggy_char_p_t forward_to = malloc(forward_to_length + 1);
+    if (forward_to == NULL)
     {
         napi_throw_error(env, NULL, "Memory allocation failed");
         return NULL;
     }
 
-    status = napi_get_value_string_utf8(env, args[1], udp_type, udp_type_length + 1, &udp_type_length);
+    status = napi_get_value_string_utf8(env, args[1], forward_to, forward_to_length + 1, &forward_to_length);
     if (status != napi_ok)
     {
-        free(udp_type);
-        napi_throw_type_error(env, NULL, "Failed to get udp_type string");
+        free(forward_to);
+        napi_throw_type_error(env, NULL, "Failed to get forward_to string");
         return NULL;
     }
 
-    // Call the pinggy_config_set_udp_type function
-    pinggy_config_set_udp_type(config, udp_type);
+    // Call the pinggy_config_add_forwarding_simple function
+    pinggy_config_add_forwarding_simple(config, forward_to);
 
     // Free allocated memory
-    free(udp_type);
+    free(forward_to);
 
     // Return undefined (as the C function returns void)
     napi_value result;
@@ -485,10 +414,10 @@ napi_value ConfigSetUdpType(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value ConfigSetTcpForwardTo(napi_env env, napi_callback_info info)
+napi_value ConfigAddForwarding(napi_env env, napi_callback_info info)
 {
-    size_t argc = 2;
-    napi_value args[2];
+    size_t argc = 4;
+    napi_value args[4];
     napi_status status;
 
     // Parse arguments
@@ -500,9 +429,9 @@ napi_value ConfigSetTcpForwardTo(napi_env env, napi_callback_info info)
     }
 
     // Validate the number of arguments
-    if (argc < 2)
+    if (argc < 4)
     {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, tcp_forward_to)");
+        napi_throw_type_error(env, NULL, "Expected four arguments (config, forwarding_type, binding_url, forward_to)");
         return NULL;
     }
 
@@ -515,101 +444,83 @@ napi_value ConfigSetTcpForwardTo(napi_env env, napi_callback_info info)
         return NULL;
     }
 
-    // Get the second argument: tcp_forward_to (string)
-    size_t tcp_forward_to_length;
-    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &tcp_forward_to_length);
+    // Get the second argument: forwarding_type (string) Example: "http", "tcp", "udp", "tls", "tlstcp".
+    size_t forwarding_type_length;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &forwarding_type_length);
     if (status != napi_ok)
     {
-        napi_throw_type_error(env, NULL, "Invalid tcp_forward_to argument");
+        napi_throw_type_error(env, NULL, "Invalid forwarding_type argument");
         return NULL;
     }
 
-    pinggy_char_p_t tcp_forward_to = malloc(tcp_forward_to_length + 1);
-    if (tcp_forward_to == NULL)
+    pinggy_char_p_t forwarding_type = malloc(forwarding_type_length + 1);
+    if (forwarding_type == NULL)
     {
         napi_throw_error(env, NULL, "Memory allocation failed");
         return NULL;
     }
 
-    status = napi_get_value_string_utf8(env, args[1], tcp_forward_to, tcp_forward_to_length + 1, &tcp_forward_to_length);
+    status = napi_get_value_string_utf8(env, args[1], forwarding_type, forwarding_type_length + 1, &forwarding_type_length);
     if (status != napi_ok)
     {
-        free(tcp_forward_to);
-        napi_throw_type_error(env, NULL, "Failed to get tcp_forward_to string");
+        free(forwarding_type);
+        napi_throw_type_error(env, NULL, "Failed to get forwarding_type string");
         return NULL;
     }
 
-    // Call the pinggy_config_set_tcp_forward_to function
-    pinggy_config_set_tcp_forward_to(config, tcp_forward_to);
-
-    // Free allocated memory
-    free(tcp_forward_to);
-
-    // Return undefined (as the C function returns void)
-    napi_value result;
-    napi_get_undefined(env, &result);
-    return result;
-}
-
-napi_value ConfigSetUdpForwardTo(napi_env env, napi_callback_info info)
-{
-    size_t argc = 2;
-    napi_value args[2];
-    napi_status status;
-
-    // Parse arguments
-    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    // Get the third argument: binding_url (string)  Examples: "example.pinggy.io", "example.pinggy.io:8080", ":80".
+    size_t binding_url_length;
+    status = napi_get_value_string_utf8(env, args[2], NULL, 0, &binding_url_length);
     if (status != napi_ok)
     {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
+        napi_throw_type_error(env, NULL, "Invalid binding_url argument");
         return NULL;
     }
 
-    // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, udp_forward_to)");
-        return NULL;
-    }
-
-    // Get the first argument: config (pinggy_ref_t / uint32_t)
-    pinggy_ref_t config;
-    status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
-
-    // Get the second argument: udp_forward_to (string)
-    size_t udp_forward_to_length;
-    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &udp_forward_to_length);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid udp_forward_to argument");
-        return NULL;
-    }
-
-    pinggy_char_p_t udp_forward_to = malloc(udp_forward_to_length + 1);
-    if (udp_forward_to == NULL)
+    pinggy_char_p_t binding_url = malloc(binding_url_length + 1);
+    if (binding_url == NULL)
     {
         napi_throw_error(env, NULL, "Memory allocation failed");
         return NULL;
     }
 
-    status = napi_get_value_string_utf8(env, args[1], udp_forward_to, udp_forward_to_length + 1, &udp_forward_to_length);
+    status = napi_get_value_string_utf8(env, args[2], binding_url, binding_url_length + 1, &binding_url_length);
     if (status != napi_ok)
     {
-        free(udp_forward_to);
-        napi_throw_type_error(env, NULL, "Failed to get udp_forward_to string");
+        free(binding_url);
+        napi_throw_type_error(env, NULL, "Failed to get binding_url string");
         return NULL;
     }
 
-    // Call the pinggy_config_set_udp_forward_to function
-    pinggy_config_set_udp_forward_to(config, udp_forward_to);
+    // Get the 4th argument: forward_to (string) Examples: "http://localhost:3000"), an IP address (e.g., "127.0.0.1:8000"), or just a port (e.g., ":5000").
+    size_t forward_to_length;
+    status = napi_get_value_string_utf8(env, args[3], NULL, 0, &forward_to_length);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid forward_to_length argument");
+        return NULL;
+    }
+
+    pinggy_char_p_t forward_to = malloc(forward_to_length + 1);
+    if (forward_to == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    status = napi_get_value_string_utf8(env, args[3], forward_to, forward_to_length + 1, &forward_to_length);
+    if (status != napi_ok)
+    {
+        free(forward_to);
+        napi_throw_type_error(env, NULL, "Failed to get forward_to string");
+        return NULL;
+    }
+
+    // Call the pinggy_config_add_forwarding function
+    pinggy_config_add_forwarding(config, forwarding_type, binding_url, forward_to);
 
     // Free allocated memory
-    free(udp_forward_to);
+    free(forward_to);
 
     // Return undefined (as the C function returns void)
     napi_value result;
@@ -1109,217 +1020,7 @@ napi_value ConfigGetToken(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value ConfigGetType(napi_env env, napi_callback_info info)
-{
-    size_t argc = 1;    // Number of expected arguments
-    napi_value args[1]; // Array to store the JS arguments (passed to cb_info function)
-    napi_value result;  // return value for JS
-    napi_status status; // return value for JS
-
-    // Parse arguments
-    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
-
-    // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
-
-    // Get the first argument: config (uint32_t)
-    uint32_t config;
-    status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
-
-    // Allocate buffer for the type
-    pinggy_capa_t required_len = 0; // Example buffer length
-    pinggy_const_int_t rc = pinggy_config_get_type_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get required length for type");
-        return NULL;
-    }
-    pinggy_char_p_t buffer = malloc(required_len + 1);
-    if (buffer == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
-
-    // Call the pinggy_config_get_type function
-    pinggy_const_int_t copied_len = pinggy_config_get_type(config, required_len + 1, buffer);
-
-    // Handle errors (if the copied length is negative, assuming it indicates an error)
-    if (copied_len < 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get type");
-        return NULL;
-    }
-
-    // Convert the buffer to a JavaScript string
-    status = napi_create_string_utf8(env, buffer, copied_len, &result);
-    if (status != napi_ok)
-    {
-        free(buffer);
-        napi_throw_error(env, NULL, "Failed to create string");
-        return NULL;
-    }
-
-    free(buffer);
-    return result;
-}
-
-napi_value ConfigGetUdpType(napi_env env, napi_callback_info info)
-{
-    size_t argc = 1;
-    napi_value args[1];
-    napi_status status;
-
-    // Parse arguments
-    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
-
-    // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
-
-    // Get the first argument: config (pinggy_ref_t / uint32_t)
-    pinggy_ref_t config;
-    status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
-
-    // Create a buffer to hold the udp type
-    pinggy_capa_t required_len = 0;
-    pinggy_const_int_t rc = pinggy_config_get_udp_type_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get required length for UDP type");
-        return NULL;
-    }
-    pinggy_char_p_t udp_type = malloc(required_len + 1);
-    if (udp_type == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
-
-    // Call the pinggy function to get the udp type
-    pinggy_const_int_t copied_length = pinggy_config_get_udp_type(config, required_len + 1, udp_type);
-    if (copied_length < 0)
-    {
-        free(udp_type);
-        napi_throw_error(env, NULL, "Failed to get UDP type");
-        return NULL;
-    }
-
-    // Return the udp type as a JavaScript string
-    napi_value result;
-    status = napi_create_string_utf8(env, udp_type, copied_length, &result);
-    if (status != napi_ok)
-    {
-        free(udp_type);
-        napi_throw_error(env, NULL, "Failed to create string from UDP type");
-        return NULL;
-    }
-
-    // Free the allocated memory for udp_type
-    free(udp_type);
-
-    return result;
-}
-
-napi_value ConfigGetTcpForwardTo(napi_env env, napi_callback_info info)
-{
-    size_t argc = 1;
-    napi_value args[1];
-    napi_status status;
-
-    // Parse arguments
-    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
-
-    // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
-
-    // Get the first argument: config (pinggy_ref_t / uint32_t)
-    pinggy_ref_t config;
-    status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
-
-    // Create a buffer to hold the TCP forwarding address
-    pinggy_capa_t required_len = 0;
-    pinggy_const_int_t rc = pinggy_config_get_tcp_forward_to_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get required length for TCP forwarding address");
-        return NULL;
-    }
-    pinggy_char_p_t tcp_forward_to = malloc(required_len + 1);
-    if (tcp_forward_to == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
-
-    // Call the pinggy function to get the TCP forwarding address
-    pinggy_const_int_t copied_length = pinggy_config_get_tcp_forward_to(config, required_len + 1, tcp_forward_to);
-
-    if (copied_length < 0)
-    {
-        free(tcp_forward_to);
-        napi_throw_error(env, NULL, "Failed to get TCP forwarding address");
-        return NULL;
-    }
-
-    // Return the TCP forwarding address as a JavaScript string
-    napi_value result;
-    status = napi_create_string_utf8(env, tcp_forward_to, copied_length, &result);
-    if (status != napi_ok)
-    {
-        free(tcp_forward_to);
-        napi_throw_error(env, NULL, "Failed to create string from TCP forwarding address");
-        return NULL;
-    }
-
-    // Free the allocated memory for tcp_forward_to
-    free(tcp_forward_to);
-
-    return result;
-}
-
-napi_value ConfigGetUdpForwardTo(napi_env env, napi_callback_info info)
+napi_value ConfigGetForwarding(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1];
@@ -1350,41 +1051,41 @@ napi_value ConfigGetUdpForwardTo(napi_env env, napi_callback_info info)
     }
 
     pinggy_capa_t required_len = 0;
-    pinggy_const_int_t rc = pinggy_config_get_udp_forward_to_len(config, 0, NULL, &required_len);
+    pinggy_const_int_t rc = pinggy_config_get_forwardings_len(config, 0, NULL, &required_len);
     if (rc < 0 || required_len == 0)
     {
-        napi_throw_error(env, NULL, "Failed to get required length for UDP forwarding address");
+        napi_throw_error(env, NULL, "Failed to get required length for forwarding rules");
         return NULL;
     }
 
-    // Create a buffer to hold the UDP forwarding address
-    pinggy_char_p_t udp_forward_to = malloc(required_len + 1);
-    if (udp_forward_to == NULL)
+    // Create a buffer to hold the forwarding rules
+    pinggy_char_p_t forwarding_rules = malloc(required_len + 1);
+    if (forwarding_rules == NULL)
     {
         napi_throw_error(env, NULL, "Memory allocation failed");
         return NULL;
     }
 
-    // Call the pinggy function to get the UDP forwarding address
-    pinggy_const_int_t copied_length = pinggy_config_get_udp_forward_to(config, required_len + 1, udp_forward_to);
+    // Call the pinggy function to Retrieves the forwarding rules (as a JSON string) from the tunnel config.
+    pinggy_const_int_t copied_length = pinggy_config_get_forwardings(config, required_len + 1, forwarding_rules);
     if (copied_length < 0)
     {
-        free(udp_forward_to);
-        napi_throw_error(env, NULL, "Failed to get UDP forwarding address");
+        free(forwarding_rules);
+        napi_throw_error(env, NULL, "Failed to get forwarding_rules");
         return NULL;
     }
-    // Return the UDP forwarding address as a JavaScript string
+    // Return the forwarding_rules as a JavaScript string
     napi_value result;
-    status = napi_create_string_utf8(env, udp_forward_to, copied_length, &result);
+    status = napi_create_string_utf8(env, forwarding_rules, copied_length, &result);
     if (status != napi_ok)
     {
-        free(udp_forward_to);
-        napi_throw_error(env, NULL, "Failed to create string from UDP forwarding address");
+        free(forwarding_rules);
+        napi_throw_error(env, NULL, "Failed to create string from forwarding_rules");
         return NULL;
     }
 
     // Free the allocated memory for udp_forward_to
-    free(udp_forward_to);
+    free(forwarding_rules);
 
     return result;
 }
@@ -2955,7 +2656,9 @@ napi_value Init1(napi_env env, napi_value exports)
         set_reconnect_interval_fn,
         set_auto_reconnect_fn,
         set_max_reconnect_attempts_fn,
-        set_reverse_proxy_fn;
+        set_reverse_proxy_fn,
+        set_forwarding_simple_fn,
+        set_forwarding_fn;
 
     napi_value get_server_address_fn,
         get_sni_server_name_fn,
@@ -2982,7 +2685,8 @@ napi_value Init1(napi_env env, napi_value exports)
         get_reconnect_interval_fn,
         get_auto_reconnect_fn,
         get_max_reconnect_attempts_fn,
-        get_pinggy_version_fn;
+        get_pinggy_version_fn,
+        get_forwarding_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
     // napi_create_function(napi_env env,
@@ -3035,17 +2739,20 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigSetToken, NULL, &set_token_fn);
     napi_set_named_property(env, exports, "configSetToken", set_token_fn);
 
-    napi_create_function(env, NULL, 0, ConfigSetType, NULL, &set_type_fn);
-    napi_set_named_property(env, exports, "configSetType", set_type_fn);
+    // napi_create_function(env, NULL, 0, ConfigSetType, NULL, &set_type_fn);
+    // napi_set_named_property(env, exports, "configSetType", set_type_fn);
 
-    napi_create_function(env, NULL, 0, ConfigGetUdpType, NULL, &get_udp_type_fn);
-    napi_set_named_property(env, exports, "configGetUdpType", get_udp_type_fn);
+    // napi_create_function(env, NULL, 0, ConfigGetUdpType, NULL, &get_udp_type_fn);
+    // napi_set_named_property(env, exports, "configGetUdpType", get_udp_type_fn);
 
-    napi_create_function(env, NULL, 0, ConfigGetTcpForwardTo, NULL, &get_tcp_forward_to_fn);
-    napi_set_named_property(env, exports, "configGetTcpForwardTo", get_tcp_forward_to_fn);
+    // napi_create_function(env, NULL, 0, ConfigGetTcpForwardTo, NULL, &get_tcp_forward_to_fn);
+    // napi_set_named_property(env, exports, "configGetTcpForwardTo", get_tcp_forward_to_fn);
 
-    napi_create_function(env, NULL, 0, ConfigGetUdpForwardTo, NULL, &get_udp_forward_to_fn);
-    napi_set_named_property(env, exports, "configGetUdpForwardTo", get_udp_forward_to_fn);
+    // napi_create_function(env, NULL, 0, ConfigGetUdpForwardTo, NULL, &get_udp_forward_to_fn);
+    // napi_set_named_property(env, exports, "configGetUdpForwardTo", get_udp_forward_to_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetForwarding, NULL, &get_forwarding_fn);
+    napi_set_named_property(env, exports, "configGetForwarding", get_forwarding_fn);
 
     napi_create_function(env, NULL, 0, ConfigSetForce, NULL, &set_force_fn);
     napi_set_named_property(env, exports, "configSetForce", set_force_fn);
@@ -3062,14 +2769,19 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigSetSSL, NULL, &set_ssl_fn);
     napi_set_named_property(env, exports, "configSetSSL", set_ssl_fn);
 
-    napi_create_function(env, NULL, 0, ConfigSetUdpType, NULL, &set_udp_type_fn);
-    napi_set_named_property(env, exports, "configSetUdpType", set_udp_type_fn);
+    // napi_create_function(env, NULL, 0, ConfigSetUdpType, NULL, &set_udp_type_fn);
+    // napi_set_named_property(env, exports, "configSetUdpType", set_udp_type_fn);
 
-    napi_create_function(env, NULL, 0, ConfigSetTcpForwardTo, NULL, &set_tcp_forward_to_fn);
-    napi_set_named_property(env, exports, "configSetTcpForwardTo", set_tcp_forward_to_fn);
+    // napi_create_function(env, NULL, 0, ConfigSetTcpForwardTo, NULL, &set_tcp_forward_to_fn);
+    // napi_set_named_property(env, exports, "configSetTcpForwardTo", set_tcp_forward_to_fn);
 
-    napi_create_function(env, NULL, 0, ConfigSetUdpForwardTo, NULL, &set_udp_forward_to_fn);
-    napi_set_named_property(env, exports, "configSetUdpForwardTo", set_udp_forward_to_fn);
+    // napi_create_function(env, NULL, 0, ConfigSetUdpForwardTo, NULL, &set_udp_forward_to_fn);
+    // napi_set_named_property(env, exports, "configSetUdpForwardTo", set_udp_forward_to_fn);
+    napi_create_function(env, NULL, 0, ConfigAddForwarding, NULL, &set_forwarding_fn);
+    napi_set_named_property(env, exports, "configAddForwarding", set_forwarding_fn);
+
+    napi_create_function(env, NULL, 0, ConfigAddForwardingSimple, NULL, &set_forwarding_simple_fn);
+    napi_set_named_property(env, exports, "configAddForwardingSimple", set_forwarding_simple_fn);
 
     napi_create_function(env, NULL, 0, ConfigSetInsecure, NULL, &set_insecure_fn);
     napi_set_named_property(env, exports, "configSetInsecure", set_insecure_fn);
@@ -3077,8 +2789,8 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigGetToken, NULL, &get_token_fn);
     napi_set_named_property(env, exports, "configGetToken", get_token_fn);
 
-    napi_create_function(env, NULL, 0, ConfigGetType, NULL, &get_type_fn);
-    napi_set_named_property(env, exports, "configGetType", get_type_fn);
+    // napi_create_function(env, NULL, 0, ConfigGetType, NULL, &get_type_fn);
+    // napi_set_named_property(env, exports, "configGetType", get_type_fn);
 
     napi_create_function(env, NULL, 0, ConfigGetSsl, NULL, &get_ssl_fn);
     napi_set_named_property(env, exports, "configGetSsl", get_ssl_fn);

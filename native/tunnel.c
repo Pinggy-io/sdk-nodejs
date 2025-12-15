@@ -91,51 +91,104 @@ napi_value TunnelStart(napi_env env, napi_callback_info info)
     return result;
 }
 
-// Wrapper for pinggy_tunnel_connect
-napi_value TunnelConnect(napi_env env, napi_callback_info info)
+napi_value TunnelStartNonBlocking(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1];
+    napi_value result;
     napi_status status;
 
-    // Parse the arguments
+    // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok || argc < 1)
-    {
-        char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel ref)", __FILE__, __LINE__);
-        napi_throw_error(env, NULL, error_message);
-        return NULL;
-    }
-
-    // Convert the first argument to uint32_t (tunnel ref)
-    uint32_t tunnel_ref;
-    status = napi_get_value_uint32(env, args[0], &tunnel_ref);
     if (status != napi_ok)
     {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
-        napi_throw_error(env, NULL, error_message);
-        return NULL;
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to parse arguments", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
     }
 
-    // Call the pinggy_tunnel_connect function
-    pinggy_bool_t result = pinggy_tunnel_connect((pinggy_ref_t)tunnel_ref);
-    PINGGY_DEBUG_INT(result);
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel)", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
 
-    // Convert the result (pinggy_bool_t) to a JavaScript boolean
-    napi_value js_result;
-    status = napi_get_boolean(env, result, &js_result);
+    // Get the first argument: tunnel (pinggy_ref_t)
+    uint32_t tunnel;
+    status = napi_get_value_uint32(env, args[0], &tunnel);
     if (status != napi_ok)
     {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create JavaScript boolean", __FILE__, __LINE__);
-        napi_throw_error(env, NULL, error_message);
-        return NULL;
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid tunnel reference", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
     }
 
-    return js_result;
+    // Call the pinggy_tunnel_start_non_blocking function
+    pinggy_bool_t success = pinggy_tunnel_start_non_blocking(tunnel);
+    PINGGY_DEBUG_INT(success);
+    if (!success)
+    {
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to start tunnel", __FILE__, __LINE__);
+        napi_create_string_utf8(env, error_message, NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
+
+    // Return the boolean value (success) as a JavaScript boolean
+    napi_get_boolean(env, success, &result);
+    return result;
 }
+
+// Wrapper for pinggy_tunnel_connect
+// napi_value TunnelConnect(napi_env env, napi_callback_info info)
+// {
+//     size_t argc = 1;
+//     napi_value args[1];
+//     napi_status status;
+
+//     // Parse the arguments
+//     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+//     if (status != napi_ok || argc < 1)
+//     {
+//         char error_message[256];
+//         snprintf(error_message, sizeof(error_message), "[%s:%d] Expected one argument (tunnel ref)", __FILE__, __LINE__);
+//         napi_throw_error(env, NULL, error_message);
+//         return NULL;
+//     }
+
+//     // Convert the first argument to uint32_t (tunnel ref)
+//     uint32_t tunnel_ref;
+//     status = napi_get_value_uint32(env, args[0], &tunnel_ref);
+//     if (status != napi_ok)
+//     {
+//         char error_message[256];
+//         snprintf(error_message, sizeof(error_message), "[%s:%d] Expected argument to be an unsigned integer (tunnel ref)", __FILE__, __LINE__);
+//         napi_throw_error(env, NULL, error_message);
+//         return NULL;
+//     }
+
+//     // Call the pinggy_tunnel_connect function
+//     pinggy_bool_t result = pinggy_tunnel_connect((pinggy_ref_t)tunnel_ref);
+//     PINGGY_DEBUG_INT(result);
+
+//     // Convert the result (pinggy_bool_t) to a JavaScript boolean
+//     napi_value js_result;
+//     status = napi_get_boolean(env, result, &js_result);
+//     if (status != napi_ok)
+//     {
+//         char error_message[256];
+//         snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to create JavaScript boolean", __FILE__, __LINE__);
+//         napi_throw_error(env, NULL, error_message);
+//         return NULL;
+//     }
+
+//     return js_result;
+// }
 
 // Wrapper for pinggy_tunnel_resume
 napi_value TunnelResume(napi_env env, napi_callback_info info)
@@ -311,19 +364,40 @@ napi_value TunnelStartWebDebugging(napi_env env, napi_callback_info info)
         return NULL;
     }
 
-    // Extract listening port (assumed to be a uint16_t)
-    uint32_t port;
-    status = napi_get_value_uint32(env, args[1], &port);
+    size_t listening_addr_len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &listening_addr_len);
     if (status != napi_ok)
     {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid port number", __FILE__, __LINE__);
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Invalid listening address", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+    // create a buffer to hold the listening address
+    pinggy_const_char_p_t listening_addr = (char *)malloc(listening_addr_len + 1);
+    status = napi_get_value_string_utf8(env, args[1], listening_addr, listening_addr_len + 1, NULL);
+    if (status != napi_ok)
+    {
+        free(listening_addr);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to get listening address string", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+    // copy string into buffer
+    // listening_addr[listening_addr_len] = '\0';
+    status = napi_get_value_string_utf8(env, args[1], (char *)listening_addr, listening_addr_len + 1, NULL);
+    if (status != napi_ok)
+    {
+        free((void *)listening_addr);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Failed to copy listening address string", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
         return NULL;
     }
 
-    // Call the actual Pinggy function
-    pinggy_uint16_t result = pinggy_tunnel_start_web_debugging(tunnel, (pinggy_uint16_t)port);
+    // Call the actual Pinggy function Example: "localhost:4300" specify host:port
+    pinggy_uint16_t result = pinggy_tunnel_start_web_debugging(tunnel, listening_addr);
     PINGGY_DEBUG_INT(result);
 
     // Return the result as a JavaScript number
@@ -392,16 +466,16 @@ napi_value TunnelRequestPrimaryForwarding(napi_env env, napi_callback_info info)
 // ================================= CALLBACKS =================================
 napi_value TunnelRequestAdditionalForwarding(napi_env env, napi_callback_info info)
 {
-    size_t argc = 3;
-    napi_value args[3];
+    size_t argc = 4;
+    napi_value args[4];
     napi_status status;
 
     // Parse the arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok || argc < 3)
+    if (status != napi_ok || argc < 4)
     {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected three arguments: (tunnelRef, remoteBindingAddr, forwardTo)", __FILE__, __LINE__);
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected three arguments: (tunnelRef, remote_binding_url, forward_to, forwarding_type)", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
         return NULL;
     }
@@ -417,40 +491,60 @@ napi_value TunnelRequestAdditionalForwarding(napi_env env, napi_callback_info in
         return NULL;
     }
 
-    // Convert second argument to a C string (remoteBindingAddr)
-    size_t remoteBindingAddrLen;
-    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &remoteBindingAddrLen);
+    // Convert second argument to a C string (remote_binding_url)
+    size_t remote_binding_url_len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &remote_binding_url_len);
     if (status != napi_ok)
     {
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected second argument to be a string (remoteBindingAddr)", __FILE__, __LINE__);
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected second argument to be a string (remote_binding_url)", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
         return NULL;
     }
-    char *remoteBindingAddr = (char *)malloc(remoteBindingAddrLen + 1);
-    napi_get_value_string_utf8(env, args[1], remoteBindingAddr, remoteBindingAddrLen + 1, NULL);
+    char *remote_binding_url = (char *)malloc(remote_binding_url_len + 1);
+    napi_get_value_string_utf8(env, args[1], remote_binding_url, remote_binding_url_len + 1, NULL);
 
     // Convert third argument to a C string (forwardTo)
-    size_t forwardToLen;
-    status = napi_get_value_string_utf8(env, args[2], NULL, 0, &forwardToLen);
+    size_t forward_to_len;
+    status = napi_get_value_string_utf8(env, args[2], NULL, 0, &forward_to_len);
     if (status != napi_ok)
     {
-        free(remoteBindingAddr);
+        free(remote_binding_url);
         char error_message[256];
-        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected third argument to be a string (forwardTo)", __FILE__, __LINE__);
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected third argument to be a string (forward_to)", __FILE__, __LINE__);
         napi_throw_error(env, NULL, error_message);
         return NULL;
     }
-    char *forwardTo = (char *)malloc(forwardToLen + 1);
-    napi_get_value_string_utf8(env, args[2], forwardTo, forwardToLen + 1, NULL);
+    char *forward_to = (char *)malloc(forward_to_len + 1);
+    napi_get_value_string_utf8(env, args[2], forward_to, forward_to_len + 1, NULL);
+
+    // Convert fourth argument to a C string (forwardTo)
+    size_t forwarding_type_len;
+    status = napi_get_value_string_utf8(env, args[3], NULL, 0, &forwarding_type_len);
+    if (status != napi_ok)
+    {
+        free(remote_binding_url);
+        char error_message[256];
+        snprintf(error_message, sizeof(error_message), "[%s:%d] Expected third argument to be a string (forward_type)", __FILE__, __LINE__);
+        napi_throw_error(env, NULL, error_message);
+        return NULL;
+    }
+    char *forward_type = (char *)malloc(forwarding_type_len + 1);
+    napi_get_value_string_utf8(env, args[3], forward_type, forwarding_type_len + 1, NULL);
+
+    pinggy_const_char_p_t remoteBindingAddr = remote_binding_url;
+    ;
+    pinggy_const_char_p_t forwardTo = forward_to;
+    pinggy_const_char_p_t forwardingType = forward_type;
 
     // Call the Pinggy function
-    pinggy_tunnel_request_additional_forwarding((pinggy_ref_t)tunnelRef, remoteBindingAddr, forwardTo);
+    pinggy_tunnel_request_additional_forwarding((pinggy_ref_t)tunnelRef, remoteBindingAddr, forwardTo, forwardingType);
     PINGGY_DEBUG_INT(tunnelRef);
 
     // Free allocated memory
-    free(remoteBindingAddr);
-    free(forwardTo);
+    free(remote_binding_url);
+    free(forward_to);
+    free(forward_type);
 
     return NULL;
 }
@@ -460,6 +554,7 @@ typedef struct
 {
     napi_ref callback_ref;
     napi_env env;
+    
 } CallbackData;
 
 // primary forwarding succeeded callback in newer version in place of reverse forwarding done callback
@@ -2381,7 +2476,7 @@ napi_value TunnelSetWillReconnectCallback(napi_env env, napi_callback_info info)
 napi_value Init2(napi_env env, napi_value exports)
 {
     napi_value request_primary_forwarding_fn,
-        tunnel_initiate_fn, tunnel_start_fn,
+        tunnel_initiate_fn, tunnel_start_fn, tunnel_start_non_blocking_fn,
         tunnel_resume_fn, tunnel_stop_fn,
         tunnel_set_reverse_forwarding_done_callback_fn,
         tunnel_set_will_reconnect_callback_fn,
@@ -2416,6 +2511,9 @@ napi_value Init2(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, TunnelStart, NULL, &tunnel_start_fn);
     napi_set_named_property(env, exports, "tunnelStart", tunnel_start_fn);
 
+    napi_create_function(env, NULL, 0, TunnelStartNonBlocking, NULL, &tunnel_start_non_blocking_fn);
+    napi_set_named_property(env, exports, "tunnelStartNonBlocking", tunnel_start_non_blocking_fn);
+
     napi_create_function(env, NULL, 0, TunnelResume, NULL, &tunnel_resume_fn);
     napi_set_named_property(env, exports, "tunnelResume", tunnel_resume_fn);
 
@@ -2432,8 +2530,8 @@ napi_value Init2(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, SetPrimaryForwardingCallback, NULL, &tunnel_set_reverse_forwarding_done_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetPrimaryForwardingSucceededCallback", tunnel_set_reverse_forwarding_done_callback_fn);
 
-    napi_create_function(env, NULL, 0, TunnelConnect, NULL, &tunnel_connect_fn);
-    napi_set_named_property(env, exports, "tunnelConnect", tunnel_connect_fn);
+    // napi_create_function(env, NULL, 0, TunnelConnect, NULL, &tunnel_connect_fn);
+    // napi_set_named_property(env, exports, "tunnelConnect", tunnel_connect_fn);
 
     napi_create_function(env, NULL, 0, SetAuthenticatedCallback, NULL, &tunnel_set_authenticated_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetAuthenticatedCallback", tunnel_set_authenticated_callback_fn);
