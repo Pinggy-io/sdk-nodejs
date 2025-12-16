@@ -1020,7 +1020,7 @@ napi_value ConfigGetToken(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value ConfigGetForwarding(napi_env env, napi_callback_info info)
+napi_value ConfigGetForwardings(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value args[1];
@@ -2624,6 +2624,311 @@ napi_value ConfigGetMaxReconnectAttempts(napi_env env, napi_callback_info info)
 
     return result;
 }
+// Wrapper for pinggy_config_set_forwardings
+napi_value ConfigSetForwardings(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, forwardings)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Get the second argument: forwardings (string)
+    size_t forwardings_len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &forwardings_len);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid forwardings argument");
+        return NULL;
+    }
+
+    pinggy_char_p_t forwardings = malloc(forwardings_len + 1);
+    if (forwardings == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    status = napi_get_value_string_utf8(env, args[1], forwardings, forwardings_len + 1, &forwardings_len);
+    if (status != napi_ok)
+    {
+        free(forwardings);
+        napi_throw_type_error(env, NULL, "Failed to get forwardings string");
+        return NULL;
+    }
+
+    // Call the pinggy_config_set_forwardings function
+    pinggy_config_set_forwardings(config, forwardings);
+
+    // Free allocated memory
+    free(forwardings);
+
+    // Return undefined (as the C function returns void)
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+// Wrapper for pinggy_config_reset_forwardings
+napi_value ConfigResetForwardings(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    // Parse arguments
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    // Validate the number of arguments
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    // Get the first argument: config (pinggy_ref_t / uint32_t)
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    // Call the pinggy_config_reset_forwardings function
+    pinggy_config_reset_forwardings(config);
+
+    // Return undefined (as the C function returns void)
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_set_webdebugger_addr. Sets the port for the web debugger.
+napi_value ConfigSetWebdebuggerAddr(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, addr)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    size_t addr_len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &addr_len);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid addr argument");
+        return NULL;
+    }
+
+    pinggy_char_p_t addr = malloc(addr_len + 1);
+    if (addr == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    status = napi_get_value_string_utf8(env, args[1], addr, addr_len + 1, &addr_len);
+    if (status != napi_ok)
+    {
+        free(addr);
+        napi_throw_type_error(env, NULL, "Failed to get addr string");
+        return NULL;
+    }
+
+    pinggy_config_set_webdebugger_addr(config, addr);
+    free(addr);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_set_webdebugger. Enables or disables the web debugger for the tunnel.
+napi_value ConfigSetWebdebugger(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 2)
+    {
+        napi_throw_type_error(env, NULL, "Expected two arguments (config, enable)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    bool enable;
+    status = napi_get_value_bool(env, args[1], &enable);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid enable argument");
+        return NULL;
+    }
+
+    pinggy_config_set_webdebugger(config, (pinggy_bool_t)enable);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_webdebugger. Checks whether the web debugger is enabled in the tunnel config.
+napi_value ConfigGetWebdebugger(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    pinggy_bool_t webdebugger_enabled = pinggy_config_get_webdebugger(config);
+
+    napi_value result;
+    napi_get_boolean(env, webdebugger_enabled, &result);
+    return result;
+}
+
+// Wrapper for pinggy_config_get_webdebugger_addr. Retrieves the web debugger bindaddress from the tunnel config.
+napi_value ConfigGetWebdebuggerAddr(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to parse arguments");
+        return NULL;
+    }
+
+    if (argc < 1)
+    {
+        napi_throw_type_error(env, NULL, "Expected one argument (config)");
+        return NULL;
+    }
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    if (status != napi_ok)
+    {
+        napi_throw_type_error(env, NULL, "Invalid config argument");
+        return NULL;
+    }
+
+    pinggy_capa_t required_len = 0;
+    pinggy_const_int_t rc = pinggy_config_get_webdebugger_addr_len(config, 0, NULL, &required_len);
+    if (rc < 0 || required_len == 0)
+    {
+        napi_throw_error(env, NULL, "Failed to determine webdebugger_addr length");
+        return NULL;
+    }
+
+    pinggy_char_p_t webdebugger_addr = malloc(required_len + 1);
+    if (webdebugger_addr == NULL)
+    {
+        napi_throw_error(env, NULL, "Memory allocation failed");
+        return NULL;
+    }
+
+    pinggy_const_int_t copied = pinggy_config_get_webdebugger_addr(config, required_len + 1, webdebugger_addr);
+    if (copied < 0)
+    {
+        free(webdebugger_addr);
+        napi_throw_error(env, NULL, "Failed to get webdebugger_addr");
+        return NULL;
+    }
+
+    napi_value result;
+    status = napi_create_string_utf8(env, webdebugger_addr, copied, &result);
+    free(webdebugger_addr);
+    if (status != napi_ok)
+    {
+        napi_throw_error(env, NULL, "Failed to create JS string from webdebugger_addr");
+        return NULL;
+    }
+
+    return result;
+}
 
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
@@ -2658,7 +2963,11 @@ napi_value Init1(napi_env env, napi_value exports)
         set_max_reconnect_attempts_fn,
         set_reverse_proxy_fn,
         set_forwarding_simple_fn,
-        set_forwarding_fn;
+        set_forwarding_fn,
+        set_forwardings,
+        set_reset_forwardings,
+        set_webdebugger_addr_fn,
+        set_webdebugger_fn;
 
     napi_value get_server_address_fn,
         get_sni_server_name_fn,
@@ -2686,7 +2995,9 @@ napi_value Init1(napi_env env, napi_value exports)
         get_auto_reconnect_fn,
         get_max_reconnect_attempts_fn,
         get_pinggy_version_fn,
-        get_forwarding_fn;
+        get_forwarding_fn,
+        get_webdebugger_fn,
+        get_webdebugger_addr_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
     // napi_create_function(napi_env env,
@@ -2739,19 +3050,7 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigSetToken, NULL, &set_token_fn);
     napi_set_named_property(env, exports, "configSetToken", set_token_fn);
 
-    // napi_create_function(env, NULL, 0, ConfigSetType, NULL, &set_type_fn);
-    // napi_set_named_property(env, exports, "configSetType", set_type_fn);
-
-    // napi_create_function(env, NULL, 0, ConfigGetUdpType, NULL, &get_udp_type_fn);
-    // napi_set_named_property(env, exports, "configGetUdpType", get_udp_type_fn);
-
-    // napi_create_function(env, NULL, 0, ConfigGetTcpForwardTo, NULL, &get_tcp_forward_to_fn);
-    // napi_set_named_property(env, exports, "configGetTcpForwardTo", get_tcp_forward_to_fn);
-
-    // napi_create_function(env, NULL, 0, ConfigGetUdpForwardTo, NULL, &get_udp_forward_to_fn);
-    // napi_set_named_property(env, exports, "configGetUdpForwardTo", get_udp_forward_to_fn);
-
-    napi_create_function(env, NULL, 0, ConfigGetForwarding, NULL, &get_forwarding_fn);
+    napi_create_function(env, NULL, 0, ConfigGetForwardings, NULL, &get_forwarding_fn);
     napi_set_named_property(env, exports, "configGetForwarding", get_forwarding_fn);
 
     napi_create_function(env, NULL, 0, ConfigSetForce, NULL, &set_force_fn);
@@ -2769,14 +3068,18 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigSetSSL, NULL, &set_ssl_fn);
     napi_set_named_property(env, exports, "configSetSSL", set_ssl_fn);
 
-    // napi_create_function(env, NULL, 0, ConfigSetUdpType, NULL, &set_udp_type_fn);
-    // napi_set_named_property(env, exports, "configSetUdpType", set_udp_type_fn);
+    napi_create_function(env, NULL,0,ConfigSetWebdebuggerAddr, NULL, &set_webdebugger_addr_fn);
+    napi_set_named_property(env, exports, "configSetWebdebuggerAddr", set_webdebugger_addr_fn);
 
-    // napi_create_function(env, NULL, 0, ConfigSetTcpForwardTo, NULL, &set_tcp_forward_to_fn);
-    // napi_set_named_property(env, exports, "configSetTcpForwardTo", set_tcp_forward_to_fn);
+    napi_create_function(env, NULL, 0, ConfigSetWebdebugger, NULL, &set_webdebugger_fn);
+    napi_set_named_property(env, exports, "configSetWebdebugger", set_webdebugger_fn);
 
-    // napi_create_function(env, NULL, 0, ConfigSetUdpForwardTo, NULL, &set_udp_forward_to_fn);
-    // napi_set_named_property(env, exports, "configSetUdpForwardTo", set_udp_forward_to_fn);
+    napi_create_function(env, NULL, 0, ConfigResetForwardings, NULL, &set_reset_forwardings);
+    napi_set_named_property(env, exports, "configResetForwardings", set_reset_forwardings);
+
+    napi_create_function(env, NULL, 0, ConfigSetForwardings, NULL, &set_forwardings);
+    napi_set_named_property(env, exports, "configSetForwardings", set_forwardings);
+
     napi_create_function(env, NULL, 0, ConfigAddForwarding, NULL, &set_forwarding_fn);
     napi_set_named_property(env, exports, "configAddForwarding", set_forwarding_fn);
 
@@ -2786,11 +3089,14 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigSetInsecure, NULL, &set_insecure_fn);
     napi_set_named_property(env, exports, "configSetInsecure", set_insecure_fn);
 
+    napi_create_function(env,NULL,0,ConfigGetWebdebuggerAddr, NULL, &get_webdebugger_addr_fn);
+    napi_set_named_property(env, exports, "configGetWebdebuggerAddr", get_webdebugger_addr_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetWebdebugger, NULL, &get_webdebugger_fn);
+    napi_set_named_property(env, exports, "configGetWebdebugger", get_webdebugger_fn);
+
     napi_create_function(env, NULL, 0, ConfigGetToken, NULL, &get_token_fn);
     napi_set_named_property(env, exports, "configGetToken", get_token_fn);
-
-    // napi_create_function(env, NULL, 0, ConfigGetType, NULL, &get_type_fn);
-    // napi_set_named_property(env, exports, "configGetType", get_type_fn);
 
     napi_create_function(env, NULL, 0, ConfigGetSsl, NULL, &get_ssl_fn);
     napi_set_named_property(env, exports, "configGetSsl", get_ssl_fn);
