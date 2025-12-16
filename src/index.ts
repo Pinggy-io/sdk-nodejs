@@ -36,6 +36,7 @@ export { pinggy, TunnelInstance, Config, Tunnel };
 export type { PinggyOptionsType as PinggyOptions, HeaderModification, ForwardingEntry, BasicAuthItem, Optional } from "./pinggyOptions.js";
 export { TunnelType } from "./pinggyOptions.js"
 export type { TunnelStatus, PinggyNative, TunnelUsageType } from "./types.js";
+export { TunnelState, tunnelStateToString } from "./types.js";
 export { LogLevel } from "./utils/logger.js"
 
 export { listen } from "./utils/listen.js";

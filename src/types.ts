@@ -19,12 +19,18 @@ import { LogLevel } from "./utils/logger.js";
  * @internal
  */
 export interface PinggyNative {
+  // special methods
+  /** Set the log file path. */
+  setLogPath(path: string): void;
+  /** Enable or disable logging. */
+  setLogEnable(enable: boolean): void;
+
   /** Create a new config and return its reference. */
   createConfig(): number;
+
+  // Config setter methods
   /** Set the argument string for a config. */
   configSetArgument: (configRef: number, arg: string) => void;
-  /** Get the argument string for a config. */
-  configGetArgument(configRef: number): string;
   /** Set the authentication token for a config. */
   configSetToken(configRef: number, token: string): void;
   /** Set the server address for a config. */
@@ -32,7 +38,7 @@ export interface PinggyNative {
   /** Set the SNI server name for a config. */
   configSetSniServerName(configRef: number, name: string): void;
   /** Set SSL configuration for a config. */
-  configSetSsl(configRef: number, ssl: boolean): void;
+  configSetSSL(configRef: number, ssl: boolean): void;
   /** Set force configuration for a config. */
   configSetForce(configRef: number, force: boolean): void;
   /** Set auto-reconnect configuration for a config. */
@@ -41,22 +47,6 @@ export interface PinggyNative {
   configSetMaxReconnectAttempts(configRef: number, maxReconnectAttempts: number): void;
   /** Set reconnect interval configuration for a config. */
   configSetReconnectInterval(configRef: number, reconnectInterval: number): void;
-  /** Get auto-reconnect configuration for a config. */
-  configGetAutoReconnect(configRef: number): boolean;
-  /** Get max reconnect attempts configuration for a config. */
-  configGetMaxReconnectAttempts(configRef: number): number;
-  /** Get reconnect interval configuration for a config. */
-  configGetReconnectInterval(configRef: number): number;
-  /** Get force configuration for a config. */
-  configGetForce(configRef: number): boolean;
-  /** Get the authentication token for a config. */
-  configGetToken(configRef: number): string;
-  /** Get the server address for a config. */
-  configGetServerAddress(configRef: number): string;
-  /** Get the SNI server name for a config. */
-  configGetSniServerName(configRef: number): string;
-  /** Get SSL configuration for a config. */
-  configGetSsl(configRef: number): boolean;
   /** Set HTTPS-only configuration for a config. */
   configSetHttpsOnly(configRef: number, httpsOnly: boolean): void;
   /** Set IP whitelist configuration for a config. */
@@ -77,14 +67,73 @@ export interface PinggyNative {
   configSetHeaderModification(configRef: number, headers: string): void;
   /** Set local server TLS configuration for a config. */
   configSetLocalServerTls(configRef: number, tls: string): void;
-  /** Get local server TLS configuration for a config. */
-  configGetLocalServerTls(configRef: number): string;
-  /** Get the header modification configuration for a config. */
-  configGetHeaderModification(configRef: number): string;
-  /** Get the bearer authentication configuration for a config. */
-  configGetBearerTokenAuths(configRef: number): string;
-  /** Get the basic authentication configuration for a config. */
-  configGetBasicAuths(configRef: number): string;
+  /**
+   *  * @brief Adds a new forwarding rule to the tunnel configuration.
+ *
+ * This function allows you to specify how incoming connections to a `binding_url`
+ * on the Pinggy server should be forwarded to a `forward_to` address on your local machine.
+ *
+ * @param config          Reference to the tunnel config object.
+ * @param forwarding_type Null-terminated string specifying the type of forwarding.
+ *                        Valid types are "http", "tcp", "udp", "tls", "tlstcp".
+ *                        If an empty string or NULL is provided, "http" is assumed.
+ * @param binding_url     Null-terminated string specifying the remote address to bind to.
+ *                        This can be a domain name, a domain:port combination, or just a port.
+ *                        Examples: "example.pinggy.io", "example.pinggy.io:8080", ":80".
+ *                        If empty or NULL, the server will assign a default binding.
+ * @param forward_to      Null-terminated string specifying the local address to forward to.
+ *                        This can be a URL (e.g., "http://localhost:3000"), an IP address
+ *                        (e.g., "127.0.0.1:8000"), or just a port (e.g., ":5000").
+ *                        If the schema (e.g., "http://") and host are omitted, "localhost"
+ *                        is assumed. For example, ":3000" becomes "http://localhost:3000"
+ *                        for HTTP forwarding.
+ *                        If `forwarding_type` is "http" and `forward_to` specifies an "https"
+ *                        schema (e.g., "https://localhost:443"), this implicitly enables
+ *                        `local_server_tls` for this specific forwarding rule.
+ * @return                pinggy_true on success, pinggy_false on failure.
+  */
+  configAddForwarding(configRef: number, forwardingType: string, bindingUrl: string, forwardTo: string): void;
+
+  /** Add forwarding simple 
+   * Examples:
+   * `pinggy_config_add_forwarding_simple(config, "3000")` will be interpreted as
+   * `pinggy_config_add_forwarding(config, "http", "", "http://localhost:3000")`.
+   * `pinggy_config_add_forwarding_simple(config, "tcp://localhost:22")` will be interpreted as
+   * `pinggy_config_add_forwarding(config, "tcp", "", "tcp://localhost:22")`.
+   * `pinggy_config_add_forwarding_simple(config, "https://8080")` will be interpreted as
+   * `pinggy_config_add_forwarding(config, "http", "", "https://localhost:8080")`
+   */
+  configAddForwardingSimple(configRef: number, forwardTo: string): void;
+  /** Set webdebugger enabled status */
+  configSetWebdebugger(configRef: number, enabled: boolean): void;
+  /** Set webdebugger address */
+  configSetWebdebuggerAddr(configRef: number, addr: string): void;
+  /** Reset all forwardings for a config. */
+  configResetForwardings(configRef: number): void;
+
+  // Config getter methods
+  /** Get the argument string for a config. */
+  configGetArgument(configRef: number): string;
+  /** Get auto-reconnect configuration for a config. */
+  configGetAutoReconnect(configRef: number): boolean;
+  /** Get max reconnect attempts configuration for a config. */
+  configGetMaxReconnectAttempts(configRef: number): number;
+  /** Get reconnect interval configuration for a config. */
+  configGetReconnectInterval(configRef: number): number;
+  /** Get force configuration for a config. */
+  configGetForce(configRef: number): boolean;
+  /** Get the authentication token for a config. */
+  configGetToken(configRef: number): string;
+  /** Get the server address for a config. */
+  configGetServerAddress(configRef: number): string;
+  /** Get the SNI server name for a config. */
+  configGetSniServerName(configRef: number): string;
+  /** Get SSL configuration for a config. */
+  configGetSsl(configRef: number): boolean;
+  /** Get HTTPS-only configuration for a config. */
+  configGetHttpsOnly(configRef: number): boolean;
+  /** Get the IP whitelist for a config. */
+  configGetIpWhiteList(configRef: number): string;
   /** Get the X-Forwarded-For header configuration for a config. */
   configGetXForwardedFor(configRef: number): boolean;
   /** Get the Original-Request-URL header configuration for a config. */
@@ -93,71 +142,77 @@ export interface PinggyNative {
   configGetAllowPreflight(configRef: number): boolean;
   /** Get the reverse-proxy configuration for a config. */
   configGetReverseProxy(configRef: number): boolean;
-  /** Get the IP whitelist for a config. */
-  configGetIpWhiteList(configRef: number): string;
-  /** Get HTTPS-only configuration for a config. */
-  configGetHttpsOnly(configRef: number): boolean;
-  /** Set the log file path. */
-  setLogPath(path: string): void;
-  /** Enable or disable logging. */
-  setLogEnable(enable: boolean): void;
+  /** Get the bearer authentication configuration for a config. */
+  configGetBearerTokenAuths(configRef: number): string;
+  /** Get the basic authentication configuration for a config. */
+  configGetBasicAuths(configRef: number): string;
+  /** Get the header modification configuration for a config. */
+  configGetHeaderModification(configRef: number): string;
+  /** Get local server TLS configuration for a config. */
+  configGetLocalServerTls(configRef: number): string;
+  /** Get tunnel Forwarding details */
+  configGetForwarding(configRef: number): string;
+  /** Get webdebugger enabled status */
+  configGetWebdebugger(configRef: number): boolean;
+  /** Get webdebugger address */
+  configGetWebdebuggerAddr(configRef: number): string;
+
   /** Initiate a tunnel and return its reference. */
   tunnelInitiate(configRef: number): number;
-  /** Connect a tunnel. */
-  tunnelConnect(tunnelRef: number): boolean;
+  /** Starts and serves the tunnel, blocking indefinitely until stopped. */
+  tunnelStart(tunnelRef: number): boolean;
+  /** It is similar to resume. However, it also start the the tunnel if not started.*/
+  tunnelStartNonBlocking(tunnelRef: number): boolean;
   /** Resume a tunnel. */
   tunnelResume(tunnelRef: number): boolean;
   /** Resume a tunnel with timeout */
   tunnelResumeWithTimeout(tunnelRef: number, timeout: number): boolean;
-  /** Start web debugging for a tunnel. */
-  tunnelStartWebDebugging(tunnelRef: number, port: number): number;
-  /** Request primary forwarding for a tunnel. */
-  tunnelRequestPrimaryForwarding(tunnelRef: number): void;
+
+  /** Start web debugging for a tunnel.
+   *  @param tunnel         Reference to the tunnel object.
+   *  @param listening_addr listening addr for the webDebugger. Keep it empty for automatic selection.
+   *  Example: "localhost:4300" specify host:port
+   */
+  tunnelStartWebDebugging(tunnelRef: number, listeningAddr: string): number;
+
   /** Request additional forwarding for a tunnel. */
   tunnelRequestAdditionalForwarding(
     tunnelRef: number,
     remoteAddress: string,
     localAddress: string
   ): void;
-  /** Set the callback for tunnel authentication. */
-  tunnelSetAuthenticatedCallback(tunnelRef: number, callback: () => void): void;
-  /** Set the callback for primary forwarding success. */
-  tunnelSetPrimaryForwardingSucceededCallback(
-    tunnelRef: number,
-    callback: (addresses: string[]) => void
-  ): void;
-  /** Set the callback for primary forwarding failure. */
-  tunnelSetPrimaryForwardingFailedCallback(
-    tunnelRef: number,
-    callback: (tunnelRef: number, errorMessage: string) => void
-  ): void;
-  /** Set the callback for additional forwarding success. */
-  tunnelSetAdditionalForwardingSucceededCallback(
-    tunnelRef: number,
-    callback: (
-      tunnelRef: number,
-      bindAddr: string,
-      forwardToAddr: string,
-    ) => void
-  ): void;
-  /** Set the callback for additional forwarding failure. */
-  tunnelSetAdditionalForwardingFailedCallback(
-    tunnelRef: number,
-    callback: (
-      tunnelRef: number,
-      bindAddress: string,
-      forwardToAddr: string,
-      errorMessage: string
-    ) => void
-  ): void;
+
   /** Stop a tunnel. */
   tunnelStop(tunnelRef: number): boolean;
   /** Check if a tunnel is active. */
   tunnelIsActive(tunnelRef: number): boolean;
+
   /** Initialize exception handling. */
   initExceptionHandling(): void;
   /** Get the last exception message. */
   getLastException(): string;
+
+  /** Enable or disable debug logging. */
+  setDebugLogging(enabled: boolean): void;
+  /** Get the Pinggy SDK version. */
+  getPinggyVersion(): string;
+  /** Get the tunnel greet message. */
+  getTunnelGreetMessage(tunnelRef: number): string;
+  /** Get the tunnel state. */
+  getTunnelState(tunnelRef: number): TunnelState;
+  /** Get the web debugging address for a tunnel. */
+  getTunnelWebDebuggingAddress(tunnelRef: number): string;
+  /** Get the web debugging port for a tunnel. */
+  getTunnelWebDebuggingPort(tunnelRef: number): number;
+  /** start the tunnel usage update. */
+  startTunnelUsageUpdate(tunnelRef: number): void;
+  /** stop the tunnel usage update. */
+  stopTunnelUsageUpdate(tunnelRef: number): void;
+  /** get the tunnel usages. */
+  getTunnelUsages(tunnelRef: number): string;
+
+  //----------------------Tunnel Callbacks------------------
+
   /** Set the callback for authentication failure. */
   tunnelSetAuthenticationFailedCallback(
     tunnelRef: number,
@@ -178,22 +233,30 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (tunnelRef: number, error: string, messages: string[]) => void
   ): void;
-  /** Enable or disable debug logging. */
-  setDebugLogging(enabled: boolean): void;
-  /** Get the Pinggy SDK version. */
-  getPinggyVersion(): string;
-  /** Get the tunnel greet message. */
-  getTunnelGreetMessage(tunnelRef: number): string;
-  /** start the tunnel usage update. */
-  startTunnelUsageUpdate(tunnelRef: number): void;
-  /** stop the tunnel usage update. */
-  stopTunnelUsageUpdate(tunnelRef: number): void;
-  /** get the tunnel usages. */
-  getTunnelUsages(tunnelRef: number): string;
-  /** Set the callback for forwarding changes. */
-  tunnelSetOnForwardingChangedCallback(
+
+  /** Set the callback for additional forwarding success. */
+  tunnelSetAdditionalForwardingSucceededCallback(
     tunnelRef: number,
-    callback: (tunnelRef: number, forwardToAddr: string) => void
+    callback: (
+      tunnelRef: number,
+      bindAddr: string,
+      forwardToAddr: string,
+    ) => void
+  ): void;
+  /** Set the callback for additional forwarding failure. */
+  tunnelSetAdditionalForwardingFailedCallback(
+    tunnelRef: number,
+    callback: (
+      tunnelRef: number,
+      bindAddress: string,
+      forwardToAddr: string,
+      errorMessage: string
+    ) => void
+  ): void;
+  /** Set the callback for forwarding changes. */
+  tunnelSetOnTunnelForwardingChangedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, urlMap: string) => void
   ): void;
   /** Set the callback for usage updates. */
   tunnelSetOnUsageUpdateCallback(
@@ -214,6 +277,18 @@ export interface PinggyNative {
   tunnelSetOnWillReconnectCallback(
     tunnelRef: number,
     callback: (tunnelRef: number, error: string, numMsgs: number, messages: string[]) => void
+  ): void;
+  /** Registers a callback for when primary forwarding fails. */
+  tunnelSetOnTunnelFailedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, msg: string) => void
+  ): void;
+
+  /** Registers a callback for when primary forwarding is successfully established. */
+
+  tunnelSetEstablishedCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, urls: string[]) => void
   ): void;
 }
 
@@ -273,7 +348,73 @@ export interface Tunnel {
 }
 /**
  * Tunnel lifecycle statuses.
+ * Maps to the native pinggy_tunnel_state_t enum.
  * @public
+ */
+export enum TunnelState {
+  Invalid = 0,
+  Initial = 1,
+  Started = 2,
+  ReconnectInitiated = 3,
+  Reconnecting = 4,
+  Connecting = 5,
+  Connected = 6,
+  SessionInitiating = 7,
+  SessionInitiated = 8,
+  Authenticating = 9,
+  Authenticated = 10,
+  ForwardingInitiated = 11,
+  ForwardingSucceeded = 12,
+  Stopped = 13,
+  Ended = 14,
+}
+
+/**
+ * Converts a TunnelState enum value to its string representation.
+ * @param state - The TunnelState enum value
+ * @returns The string name of the state (e.g., "Invalid", "Connecting", "ForwardingSucceeded")
+ * @public
+ */
+export function tunnelStateToString(state: TunnelState): string {
+  switch (state) {
+    case TunnelState.Invalid:
+      return "Invalid";
+    case TunnelState.Initial:
+      return "Initial";
+    case TunnelState.Started:
+      return "Started";
+    case TunnelState.ReconnectInitiated:
+      return "ReconnectInitiated";
+    case TunnelState.Reconnecting:
+      return "Reconnecting";
+    case TunnelState.Connecting:
+      return "Connecting";
+    case TunnelState.Connected:
+      return "Connected";
+    case TunnelState.SessionInitiating:
+      return "SessionInitiating";
+    case TunnelState.SessionInitiated:
+      return "SessionInitiated";
+    case TunnelState.Authenticating:
+      return "Authenticating";
+    case TunnelState.Authenticated:
+      return "Authenticated";
+    case TunnelState.ForwardingInitiated:
+      return "ForwardingInitiated";
+    case TunnelState.ForwardingSucceeded:
+      return "ForwardingSucceeded";
+    case TunnelState.Stopped:
+      return "Stopped";
+    case TunnelState.Ended:
+      return "Ended";
+    default:
+      return `Unknown(${state})`;
+  }
+}
+
+/**
+ * @deprecated Use TunnelState instead
+ * Legacy tunnel status enum for backward compatibility
  */
 export enum TunnelStatus {
   IDLE = "idle",
