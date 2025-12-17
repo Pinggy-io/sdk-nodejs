@@ -77,9 +77,7 @@ export class Config implements IConfig {
       // Apply user-defined values or set defaults
       const serverAddress = options.serverAddress || "a.pinggy.io:443";
       const sniServerName = options.getSniServerName();
-      let forwardTo = options.getForwardingPrimary() || "localhost:80";
       const ssl = options.getSsl() ?? true; // Default to true if not specified
-      const type = options.tunnelType?.[0] || "http"; // Default to "http" if not specified
 
       // Set argument if provided
       if (options.getAdditionalArguments()?.trim()) {
@@ -211,7 +209,7 @@ export class Config implements IConfig {
       // Set SSL configuration
       this.safeSet(
         () => {
-          this.addon.configSetSsl(configRef, ssl);
+          this.addon.configSetSSL(configRef, ssl);
         },
         "SSL configuration",
         `SSL configuration set to: ${ssl}`
@@ -294,54 +292,38 @@ export class Config implements IConfig {
         }
       }
 
-      if (type === "udp") {
-        try {
-          this.addon.configSetUdpForwardTo(configRef, forwardTo);
-          Logger.info(`Configured UDP forwarding to: ${forwardTo}`);
-        } catch (e) {
-          const lastEx = this.addon.getLastException();
-          if (lastEx) {
-            const pinggyError = new PinggyError(lastEx);
-            Logger.error("Error setting UDP forward to:", pinggyError);
-            throw pinggyError;
-          } else {
-            if (e instanceof Error) {
-              Logger.error("Error setting UDP forward to:", e);
-            } else {
-              Logger.error(
-                "Error setting UDP forward to:",
-                new Error(String(e))
-              );
-            }
-            throw e;
+      // Configure forwarding 
+      try {
+        const forwardingFormat = options.getForwardingKind();
+        let forwardTo = options.getForwardingPrimary() || "localhost:80";
+        if (forwardingFormat === "array" && options.getForwardingObjects) {
+          const forwardingData = options.getForwardingObjects();
+          if (forwardingData !== null) {
+            this.addon.configSetForwardings(configRef, forwardingData);
+            Logger.info(`Configured forwardings (array): ${JSON.stringify(forwardingData)}`);
           }
-        }
-      } else {
-        this.addon.configSetTcpForwardTo(configRef, forwardTo);
-      }
 
-      if (type) {
-        try {
-          if (type === "udp") {
-            this.addon.configSetUdpType(configRef, type);
+        } else if (forwardingFormat === "string") {
+          this.addon.configAddForwardingSimple(configRef, forwardTo);
+          Logger.info(`Configured forwarding (string): ${forwardTo}`);
+
+        } else {
+          Logger.error("Forwarding configuration missing after validation.");
+          throw new Error("Forwarding configuration missing.");
+        }
+      } catch (e) {
+        const lastEx = this.addon.getLastException();
+        if (lastEx) {
+          const pinggyError = new PinggyError(lastEx);
+          Logger.error("Error setting forwarding:", pinggyError);
+          throw pinggyError;
+        } else {
+          if (e instanceof Error) {
+            Logger.error("Error setting forwarding:", e);
           } else {
-            this.addon.configSetType(configRef, type);
+            Logger.error("Error setting forwarding:", new Error(String(e)));
           }
-          Logger.info(`Configured tunnel type: ${type}`);
-        } catch (e) {
-          const lastEx = this.addon.getLastException();
-          if (lastEx) {
-            const pinggyError = new PinggyError(lastEx);
-            Logger.error("Error setting type:", pinggyError);
-            throw pinggyError;
-          } else {
-            if (e instanceof Error) {
-              Logger.error("Error setting type:", e);
-            } else {
-              Logger.error("Error setting type:", new Error(String(e)));
-            }
-            throw e;
-          }
+          throw e;
         }
       }
 
@@ -507,61 +489,20 @@ export class Config implements IConfig {
   }
 
   /**
-   * Gets the current TCP forwarding address.
-   * @returns {string | null} The TCP forwarding address, or null if unavailable.
+   * Gets the forwarding rules configuration.
+   * Returns a JSON string containing all forwarding rules configured for this tunnel.
+   * @returns {string | null} The forwarding rules as a JSON string, or null if unavailable.
+   * @example
+   * // Returns something like:
+   * // [{"type":"http","listenAddress":"","address":"http://localhost:3000"}]
    */
-  public getTcpForwardTo(): string | null {
+  public getForwarding(): string | null {
     try {
       return this.configRef
-        ? this.addon.configGetTcpForwardTo(this.configRef)
+        ? this.addon.configGetForwarding(this.configRef)
         : null;
     } catch (e) {
-      Logger.error("Error getting TCP forward configuration:", e as Error);
-      return null;
-    }
-  }
-
-  /**
-   * Gets the current UDP forwarding address.
-   * @returns {string | null} The UDP forwarding address, or null if unavailable.
-   */
-  public getUdpForwardTo(): string | null {
-    try {
-      return this.configRef
-        ? this.addon.configGetUdpForwardTo(this.configRef)
-        : null;
-    } catch (e) {
-      Logger.error("Error getting UDP forward configuration:", e as Error);
-      return null;
-    }
-  }
-
-  /**
-   * Gets the tunnel type.
-   * @returns {string | null} The tunnel type, or null if unavailable.
-   */
-  public getTunnelType(): string | null {
-    try {
-      return this.configRef
-        ? this.addon.configGetType(this.configRef)
-        : null;
-    } catch (e) {
-      Logger.error("Error getting tunnel type configuration:", e as Error);
-      return null;
-    }
-  }
-
-  /**
-   * Gets the tunnel type.
-   * @returns {string | null} The tunnel type, or null if unavailable.
-   */
-  public getUdpType(): string | null {
-    try {
-      return this.configRef
-        ? this.addon.configGetUdpType(this.configRef)
-        : null;
-    } catch (e) {
-      Logger.error("Error getting tunnel type configuration:", e as Error);
+      Logger.error("Error getting forwarding configuration:", e as Error);
       return null;
     }
   }

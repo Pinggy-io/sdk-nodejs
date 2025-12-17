@@ -156,71 +156,6 @@ export class Tunnel implements ITunnel {
   private setupCallbacks(): void {
     const callbackConfigs = [
       {
-        setter: 'tunnelSetAuthenticatedCallback',
-        callback: () => {
-          Logger.info("Tunnel authenticated, requesting primary forwarding...");
-          this.authenticated = true;
-          if (this.resolveAuth) this.resolveAuth();
-          this.functionQueue.enqueue(() => {
-            this.addon.tunnelRequestPrimaryForwarding(this.tunnelRef);
-          });
-          if (this.onAuthenticatedCallback) {
-            try {
-              this.onAuthenticatedCallback("Tunnel authenticated succesfully")
-            } catch (error) {
-              Logger.error("Error in authenticated callback", error as Error)
-            }
-          }
-        }
-      },
-      {
-        setter: 'tunnelSetAuthenticationFailedCallback',
-        callback: (tunnelRef: number, errorMessage: string) => {
-          Logger.error(`Authentication failed for tunnel ${tunnelRef}: ${errorMessage}`);
-          if (this.onAuthenticatedCallback) {
-            try {
-              this.onAuthenticatedCallback(`Tunnel authenticated Failed:${errorMessage}`)
-            } catch (error) {
-              Logger.error("Error in authenticated callback", error as Error)
-            }
-          }
-          if (this.rejectAuth) this.rejectAuth(new PinggyError("Authentication failed: " + errorMessage));
-
-        }
-      },
-      {
-        setter: 'tunnelSetPrimaryForwardingSucceededCallback',
-        callback: (addresses: string[]) => {
-          this.primaryForwardingDone = true;
-          this._urls = addresses;
-          if (this.resolveForwarding) this.resolveForwarding(addresses);
-          if (this.onPrimaryForwardingCallback) {
-            if (this.status === TunnelStatus.STARTING) {
-              this.status = TunnelStatus.LIVE;
-            }
-            try {
-              this.onPrimaryForwardingCallback("Primary forwarding succeeded", addresses)
-            } catch (error) {
-              Logger.error("Error in primary forwarding", error as Error)
-            }
-          }
-        }
-      },
-      {
-        setter: 'tunnelSetPrimaryForwardingFailedCallback',
-        callback: (tunnelRef: number, errorMessage: string) => {
-          Logger.error(`Primary forwarding failed for tunnel ${tunnelRef}: ${errorMessage}`);
-          if (this.onPrimaryForwardingCallback) {
-            try {
-              this.onPrimaryForwardingCallback("Primary forwarding Failed")
-            } catch (error) {
-              Logger.error("Error in primary forwarding", error as Error)
-            }
-          }
-          if (this.rejectForwarding) this.rejectForwarding(new PinggyError("Primary forwarding failed: " + errorMessage));
-        }
-      },
-      {
         setter: 'tunnelSetAdditionalForwardingSucceededCallback',
         callback: (tunnelRef: number, bindAddr: string, forwardToAddr: string) => {
           Logger.info(`Additional forwarding succeeded for tunnel ${tunnelRef}: ${bindAddr} -> ${forwardToAddr}`);
@@ -288,6 +223,25 @@ export class Tunnel implements ITunnel {
         }
       },
       {
+        setter: 'tunnelSetEstablishedCallback',
+        callback: (tunnelRef: number, urls: string[]) => {
+          Logger.info(`Tunnel established: ${tunnelRef}, ${urls.join(", ")}`);
+          this.primaryForwardingDone = true;
+          this._urls = urls;
+          if (this.resolveForwarding) this.resolveForwarding(urls);
+            if (this.status === TunnelStatus.STARTING) {
+              this.status = TunnelStatus.LIVE;
+            }
+          
+        }
+      },
+      {
+        setter:'tunnelSetOnTunnelFailedCallback',
+        callback: (tunnelRef: number, errorMessage: string) => {
+          Logger.error(`Tunnel failed: ${tunnelRef}, error: ${errorMessage}`);
+        }
+      },
+      {
         setter: 'tunnelSetOnUsageUpdateCallback',
         callback: (tunnelRef: number, usageJson: string) => {
           this.handleUsageUpdate(usageJson);
@@ -336,7 +290,7 @@ export class Tunnel implements ITunnel {
           this.rejectForwarding = reject;
         });
 
-        const connected = this.addon.tunnelConnect(this.tunnelRef);
+        const connected = this.addon.tunnelStartNonBlocking(this.tunnelRef);
         if (!connected) {
           throw new Error("Tunnel connection failed.");
         }
@@ -356,7 +310,7 @@ export class Tunnel implements ITunnel {
             if (portMatch) {
               const port = parseInt(portMatch[1], 10);
               Logger.info(`Auto-starting web debugger on port ${port}...`);
-              await this.startWebDebugging(port);
+              await this.startWebDebugging(debuggerAddress);
             } else {
               Logger.info(`Invalid web debugger address format: ${debuggerAddress}. Expected format: host:port`);
             }
@@ -428,18 +382,18 @@ export class Tunnel implements ITunnel {
    * @returns {Promise<void>} Resolves when web debugging is started.
    * @throws {PinggyError|Error} If web debugging fails to start.
    */
-  public async startWebDebugging(listeningPort: number): Promise<void> {
+  public async startWebDebugging(listeningAddr: string): Promise<void> {
     await this.authPromise; // Wait for authentication
 
     this.executeAddonOperation({
       operation: () => {
-        const port = this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningPort);
+        const port = this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningAddr);
         if (port && port > 0) {
           this.webDebuggerPort = port;
         }
       },
       operationName: "starting web debugging",
-      successMessage: `Web debugging started on port ${listeningPort} visit http://localhost:${listeningPort}`
+      successMessage: `Web debugging started on  ${listeningAddr}`
     });
   }
 

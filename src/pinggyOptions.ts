@@ -38,8 +38,19 @@ export type HeaderModification = {
  */
 
 export type ForwardingEntry = {
-  listenAddress?: string; // empty or undefined means default forwarding
-  address: string;        // e.g., http://localhost:80 or https://localhost:5555 or host:port
+  /**
+   * The local address to forward to. Format: `[protocol://][host]:port`.
+   *   The `protocol` is primarily used to determine if `local_server_tls` should be
+   *   enabled for this specific rule (e.g., `https://`). It is ignored otherwise.
+   */
+  address: string;
+  /**
+   * (Optional) The remote address to bind to. Format: `[host][:port]`.
+  *   An empty string or undefined means the server will assign a default binding.
+  *   The hostname is ignored for TCP and UDP tunnels. Any schema provided will be ignored.
+   */
+  listenAddress?: string;
+  type?: string;              // "http", "tcp", "tls", "udp", "tlstcp"
 }
 
 /**
@@ -319,6 +330,18 @@ export class PinggyOptions implements PinggyOptionsType {
       return (primary ?? f[0]).address;
     }
     return undefined;
+  }
+
+  getForwardingObjects(): string | null {
+    const f = this.forwarding;
+    if (!f) null;
+    if (typeof f === "string") return null;
+    return JSON.stringify(f);
+  }
+
+  getForwardingKind(): "string" | "array" | "none" {
+    if (!this.forwarding) return "none";
+    return typeof this.forwarding === "string" ? "string" : Array.isArray(this.forwarding) ? "array" : "none";
   }
 
   getAdditionalForwarding(): ForwardingEntry[] {

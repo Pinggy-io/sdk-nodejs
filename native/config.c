@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "../pinggy.h"
 #include "debug.h"
+#include "helper_macro.h"
 
 // Binding for pinggy_set_log_path
 napi_value SetLogPath(napi_env env, napi_callback_info info)
@@ -291,51 +292,26 @@ napi_value ConfigSetToken(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, token)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, token)");
 
     // Get the first argument: config (uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: token (string)
     size_t token_length;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &token_length);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid token argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid token argument");
 
     pinggy_char_p_t token = malloc(token_length + 1);
-    if (token == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, token != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], token, token_length + 1, &token_length);
-    if (status != napi_ok)
-    {
-        free(token);
-        napi_throw_type_error(env, NULL, "Failed to get token string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to get token string");
 
     // Call the pinggy_config_set_token function
     pinggy_config_set_token(config, token);
@@ -356,51 +332,26 @@ napi_value ConfigAddForwardingSimple(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, forward_to)");
-        return NULL;
-    }
+   NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, forward_to)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: forward_to (string)
     size_t forward_to_length;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &forward_to_length);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid forward_to argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid forward_to argument");
 
     pinggy_char_p_t forward_to = malloc(forward_to_length + 1);
-    if (forward_to == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, forward_to != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], forward_to, forward_to_length + 1, &forward_to_length);
-    if (status != napi_ok)
-    {
-        free(forward_to);
-        napi_throw_type_error(env, NULL, "Failed to get forward_to string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to get forward_to string",free(forward_to));
 
     // Call the pinggy_config_add_forwarding_simple function
     pinggy_config_add_forwarding_simple(config, forward_to);
@@ -422,99 +373,45 @@ napi_value ConfigAddForwarding(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 4)
-    {
-        napi_throw_type_error(env, NULL, "Expected four arguments (config, forwarding_type, binding_url, forward_to)");
-        return NULL;
-    }
-
+   NAPI_CHECK_CONDITION_THROW(env, argc >= 4, "Expected four arguments (config, forwarding_type, binding_url, forward_to)");
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: forwarding_type (string) Example: "http", "tcp", "udp", "tls", "tlstcp".
     size_t forwarding_type_length;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &forwarding_type_length);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid forwarding_type argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid forwarding_type argument");
 
     pinggy_char_p_t forwarding_type = malloc(forwarding_type_length + 1);
-    if (forwarding_type == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, forwarding_type != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], forwarding_type, forwarding_type_length + 1, &forwarding_type_length);
-    if (status != napi_ok)
-    {
-        free(forwarding_type);
-        napi_throw_type_error(env, NULL, "Failed to get forwarding_type string");
-        return NULL;
-    }
-
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get forwarding_type string", free(forwarding_type));
     // Get the third argument: binding_url (string)  Examples: "example.pinggy.io", "example.pinggy.io:8080", ":80".
     size_t binding_url_length;
     status = napi_get_value_string_utf8(env, args[2], NULL, 0, &binding_url_length);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid binding_url argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid binding_url argument");
 
     pinggy_char_p_t binding_url = malloc(binding_url_length + 1);
-    if (binding_url == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
-
+    NAPI_CHECK_CONDITION_THROW(env, binding_url != NULL, "Memory allocation failed");
     status = napi_get_value_string_utf8(env, args[2], binding_url, binding_url_length + 1, &binding_url_length);
-    if (status != napi_ok)
-    {
-        free(binding_url);
-        napi_throw_type_error(env, NULL, "Failed to get binding_url string");
-        return NULL;
-    }
+   NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get binding_url string",free(binding_url));
 
     // Get the 4th argument: forward_to (string) Examples: "http://localhost:3000"), an IP address (e.g., "127.0.0.1:8000"), or just a port (e.g., ":5000").
     size_t forward_to_length;
     status = napi_get_value_string_utf8(env, args[3], NULL, 0, &forward_to_length);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid forward_to_length argument");
-        return NULL;
-    }
+   NAPI_CHECK_STATUS_THROW(env, status, "Invalid forward_to argument");
 
     pinggy_char_p_t forward_to = malloc(forward_to_length + 1);
-    if (forward_to == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, forward_to != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[3], forward_to, forward_to_length + 1, &forward_to_length);
-    if (status != napi_ok)
-    {
-        free(forward_to);
-        napi_throw_type_error(env, NULL, "Failed to get forward_to string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get forward_to string",free(forward_to));
 
     // Call the pinggy_config_add_forwarding function
     pinggy_config_add_forwarding(config, forwarding_type, binding_url, forward_to);
@@ -3060,7 +2957,7 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigSetSSL, NULL, &set_ssl_fn);
     napi_set_named_property(env, exports, "configSetSSL", set_ssl_fn);
 
-    napi_create_function(env, NULL,0,ConfigSetWebdebuggerAddr, NULL, &set_webdebugger_addr_fn);
+    napi_create_function(env, NULL, 0, ConfigSetWebdebuggerAddr, NULL, &set_webdebugger_addr_fn);
     napi_set_named_property(env, exports, "configSetWebdebuggerAddr", set_webdebugger_addr_fn);
 
     napi_create_function(env, NULL, 0, ConfigSetWebdebugger, NULL, &set_webdebugger_fn);
@@ -3081,7 +2978,7 @@ napi_value Init1(napi_env env, napi_value exports)
     napi_create_function(env, NULL, 0, ConfigSetInsecure, NULL, &set_insecure_fn);
     napi_set_named_property(env, exports, "configSetInsecure", set_insecure_fn);
 
-    napi_create_function(env,NULL,0,ConfigGetWebdebuggerAddr, NULL, &get_webdebugger_addr_fn);
+    napi_create_function(env, NULL, 0, ConfigGetWebdebuggerAddr, NULL, &get_webdebugger_addr_fn);
     napi_set_named_property(env, exports, "configGetWebdebuggerAddr", get_webdebugger_addr_fn);
 
     napi_create_function(env, NULL, 0, ConfigGetWebdebugger, NULL, &get_webdebugger_fn);

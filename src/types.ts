@@ -104,6 +104,34 @@ export interface PinggyNative {
    * `pinggy_config_add_forwarding(config, "http", "", "https://localhost:8080")`
    */
   configAddForwardingSimple(configRef: number, forwardTo: string): void;
+
+  /**
+ * @brief Sets multiple forwarding rules for the tunnel configuration.
+ *
+ * This function allows you to define multiple forwarding rules either as a single
+ * simplified forwarding string (similar to `pinggy_config_add_forwarding_simple`)
+ * or as a JSON array of forwarding objects.
+ *
+ * If `forwardings` is a single string, it should follow the format
+ * `[forwarding_type://][localhost:]port`.
+ *
+ * If `forwardings` is a JSON string, it should be an array of objects, where each
+ * object defines a forwarding rule with the following properties:
+ * - `type`: (Optional) The type of forwarding (e.g., "http", "tcp", "udp", "tls", "tlstcp").
+ *   Defaults to "http" if not specified.
+ * - `listenAddress`: (Optional) The remote address to bind to. Format: `[host][:port]`.
+ *   An empty string or undefined means the server will assign a default binding.
+ *   The hostname is ignored for TCP and UDP tunnels. Any schema provided will be ignored.
+ * - `address`: The local address to forward to. Format: `[protocol://][host]:port`.
+ *   The `protocol` is primarily used to determine if `local_server_tls` should be
+ *   enabled for this specific rule (e.g., `https://`). It is ignored otherwise.
+ *
+ * @param config      Reference to the tunnel config object.
+ * @param forwardings Null-terminated string representing either a single simplified
+ *                    forwarding rule or a JSON array of forwarding rule objects.
+ */
+  configSetForwardings(configRef: number, forwardings: string): void;
+
   /** Set webdebugger enabled status */
   configSetWebdebugger(configRef: number, enabled: boolean): void;
   /** Set webdebugger address */
@@ -213,11 +241,6 @@ export interface PinggyNative {
 
   //----------------------Tunnel Callbacks------------------
 
-  /** Set the callback for authentication failure. */
-  tunnelSetAuthenticationFailedCallback(
-    tunnelRef: number,
-    callback: (tunnelRef: number, errorMessage: string) => void
-  ): void;
   /** Set the callback for tunnel errors. */
   tunnelSetOnTunnelErrorCallback(
     tunnelRef: number,
@@ -335,7 +358,7 @@ export interface Tunnel {
   /** Start the tunnel. */
   start(): void;
   /** Start web debugging. */
-  startWebDebugging(listeningPort: number): void;
+  startWebDebugging(listeningAddr: string): void;
   /** Request additional forwarding. */
   tunnelRequestAdditionalForwarding(
     remoteAddress: string,

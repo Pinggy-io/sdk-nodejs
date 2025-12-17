@@ -391,8 +391,8 @@ export class TunnelInstance {
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
-  public startWebDebugging(port: number): void {
-    this.activeTunnel.startWebDebugging(port);
+  public startWebDebugging(listenAddress: string): void {
+    this.activeTunnel.startWebDebugging(listenAddress);
   }
 
   /**
@@ -439,20 +439,11 @@ export class TunnelInstance {
    *
    * @returns {Promise<string | null>} The tunnel type, or null if unavailable.
    */
-  public async getTunnelType(): Promise<string | null> {
-    return await this.activeConfig.getTunnelType() ?? null;
+  public async getForwarding(): Promise<string | null> {
+    return await this.activeConfig.getForwarding() ?? null;
   }
 
-  /**
-   * Gets the current UDP type for the tunnel.
-   *
-   * Delegates to {@link Config#getUdpType}.
-   *
-   * @returns {Promise<string | null>} The UDP type, or null if unavailable.
-   */
-  public async getUdpType(): Promise<string | null> {
-    return await this.activeConfig.getUdpType() ?? null;
-  }
+
 
   /**
   * Gets the current SSL setting for the tunnel.
@@ -465,27 +456,6 @@ export class TunnelInstance {
     return await this.activeConfig.getTunnelSsl() ?? null;
   }
 
-  /**
-  * Gets the TCP forward-to address for the tunnel.
-  *
-  * Delegates to {@link Config#getTcpForwardTo}.
-  *
-  * @returns {Promise<string | null>} The TCP forward-to address, or null if unavailable.
-  */
-  public async getTcpForwardTo(): Promise<string | null> {
-    return await this.activeConfig.getTcpForwardTo() ?? null;
-  }
-
-  /**
-  * Gets the UDP forward-to address for the tunnel.
-  *
-  * Delegates to {@link Config#getUdpForwardTo}.
-  *
-  * @returns {Promise<string | null>} The UDP forward-to address, or null if unavailable.
-  */
-  public async getUdpForwardTo(): Promise<string | null> {
-    return await this.activeConfig.getUdpForwardTo() ?? null;
-  }
 
   /**
    * Returns whether HTTPS-only mode is enabled for the tunnel instance.

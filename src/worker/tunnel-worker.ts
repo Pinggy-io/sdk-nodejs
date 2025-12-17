@@ -252,10 +252,7 @@ class TunnelWorker {
       autoReconnect,
       headerModificationRaw,
       webDebuggerPort,
-      tunnelType,
-      udpType,
-      tcpForwardTo,
-      udpForwardTo,
+      forwardingJSON,
       ssl,
       argString,
     ] = await Promise.all([
@@ -276,10 +273,7 @@ class TunnelWorker {
       this.config.getAutoReconnect(),
       this.config.getHeaderModification() as unknown as Promise<HeaderModification[]>,
       this.tunnel.getWebDebuggerPort(),
-      this.config.getTunnelType(),
-      this.config.getUdpType(),
-      this.config.getTcpForwardTo(),
-      this.config.getUdpForwardTo(),
+      this.config.getForwarding(),
       this.config.getTunnelSsl(),
       this.config.getArgument(),
     ]);
@@ -312,16 +306,35 @@ class TunnelWorker {
       )
       : [];
 
-    // Determine tunnel type and forwarding
-    const type = tunnelType || udpType;
-    if (type && ([TunnelType.Http, TunnelType.Tcp, TunnelType.Tls, TunnelType.Udp, TunnelType.TlsTcp].includes(type as TunnelType))) {
-      options.tunnelType = [type as any];
-      if (type === "udp") {
-        options.forwarding = udpForwardTo || "";
-      } else {
-        options.forwarding = tcpForwardTo || "";
+    // Parse forwarding JSON to extract type and forwarding address
+    if (forwardingJSON) {
+      try {
+        const forwardingRules = JSON.parse(forwardingJSON);
+        if (Array.isArray(forwardingRules) && forwardingRules.length > 0) {
+          // Get the first (primary) forwarding rule
+          const primaryRule = forwardingRules[0];
+          const type = primaryRule.type;
+          const address = primaryRule.address;
+          
+          options.forwarding = address || "";
+          // Set tunnel type if valid
+          if (type && ([TunnelType.Http, TunnelType.Tcp, TunnelType.Tls, TunnelType.Udp, TunnelType.TlsTcp].includes(type as TunnelType))) {
+            options.tunnelType = [type as TunnelType];
+          } else {
+            options.tunnelType = [TunnelType.Http];
+          }
+        } else {
+          // No forwarding rules found
+          options.tunnelType = [TunnelType.Http];
+          options.forwarding = "";
+        }
+      } catch (e) {
+        Logger.error("Failed to parse forwarding JSON:", e as Error);
+        options.tunnelType = [TunnelType.Http];
+        options.forwarding = "";
       }
     } else {
+      // No forwarding configuration
       options.tunnelType = [TunnelType.Http];
       options.forwarding = "";
     }
