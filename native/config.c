@@ -161,11 +161,7 @@ napi_value ConfigSetServerAddress(napi_env env, napi_callback_info info)
     // [out] argv: C array of napi_values to which the arguments will be copied. If there are more arguments then the provided count, only the requested no of arguments are copied. If there are fewer arguments provided than claimed, the rest of argv is filled with napi_value vales that represent 'undefined'. 'argv' can also be optionally ignored.
 
     // Validate the number of arguments
-    if (argc < 2) // check the received number of arguments
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, server_address)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, server_address)");
 
     // Get the first argument: config (uint32_t)
     uint32_t config;
@@ -308,7 +304,7 @@ napi_value ConfigSetToken(napi_env env, napi_callback_info info)
     NAPI_CHECK_STATUS_THROW(env, status, "Invalid token argument");
 
     pinggy_char_p_t token = malloc(token_length + 1);
-    NAPI_CHECK_STATUS_THROW(env, token != NULL, "Memory allocation failed");
+    NAPI_CHECK_CONDITION_THROW(env, token != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], token, token_length + 1, &token_length);
     NAPI_CHECK_STATUS_THROW(env, status, "Failed to get token string");
@@ -335,7 +331,7 @@ napi_value ConfigAddForwardingSimple(napi_env env, napi_callback_info info)
     NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-   NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, forward_to)");
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, forward_to)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
@@ -348,10 +344,10 @@ napi_value ConfigAddForwardingSimple(napi_env env, napi_callback_info info)
     NAPI_CHECK_STATUS_THROW(env, status, "Invalid forward_to argument");
 
     pinggy_char_p_t forward_to = malloc(forward_to_length + 1);
-    NAPI_CHECK_STATUS_THROW(env, forward_to != NULL, "Memory allocation failed");
+    NAPI_CHECK_CONDITION_RETURN(env, forward_to != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], forward_to, forward_to_length + 1, &forward_to_length);
-    NAPI_CHECK_STATUS_THROW(env, status, "Failed to get forward_to string",free(forward_to));
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get forward_to string", free(forward_to));
 
     // Call the pinggy_config_add_forwarding_simple function
     pinggy_config_add_forwarding_simple(config, forward_to);
@@ -376,7 +372,7 @@ napi_value ConfigAddForwarding(napi_env env, napi_callback_info info)
     NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-   NAPI_CHECK_CONDITION_THROW(env, argc >= 4, "Expected four arguments (config, forwarding_type, binding_url, forward_to)");
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 4, "Expected four arguments (config, forwarding_type, binding_url, forward_to)");
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
@@ -400,18 +396,18 @@ napi_value ConfigAddForwarding(napi_env env, napi_callback_info info)
     pinggy_char_p_t binding_url = malloc(binding_url_length + 1);
     NAPI_CHECK_CONDITION_THROW(env, binding_url != NULL, "Memory allocation failed");
     status = napi_get_value_string_utf8(env, args[2], binding_url, binding_url_length + 1, &binding_url_length);
-   NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get binding_url string",free(binding_url));
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get binding_url string", free(binding_url));
 
     // Get the 4th argument: forward_to (string) Examples: "http://localhost:3000"), an IP address (e.g., "127.0.0.1:8000"), or just a port (e.g., ":5000").
     size_t forward_to_length;
     status = napi_get_value_string_utf8(env, args[3], NULL, 0, &forward_to_length);
-   NAPI_CHECK_STATUS_THROW(env, status, "Invalid forward_to argument");
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid forward_to argument");
 
     pinggy_char_p_t forward_to = malloc(forward_to_length + 1);
     NAPI_CHECK_CONDITION_THROW(env, forward_to != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[3], forward_to, forward_to_length + 1, &forward_to_length);
-    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get forward_to string",free(forward_to));
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get forward_to string", free(forward_to));
 
     // Call the pinggy_config_add_forwarding function
     pinggy_config_add_forwarding(config, forwarding_type, binding_url, forward_to);
@@ -433,36 +429,20 @@ napi_value ConfigSetForce(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, force)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, force)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: force (pinggy_bool_t / uint8_t)
     bool force;
     status = napi_get_value_bool(env, args[1], &force);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid force argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid force argument");
 
     // Call the pinggy_config_set_force function
     pinggy_config_set_force(config, (pinggy_bool_t)force);
@@ -481,52 +461,27 @@ napi_value ConfigSetArgument(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, argument)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, argument)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: argument (string)
     size_t argument_length;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &argument_length);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid argument");
 
     // Allocate memory for the argument string
     pinggy_char_p_t argument = malloc(argument_length + 1);
-    if (argument == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argument != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], argument, argument_length + 1, &argument_length);
-    if (status != napi_ok)
-    {
-        free(argument);
-        napi_throw_type_error(env, NULL, "Failed to get argument string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get argument string", free(argument));
 
     // Call the pinggy_config_set_argument function
     pinggy_config_set_argument(config, argument);
@@ -548,36 +503,20 @@ napi_value ConfigSetSSL(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, ssl)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, ssl)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: ssl (pinggy_bool_t / uint8_t)
     bool ssl;
     status = napi_get_value_bool(env, args[1], &ssl);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid ssl argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid ssl argument");
 
     // Call the pinggy_config_set_ssl function
     pinggy_config_set_ssl(config, (pinggy_bool_t)ssl);
@@ -596,36 +535,20 @@ napi_value ConfigSetInsecure(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, insecure)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, insecure)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: insecure (pinggy_bool_t / uint8_t)
     bool insecure;
     status = napi_get_value_bool(env, args[1], &insecure);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid insecure argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid insecure argument");
 
     // Call the pinggy_config_set_insecure function
     pinggy_config_set_insecure(config, (pinggy_bool_t)insecure);
@@ -657,17 +580,9 @@ napi_value ConfigGetServerAddress(napi_env env, napi_callback_info info)
     // [in] env: the Node-API environment
     // [in] cbinfo: the callback info passed into the callback function
     // [in-out] argc: specifies number of expected parameters and receives the actual count of arguments. argc can optionally be ignored by passing NULL
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
     // Validate the number of arguments
-    if (argc < 1) // check the received number of arguments
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (uint32_t)
     uint32_t config;
@@ -678,37 +593,21 @@ napi_value ConfigGetServerAddress(napi_env env, napi_callback_info info)
     // [in] env: the Node-API environment
     // [in] value: the JavaScript number to convert, received as the first argument
     // [out] result: C primitive equivalent of the given napi_value as a uint32_t, since JS numbers are to double type
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
     // Allocate buffer for the server address
     pinggy_capa_t buffer_len = 0; // Example buffer length
     pinggy_const_int_t rc = pinggy_config_get_server_address_len(config, 0, NULL, &buffer_len);
-    if (rc < 0 || buffer_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get required length for server address");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && buffer_len > 0, "Failed to get required length for server address");
     // Allocate a buffer of the required length
     pinggy_char_p_t buffer = malloc(buffer_len + 1); // +1 for null terminator
-    if (buffer == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, buffer != NULL, "Memory allocation failed");
 
     // Call the pinggy_config_get_server_address function
     int copied_len = pinggy_config_get_server_address(config, buffer_len + 1, buffer);
     // get the length from the JS function preferabbly as a parameter
 
     // Handle errors (if the copied length is negative, assuming it indicates an error)
-    if (copied_len < 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get server address");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied_len >= 0, "Failed to get server address");
     napi_value result;
     // Convert the buffer to a JavaScript string
     status = napi_create_string_utf8(env, buffer, copied_len, &result);
@@ -720,12 +619,9 @@ napi_value ConfigGetServerAddress(napi_env env, napi_callback_info info)
     // [in] str: Character buffer representing a UTF-8 encoded string
     // [in] length: the length of the string in bytes, or NAPI_AUTO_LENGTH if the string is null-terminated
     // [out] result: the JavaScript string value
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create string");
     free(buffer); // Free the allocated buffer
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create string");
-        return NULL;
-    }
+
     return result;
 }
 
@@ -747,59 +643,32 @@ napi_value ConfigGetSniServerName(napi_env env, napi_callback_info info)
     // [out] args: C array of napi_values to which the arguments will be copied. If there are more arguments than the provided count, only the requested no of arguments are copied. If ther are fewer arguments provided than claimed, the rest of args is filled with napi_value values that represent 'undefined'. 'args' can also be optionally ignored.
     // [out] NULL: thisArg, the JavaScript 'this' argument for the call. Ignored in this case by passing NULL
     // [out] NULL: the pointer to store the number of bytes copied, which we are not interested in here.
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (uint32_t)
     uint32_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Allocate buffer for the SNI server name
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_sni_server_name_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get required length for SNI server name");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to get required length for SNI server name");
     pinggy_char_p_t buffer = malloc(required_len + 1);
-    if (buffer == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, buffer != NULL, "Memory allocation failed");
     // Call the pinggy_config_get_sni_server_name function
     int copied_len = pinggy_config_get_sni_server_name(config, required_len + 1, buffer);
 
     // Handle errors (if the copied length is negative, assuming it indicates an error)
-    if (copied_len < 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get SNI server name");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied_len >= 0, "Failed to get SNI server name");
     napi_value result;
     // Convert the buffer to a JavaScript string
     status = napi_create_string_utf8(env, buffer, copied_len, &result);
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create string");
     free(buffer); // Free the allocated buffer
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create string");
-        return NULL;
-    }
+
     return result;
 }
 
@@ -813,38 +682,21 @@ napi_value ConfigGetAdvancedParsing(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
-
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
     // Get the first argument: config (uint32_t)
     uint32_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy_config_get_advanced_parsing function
     pinggy_bool_t advanced_parsing = pinggy_config_get_advanced_parsing(config);
 
     // Return the boolean value (advanced_parsing) as a JavaScript boolean
     status = napi_get_boolean(env, advanced_parsing, &result);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create boolean");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create boolean");
     return result;
 }
 
@@ -857,61 +709,32 @@ napi_value ConfigGetToken(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (uint32_t)
     uint32_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Allocate buffer for the token
     pinggy_capa_t required_len = 0; // Example buffer length
     pinggy_const_int_t rc = pinggy_config_get_token_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get required length for token");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to get required length for token");
     pinggy_char_p_t buffer = malloc(required_len + 1);
-    if (buffer == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, buffer != NULL, "Memory allocation failed");
 
     // Call the pinggy_config_get_token function
     pinggy_const_int_t copied_len = pinggy_config_get_token(config, required_len + 1, buffer);
 
     // Handle errors (if the copied length is negative, assuming it indicates an error)
-    if (copied_len < 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get token");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied_len >= 0, "Failed to get token");
 
     // Convert the buffer to a JavaScript string
     status = napi_create_string_utf8(env, buffer, copied_len, &result);
-    if (status != napi_ok)
-    {
-        free(buffer);
-        napi_throw_error(env, NULL, "Failed to create string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create string", free(buffer));
 
     free(buffer);
     return result;
@@ -925,61 +748,31 @@ napi_value ConfigGetForwardings(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, status == napi_ok, "Invalid config argument");
 
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_forwardings_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get required length for forwarding rules");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to get required length for forwarding_rules");
 
     // Create a buffer to hold the forwarding rules
     pinggy_char_p_t forwarding_rules = malloc(required_len + 1);
-    if (forwarding_rules == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, forwarding_rules != NULL, "Memory allocation failed");
 
     // Call the pinggy function to Retrieves the forwarding rules (as a JSON string) from the tunnel config.
     pinggy_const_int_t copied_length = pinggy_config_get_forwardings(config, required_len + 1, forwarding_rules);
-    if (copied_length < 0)
-    {
-        free(forwarding_rules);
-        napi_throw_error(env, NULL, "Failed to get forwarding_rules");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied_length >= 0, "Failed to get forwarding_rules");
     // Return the forwarding_rules as a JavaScript string
     napi_value result;
     status = napi_create_string_utf8(env, forwarding_rules, copied_length, &result);
-    if (status != napi_ok)
-    {
-        free(forwarding_rules);
-        napi_throw_error(env, NULL, "Failed to create string from forwarding_rules");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create string from forwarding_rules", free(forwarding_rules));
 
     // Free the allocated memory for udp_forward_to
     free(forwarding_rules);
@@ -995,27 +788,15 @@ napi_value ConfigGetForce(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy function to get the force status
     pinggy_const_bool_t force = pinggy_config_get_force(config);
@@ -1023,11 +804,7 @@ napi_value ConfigGetForce(napi_env env, napi_callback_info info)
     // Return the force status as a JavaScript boolean
     napi_value result;
     status = napi_get_boolean(env, force, &result);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create boolean from force status");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create boolean");
 
     return result;
 }
@@ -1040,60 +817,34 @@ napi_value ConfigGetArgument(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Determine buffer size (assuming a reasonable buffer length for now)
     pinggy_capa_t buffer_len = 1024; // You can make this dynamic based on your use case
 
     // Allocate buffer
     pinggy_char_p_t buffer = malloc(buffer_len);
-    if (buffer == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, buffer != NULL, "Memory allocation failed");
 
     // Call the pinggy function to get the argument
     pinggy_const_int_t length = pinggy_config_get_argument(config, buffer_len, buffer);
 
     // If length is 0, return undefined as no argument was retrieved
-    if (length == 0)
-    {
-        free(buffer);
-        napi_value result;
-        napi_get_undefined(env, &result);
-        return result;
-    }
+    NAPI_CHECK_CONDITION_RETURN_UNDEFINED_AND_CLEANUP(env, length >= 0, free(buffer));
 
     // Create JavaScript string from the buffer
     napi_value result;
     status = napi_create_string_utf8(env, buffer, length, &result);
     free(buffer); // Free buffer after usage
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create string from argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create string from argument");
 
     return result;
 }
@@ -1106,27 +857,15 @@ napi_value ConfigGetSsl(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy_config_get_ssl function
     pinggy_bool_t ssl_enabled = pinggy_config_get_ssl(config);
@@ -1145,27 +884,15 @@ napi_value ConfigGetInsecure(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy_config_get_insecure function
     pinggy_bool_t insecure_enabled = pinggy_config_get_insecure(config);
@@ -1187,20 +914,13 @@ napi_value GetPinggyVersion(napi_env env, napi_callback_info info)
 
     // Call the macro-based function
     pinggy_const_int_t len = pinggy_version(buffer_len, buffer);
-    if (len < 0)
-    {
-        napi_throw_error(env, NULL, "Failed to get pinggy version");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_RETURN(env, len >= 0, "Failed to get Pinggy version");
     status = napi_create_string_utf8(env, buffer, len, &result);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create JS string for version");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create version string");
     return result;
 }
 
+// Wrapper for pinggy_config_set_https_only
 napi_value ConfigSetHttpsOnly(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
@@ -1209,36 +929,20 @@ napi_value ConfigSetHttpsOnly(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, https_only)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, https_only)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: https_only (pinggy_bool_t / bool)
     bool https_only;
     status = napi_get_value_bool(env, args[1], &https_only);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid https_only argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid https_only argument");
 
     // Call the pinggy_config_set_https_only function
     pinggy_config_set_https_only(config, (pinggy_bool_t)https_only);
@@ -1258,27 +962,15 @@ napi_value ConfigGetHttpsOnly(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy_config_get_https_only function
     pinggy_bool_t https_only = pinggy_config_get_https_only(config);
@@ -1298,36 +990,20 @@ napi_value ConfigSetAllowPreflight(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, allow_preflight)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, allow_preflight)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: allow_preflight (pinggy_bool_t / bool)
     bool allow_preflight;
     status = napi_get_value_bool(env, args[1], &allow_preflight);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid allow_preflight argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid allow_preflight argument");
 
     // Call the pinggy_config_set_allow_preflight function
     pinggy_config_set_allow_preflight(config, (pinggy_bool_t)allow_preflight);
@@ -1347,27 +1023,15 @@ napi_value ConfigGetAllowPreflight(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy_config_get_allow_preflight function
     pinggy_bool_t allow_preflight = pinggy_config_get_allow_preflight(config);
@@ -1386,33 +1050,17 @@ napi_value ConfigSetXForwardedFor(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, x_forwarded_for)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, x_forwarded_for)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     bool x_forwarded_for;
     status = napi_get_value_bool(env, args[1], &x_forwarded_for);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid x_forwarded_for argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid x_forwarded_for argument");
 
     pinggy_config_set_x_forwarded_for(config, (pinggy_bool_t)x_forwarded_for);
 
@@ -1429,25 +1077,13 @@ napi_value ConfigGetXForwardedFor(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     pinggy_bool_t x_forwarded_for = pinggy_config_get_x_forwarded_for(config);
 
@@ -1465,36 +1101,20 @@ napi_value ConfigSetReverseProxy(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, reverse_proxy)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, reverse_proxy)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: reverse_proxy (pinggy_bool_t / bool)
     bool reverse_proxy;
     status = napi_get_value_bool(env, args[1], &reverse_proxy);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid reverse_proxy argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid reverse_proxy argument");
 
     // Call the pinggy_config_set_reverse_proxy function
     pinggy_config_set_reverse_proxy(config, (pinggy_bool_t)reverse_proxy);
@@ -1514,27 +1134,15 @@ napi_value ConfigGetReverseProxy(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy_config_get_reverse_proxy function
     pinggy_bool_t reverse_proxy = pinggy_config_get_reverse_proxy(config);
@@ -1553,33 +1161,17 @@ napi_value ConfigSetOriginalRequestUrl(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, original_request_url)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, original_request_url)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     bool original_request_url;
     status = napi_get_value_bool(env, args[1], &original_request_url);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid original_request_url argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid original_request_url argument");
 
     pinggy_config_set_original_request_url(config, (pinggy_bool_t)original_request_url);
 
@@ -1596,25 +1188,13 @@ napi_value ConfigGetOriginalRequestUrl(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     pinggy_bool_t original_request_url = pinggy_config_get_original_request_url(config);
 
@@ -1631,48 +1211,25 @@ napi_value ConfigSetIpWhiteList(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, ip_white_list)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, ip_white_list)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
+
     // determines the length of the ip_white_list string
     size_t ip_len;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &ip_len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid ip_white_list argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid ip_white_list argument");
 
     pinggy_char_p_t ip_white_list = malloc(ip_len + 1); // +1 for null terminator
-    if (ip_white_list == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, ip_white_list != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], ip_white_list, ip_len + 1, &ip_len);
-    if (status != napi_ok)
-    {
-        free(ip_white_list);
-        napi_throw_type_error(env, NULL, "Failed to get ip_white_list string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get ip_white_list string", free(ip_white_list));
+
     pinggy_config_set_ip_white_list(config, ip_white_list);
     free(ip_white_list);
 
@@ -1689,60 +1246,31 @@ napi_value ConfigGetIpWhiteList(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // First call the _len variant to get required buffer size
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_ip_white_list_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to determine ip_white_list length");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to determine ip_white_list length");
 
     pinggy_char_p_t ip_white_list = malloc(required_len + 1);
-    if (ip_white_list == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, ip_white_list != NULL, "Memory allocation failed");
+
     // Call the pinggy function to get the ip_white_list
     pinggy_const_int_t copied = pinggy_config_get_ip_white_list(config, required_len + 1, ip_white_list);
-    if (copied < 0)
-    {
-        free(ip_white_list);
-        napi_throw_error(env, NULL, "Failed to get ip_white_list");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied >= 0, "Failed to get ip_white_list");
 
     // Return the ip_white_list as a JavaScript string
     napi_value result;
     status = napi_create_string_utf8(env, ip_white_list, copied, &result);
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create JS string from ip_white_list", free(ip_white_list));
 
-    if (status != napi_ok)
-    {
-        free(ip_white_list);
-        napi_throw_error(env, NULL, "Failed to create JS string from ip_white_list");
-        return NULL;
-    }
     free(ip_white_list);
     return result;
 }
@@ -1755,49 +1283,24 @@ napi_value ConfigSetBasicAuths(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, basic_auths)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, basic_auths)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // determine length of the basic_auths string
     size_t auth_len;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &auth_len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid basic_auths argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid basic_auths argument");
 
     pinggy_char_p_t basic_auths = malloc(auth_len + 1);
-    if (basic_auths == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, basic_auths != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], basic_auths, auth_len + 1, &auth_len);
-    if (status != napi_ok)
-    {
-        free(basic_auths);
-        napi_throw_type_error(env, NULL, "Failed to get basic_auths string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get basic_auths string", free(basic_auths));
 
     pinggy_config_set_basic_auths(config, basic_auths);
     free(basic_auths);
@@ -1815,59 +1318,30 @@ napi_value ConfigGetBasicAuths(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the _len variant to get the required buffer size
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_basic_auths_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to determine basic_auths length");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to determine basic_auths length");
 
     pinggy_char_p_t basic_auths = malloc(required_len + 1);
-    if (basic_auths == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, basic_auths != NULL, "Memory allocation failed");
 
     pinggy_const_int_t copied = pinggy_config_get_basic_auths(config, required_len + 1, basic_auths);
-    if (copied < 0)
-    {
-        free(basic_auths);
-        napi_throw_error(env, NULL, "Failed to get basic_auths");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied >= 0, "Failed to get basic_auths");
 
     napi_value result;
     status = napi_create_string_utf8(env, basic_auths, copied, &result);
-    free(basic_auths);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create JS string from basic_auths");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create JS string from basic_auths", free(basic_auths));
 
+    free(basic_auths);
     return result;
 }
 
@@ -1879,49 +1353,24 @@ napi_value ConfigSetBearerTokenAuths(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, bearer_token_auths)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, bearer_token_auths)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // determine length of the bearer_token_auths string
     size_t auth_len;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &auth_len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid bearer_token_auths argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid bearer_token_auths argument");
 
     pinggy_char_p_t bearer_token_auths = malloc(auth_len + 1);
-    if (bearer_token_auths == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, bearer_token_auths != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], bearer_token_auths, auth_len + 1, &auth_len);
-    if (status != napi_ok)
-    {
-        free(bearer_token_auths);
-        napi_throw_type_error(env, NULL, "Failed to get bearer_token_auths string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get bearer_token_auths string", free(bearer_token_auths));
 
     pinggy_config_set_bearer_token_auths(config, bearer_token_auths);
     free(bearer_token_auths);
@@ -1939,58 +1388,29 @@ napi_value ConfigGetBearerTokenAuths(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_bearer_token_auths_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to determine bearer_token_auths length");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to determine bearer_token_auths length");
 
     pinggy_char_p_t bearer_token_auths = malloc(required_len + 1);
-    if (bearer_token_auths == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, bearer_token_auths != NULL, "Memory allocation failed");
 
     pinggy_const_int_t copied = pinggy_config_get_bearer_token_auths(config, required_len + 1, bearer_token_auths);
-    if (copied < 0)
-    {
-        free(bearer_token_auths);
-        napi_throw_error(env, NULL, "Failed to get bearer_token_auths");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied >= 0, "Failed to get bearer_token_auths");
 
     napi_value result;
     status = napi_create_string_utf8(env, bearer_token_auths, copied, &result);
-    free(bearer_token_auths);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create JS string from bearer_token_auths");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create JS string from bearer_token_auths", free(bearer_token_auths));
 
+    free(bearer_token_auths);
     return result;
 }
 // Wrapper for pinggy_config_set_header_modification
@@ -2001,49 +1421,24 @@ napi_value ConfigSetHeaderModification(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, header_modification)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, header_modification)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // determine length of the header_modification string
     size_t header_len;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &header_len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid header_modification argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid header_modification argument");
 
     pinggy_char_p_t header_modification = malloc(header_len + 1);
-    if (header_modification == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, header_modification != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], header_modification, header_len + 1, &header_len);
-    if (status != napi_ok)
-    {
-        free(header_modification);
-        napi_throw_type_error(env, NULL, "Failed to get header_modification string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get header_modification string", free(header_modification));
 
     pinggy_config_set_header_manipulations(config, header_modification);
     free(header_modification);
@@ -2061,58 +1456,29 @@ napi_value ConfigGetHeaderModification(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_header_manipulations_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to determine header_modification length");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to determine header_modification length");
 
     pinggy_char_p_t header_modification = malloc(required_len + 1);
-    if (header_modification == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, header_modification != NULL, "Memory allocation failed");
 
     pinggy_const_int_t copied = pinggy_config_get_header_manipulations(config, required_len + 1, header_modification);
-    if (copied < 0)
-    {
-        free(header_modification);
-        napi_throw_error(env, NULL, "Failed to get header_modification");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied >= 0, "Failed to get header_modification");
 
     napi_value result;
     status = napi_create_string_utf8(env, header_modification, copied, &result);
-    free(header_modification);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create JS string from header_modification");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create JS string from header_modification", free(header_modification));
 
+    free(header_modification);
     return result;
 }
 
@@ -2124,48 +1490,23 @@ napi_value ConfigSetLocalServerTls(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, local_server_tls)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, local_server_tls)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     size_t len;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid local_server_tls argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid local_server_tls argument");
 
     pinggy_char_p_t local_server_tls = malloc(len + 1);
-    if (local_server_tls == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, local_server_tls != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], local_server_tls, len + 1, &len);
-    if (status != napi_ok)
-    {
-        free(local_server_tls);
-        napi_throw_type_error(env, NULL, "Failed to get local_server_tls string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get local_server_tls string", free(local_server_tls));
 
     pinggy_config_set_local_server_tls(config, local_server_tls);
     free(local_server_tls);
@@ -2183,58 +1524,29 @@ napi_value ConfigGetLocalServerTls(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_local_server_tls_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to determine local_server_tls length");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to determine local_server_tls length");
 
     pinggy_char_p_t local_server_tls = malloc(required_len + 1);
-    if (local_server_tls == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, local_server_tls != NULL, "Memory allocation failed");
 
     pinggy_const_int_t copied = pinggy_config_get_local_server_tls(config, required_len + 1, local_server_tls);
-    if (copied < 0)
-    {
-        free(local_server_tls);
-        napi_throw_error(env, NULL, "Failed to get local_server_tls");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied >= 0, "Failed to get local_server_tls");
 
     napi_value result;
     status = napi_create_string_utf8(env, local_server_tls, copied, &result);
-    free(local_server_tls);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create JS string from local_server_tls");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create JS string from local_server_tls", free(local_server_tls));
 
+    free(local_server_tls);
     return result;
 }
 // Wrapper for pinggy_config_set_auto_reconnect
@@ -2246,36 +1558,20 @@ napi_value ConfigSetAutoReconnect(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, autoReconnect)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, autoReconnect)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: autoReconnect (pinggy_bool_t / uint8_t)
     bool autoReconnect;
     status = napi_get_value_bool(env, args[1], &autoReconnect);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid autoReconnect argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid autoReconnect argument");
 
     // Call the pinggy_config_set_auto_reconnect function
     pinggy_config_set_auto_reconnect(config, (pinggy_bool_t)autoReconnect);
@@ -2295,27 +1591,15 @@ napi_value ConfigGetAutoReconnect(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy function to get the autoReconnect status
     pinggy_const_bool_t autoReconnect = pinggy_config_get_auto_reconnect(config);
@@ -2323,11 +1607,7 @@ napi_value ConfigGetAutoReconnect(napi_env env, napi_callback_info info)
     // Return the autoReconnect status as a JavaScript boolean
     napi_value result;
     status = napi_get_boolean(env, autoReconnect, &result);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create boolean from autoReconnect status");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create boolean from autoReconnect status");
 
     return result;
 }
@@ -2341,36 +1621,20 @@ napi_value ConfigSetReconnectInterval(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, reconnectInterval)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, reconnectInterval)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: reconnectInterval (pinggy_uint32_t / uint32_t)
     uint32_t reconnectInterval;
     status = napi_get_value_uint32(env, args[1], &reconnectInterval);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid reconnectInterval argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid reconnectInterval argument");
 
     // Call the pinggy_config_set_reconnect_interval function
     pinggy_config_set_reconnect_interval(config, (pinggy_uint16_t)reconnectInterval);
@@ -2390,27 +1654,15 @@ napi_value ConfigGetReconnectInterval(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy function to get the reconnect interval
     pinggy_uint16_t interval = pinggy_config_get_reconnect_interval(config);
@@ -2418,11 +1670,7 @@ napi_value ConfigGetReconnectInterval(napi_env env, napi_callback_info info)
     // Return the interval as a JavaScript number
     napi_value result;
     status = napi_create_uint32(env, (uint32_t)interval, &result);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create result");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create result");
 
     return result;
 }
@@ -2436,36 +1684,20 @@ napi_value ConfigSetMaxReconnectAttempts(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, maxReconnectAttempts)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, maxReconnectAttempts)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: MaxReconnectAttempts (pinggy_uint32_t / uint32_t)
     uint32_t maxReconnectAttempts;
     status = napi_get_value_uint32(env, args[1], &maxReconnectAttempts);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid maxReconnectAttempts argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid maxReconnectAttempts argument");
 
     // Call the pinggy_config_set_max_reconnect_attempts function
     pinggy_config_set_max_reconnect_attempts(config, (pinggy_uint32_t)maxReconnectAttempts);
@@ -2485,27 +1717,15 @@ napi_value ConfigGetMaxReconnectAttempts(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy function to get the max reconnect attempts
     pinggy_uint32_t maxReconnectAttempts = pinggy_config_get_max_reconnect_attempts(config);
@@ -2513,11 +1733,7 @@ napi_value ConfigGetMaxReconnectAttempts(napi_env env, napi_callback_info info)
     // Return the maxReconnectAttempts as a JavaScript number
     napi_value result;
     status = napi_create_uint32(env, (uint32_t)maxReconnectAttempts, &result);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create result");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to create result");
 
     return result;
 }
@@ -2530,51 +1746,26 @@ napi_value ConfigSetForwardings(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, forwardings)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, forwardings)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Get the second argument: forwardings (string)
     size_t forwardings_len;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &forwardings_len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid forwardings argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid forwardings argument");
 
     pinggy_char_p_t forwardings = malloc(forwardings_len + 1);
-    if (forwardings == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, forwardings != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], forwardings, forwardings_len + 1, &forwardings_len);
-    if (status != napi_ok)
-    {
-        free(forwardings);
-        napi_throw_type_error(env, NULL, "Failed to get forwardings string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get forwardings string", free(forwardings));
 
     // Call the pinggy_config_set_forwardings function
     pinggy_config_set_forwardings(config, forwardings);
@@ -2587,6 +1778,7 @@ napi_value ConfigSetForwardings(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     return result;
 }
+
 // Wrapper for pinggy_config_reset_forwardings
 napi_value ConfigResetForwardings(napi_env env, napi_callback_info info)
 {
@@ -2596,27 +1788,15 @@ napi_value ConfigResetForwardings(napi_env env, napi_callback_info info)
 
     // Parse arguments
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
     // Validate the number of arguments
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     // Get the first argument: config (pinggy_ref_t / uint32_t)
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     // Call the pinggy_config_reset_forwardings function
     pinggy_config_reset_forwardings(config);
@@ -2635,48 +1815,23 @@ napi_value ConfigSetWebdebuggerAddr(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, addr)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, addr)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     size_t addr_len;
     status = napi_get_value_string_utf8(env, args[1], NULL, 0, &addr_len);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid addr argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid addr argument");
 
     pinggy_char_p_t addr = malloc(addr_len + 1);
-    if (addr == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, addr != NULL, "Memory allocation failed");
 
     status = napi_get_value_string_utf8(env, args[1], addr, addr_len + 1, &addr_len);
-    if (status != napi_ok)
-    {
-        free(addr);
-        napi_throw_type_error(env, NULL, "Failed to get addr string");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get addr string", free(addr));
 
     pinggy_config_set_webdebugger_addr(config, addr);
     free(addr);
@@ -2694,33 +1849,17 @@ napi_value ConfigSetWebdebugger(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 2)
-    {
-        napi_throw_type_error(env, NULL, "Expected two arguments (config, enable)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, enable)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     bool enable;
     status = napi_get_value_bool(env, args[1], &enable);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid enable argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid enable argument");
 
     pinggy_config_set_webdebugger(config, (pinggy_bool_t)enable);
 
@@ -2737,25 +1876,13 @@ napi_value ConfigGetWebdebugger(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     pinggy_bool_t webdebugger_enabled = pinggy_config_get_webdebugger(config);
 
@@ -2772,58 +1899,29 @@ napi_value ConfigGetWebdebuggerAddr(napi_env env, napi_callback_info info)
     napi_status status;
 
     status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to parse arguments");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
 
-    if (argc < 1)
-    {
-        napi_throw_type_error(env, NULL, "Expected one argument (config)");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
 
     pinggy_ref_t config;
     status = napi_get_value_uint32(env, args[0], &config);
-    if (status != napi_ok)
-    {
-        napi_throw_type_error(env, NULL, "Invalid config argument");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
 
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_webdebugger_addr_len(config, 0, NULL, &required_len);
-    if (rc < 0 || required_len == 0)
-    {
-        napi_throw_error(env, NULL, "Failed to determine webdebugger_addr length");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to determine webdebugger_addr length");
 
     pinggy_char_p_t webdebugger_addr = malloc(required_len + 1);
-    if (webdebugger_addr == NULL)
-    {
-        napi_throw_error(env, NULL, "Memory allocation failed");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, webdebugger_addr != NULL, "Memory allocation failed");
 
     pinggy_const_int_t copied = pinggy_config_get_webdebugger_addr(config, required_len + 1, webdebugger_addr);
-    if (copied < 0)
-    {
-        free(webdebugger_addr);
-        napi_throw_error(env, NULL, "Failed to get webdebugger_addr");
-        return NULL;
-    }
+    NAPI_CHECK_CONDITION_THROW(env, copied >= 0, "Failed to get webdebugger_addr");
 
     napi_value result;
     status = napi_create_string_utf8(env, webdebugger_addr, copied, &result);
-    free(webdebugger_addr);
-    if (status != napi_ok)
-    {
-        napi_throw_error(env, NULL, "Failed to create JS string from webdebugger_addr");
-        return NULL;
-    }
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create JS string from webdebugger_addr", free(webdebugger_addr));
 
+    free(webdebugger_addr);
     return result;
 }
 

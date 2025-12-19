@@ -1,11 +1,9 @@
 #ifndef NAPI_HELPERS_H
 #define NAPI_HELPERS_H
 
-#include <node_api.h>
-#include <stdio.h>
 
 // Macro to check napi_status and return error on failure
-#define NAPI_CHECK_STATUS(env, status, msg)                                                          \
+#define NAPI_CHECK_STATUS_RETURN(env, status, msg)                                                          \
     do                                                                                               \
     {                                                                                                \
         if ((status) != napi_ok)                                                                     \
@@ -19,7 +17,7 @@
     } while (0)
 
 // Macro to check a condition and return error if false
-#define NAPI_CHECK_CONDITION(env, condition, msg)                                                    \
+#define NAPI_CHECK_CONDITION_RETURN(env, condition, msg)                                                    \
     do                                                                                               \
     {                                                                                                \
         if (!(condition))                                                                            \
