@@ -68,29 +68,29 @@ export interface PinggyNative {
   /** Set local server TLS configuration for a config. */
   configSetLocalServerTls(configRef: number, tls: string): void;
   /**
-   *  * @brief Adds a new forwarding rule to the tunnel configuration.
- *
- * This function allows you to specify how incoming connections to a `binding_url`
- * on the Pinggy server should be forwarded to a `forward_to` address on your local machine.
- *
- * @param config          Reference to the tunnel config object.
- * @param forwarding_type Null-terminated string specifying the type of forwarding.
- *                        Valid types are "http", "tcp", "udp", "tls", "tlstcp".
- *                        If an empty string or NULL is provided, "http" is assumed.
- * @param binding_url     Null-terminated string specifying the remote address to bind to.
- *                        This can be a domain name, a domain:port combination, or just a port.
- *                        Examples: "example.pinggy.io", "example.pinggy.io:8080", ":80".
- *                        If empty or NULL, the server will assign a default binding.
- * @param forward_to      Null-terminated string specifying the local address to forward to.
- *                        This can be a URL (e.g., "http://localhost:3000"), an IP address
- *                        (e.g., "127.0.0.1:8000"), or just a port (e.g., ":5000").
- *                        If the schema (e.g., "http://") and host are omitted, "localhost"
- *                        is assumed. For example, ":3000" becomes "http://localhost:3000"
- *                        for HTTP forwarding.
- *                        If `forwarding_type` is "http" and `forward_to` specifies an "https"
- *                        schema (e.g., "https://localhost:443"), this implicitly enables
- *                        `local_server_tls` for this specific forwarding rule.
- * @return                pinggy_true on success, pinggy_false on failure.
+   * Adds a new forwarding rule to the tunnel configuration.
+   *
+   * This function allows you to specify how incoming connections to a `binding_url`
+   * on the Pinggy server should be forwarded to a `forward_to` address on your local machine.
+   *
+   * @param config          Reference to the tunnel config object.
+   * @param forwarding_type Null-terminated string specifying the type of forwarding.
+   *                        Valid types are "http", "tcp", "udp", "tls", "tlstcp".
+   *                        If an empty string or NULL is provided, "http" is assumed.
+   * @param binding_url     Null-terminated string specifying the remote address to bind to.
+   *                        This can be a domain name, a domain:port combination, or just a port.
+   *                        Examples: "example.pinggy.io", "example.pinggy.io:8080", ":80".
+   *                        If empty or NULL, the server will assign a default binding.
+   * @param forward_to      Null-terminated string specifying the local address to forward to.
+   *                        This can be a URL (e.g., "http://localhost:3000"), an IP address
+   *                        (e.g., "127.0.0.1:8000"), or just a port (e.g., ":5000").
+   *                        If the schema (e.g., "http://") and host are omitted, "localhost"
+   *                        is assumed. For example, ":3000" becomes "http://localhost:3000"
+   *                        for HTTP forwarding.
+   *                        If `forwarding_type` is "http" and `forward_to` specifies an "https"
+   *                        schema (e.g., "https://localhost:443"), this implicitly enables
+   *                        `local_server_tls` for this specific forwarding rule.
+   * @return                pinggy_true on success, pinggy_false on failure.
   */
   configAddForwarding(configRef: number, forwardingType: string, bindingUrl: string, forwardTo: string): void;
 
@@ -106,30 +106,30 @@ export interface PinggyNative {
   configAddForwardingSimple(configRef: number, forwardTo: string): void;
 
   /**
- * @brief Sets multiple forwarding rules for the tunnel configuration.
- *
- * This function allows you to define multiple forwarding rules either as a single
- * simplified forwarding string (similar to `pinggy_config_add_forwarding_simple`)
- * or as a JSON array of forwarding objects.
- *
- * If `forwardings` is a single string, it should follow the format
- * `[forwarding_type://][localhost:]port`.
- *
- * If `forwardings` is a JSON string, it should be an array of objects, where each
- * object defines a forwarding rule with the following properties:
- * - `type`: (Optional) The type of forwarding (e.g., "http", "tcp", "udp", "tls", "tlstcp").
- *   Defaults to "http" if not specified.
- * - `listenAddress`: (Optional) The remote address to bind to. Format: `[host][:port]`.
- *   An empty string or undefined means the server will assign a default binding.
- *   The hostname is ignored for TCP and UDP tunnels. Any schema provided will be ignored.
- * - `address`: The local address to forward to. Format: `[protocol://][host]:port`.
- *   The `protocol` is primarily used to determine if `local_server_tls` should be
- *   enabled for this specific rule (e.g., `https://`). It is ignored otherwise.
- *
- * @param config      Reference to the tunnel config object.
- * @param forwardings Null-terminated string representing either a single simplified
- *                    forwarding rule or a JSON array of forwarding rule objects.
- */
+  * Sets multiple forwarding rules for the tunnel configuration.
+  *
+  * This function allows you to define multiple forwarding rules either as a single
+  * simplified forwarding string (similar to `pinggy_config_add_forwarding_simple`)
+  * or as a JSON array of forwarding objects.
+  *
+  * If `forwardings` is a single string, it should follow the format
+  * `[forwarding_type://][localhost:]port`.
+  *
+  * If `forwardings` is a JSON string, it should be an array of objects, where each
+  * object defines a forwarding rule with the following properties:
+  * - `type`: (Optional) The type of forwarding (e.g., "http", "tcp", "udp", "tls", "tlstcp").
+  *   Defaults to "http" if not specified.
+  * - `listenAddress`: (Optional) The remote address to bind to. Format: `[host][:port]`.
+  *   An empty string or undefined means the server will assign a default binding.
+  *   The hostname is ignored for TCP and UDP tunnels. Any schema provided will be ignored.
+  * - `address`: The local address to forward to. Format: `[protocol://][host]:port`.
+  *   The `protocol` is primarily used to determine if `local_server_tls` should be
+  *   enabled for this specific rule (e.g., `https://`). It is ignored otherwise.
+  *
+  * @param config      Reference to the tunnel config object.
+  * @param forwardings Null-terminated string representing either a single simplified
+  *                    forwarding rule or a JSON array of forwarding rule objects.
+  */
   configSetForwardings(configRef: number, forwardings: string): void;
 
   /** Set webdebugger enabled status */

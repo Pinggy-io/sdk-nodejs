@@ -357,7 +357,7 @@ export class Tunnel implements ITunnel {
 
   /**
    * Starts web debugging for the tunnel on the specified local port.
-   * @param {number} listeningPort - The local port to start web debugging on.
+   * @param {string} listeningAddr - The local port to start web debugging on.
    * @returns {Promise<void>} Resolves when web debugging is started.
    * @throws {PinggyError|Error} If web debugging fails to start.
    */

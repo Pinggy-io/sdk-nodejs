@@ -291,11 +291,11 @@ export class TunnelInstance {
   }
 
   /**
-  * Sets a callback function to receive PrimaryForwarding events.
+  * Sets a callback function to receive Tunnel established events.
   *
-  * Delegates to {@link Tunnel#setPrimaryForwardingCallback}.
+  * Delegates to {@link Tunnel#setTunnelEstablishedCallback}.
   *
-  * @param {function} callback - The callback function to receive PrimaryForwarding events.
+  * @param {function} callback - The callback function to receive Tunnel established events.
   * @returns {void}
   * @throws {Error} If the tunnel is not initialized.
   */
@@ -304,11 +304,11 @@ export class TunnelInstance {
   }
 
   /**
-  * Sets a callback function to receive Authenticated events.
+  * Sets a callback function to receive Forwarding changed events.
   *
-  * Delegates to {@link Tunnel#setAuthenticatedCallback}.
+  * Delegates to {@link Tunnel#setOnTunnelForwardingChanged}.
   *
-  * @param {function} callback - The callback function to receive Authenticated events.
+  * @param {function} callback - The callback function to receive Forwarding change events.
   * @returns {void}
   * @throws {Error} If the tunnel is not initialized.
   */
@@ -387,7 +387,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Tunnel#startWebDebugging}.
    *
-   * @param {number} port - The local port to start web debugging on.
+   * @param {string} listenAddress - The local port to start web debugging on.
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
@@ -433,9 +433,9 @@ export class TunnelInstance {
   }
 
   /**
-   * Gets the current tunnel type for the tunnel.
-   *
-   * Delegates to {@link Config#getTunnelType}.
+   * Gets the forwarding rules configuration.
+   * Returns a JSON string containing all forwarding rules configured for this tunnel.
+   * Delegates to {@link Config#getForwarding}.
    *
    * @returns {Promise<string | null>} The tunnel type, or null if unavailable.
    */
@@ -443,6 +443,13 @@ export class TunnelInstance {
     return await this.activeConfig.getForwarding() ?? null;
   }
 
+  /**
+   * Gets the current tunnel state for the tunnel.
+   *
+   * Delegates to {@link Tunnel#GetTunnelState}.
+   *
+   * @returns {Promise<string>} The tunnel state as a string.
+   */
   public async GetTunnelState(): Promise<string> {
     const state = await this.activeTunnel.GetTunnelState();
     return state;
