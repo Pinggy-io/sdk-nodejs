@@ -310,7 +310,11 @@ napi_value GetTunnelWebDebuggingAddress(napi_env env, napi_callback_info info)
     pinggy_const_int_t copied_len = pinggy_tunnel_get_webdebugging_addr(tunnel, required_len, webdebug_addr);
     NAPI_CHECK_CONDITION_THROW_AND_CLEANUP(env, copied_len >= 0, "Failed to get web debugging address", free(webdebug_addr));
 
-    status = napi_create_string_utf8(env, webdebug_addr, copied_len, &result);
+    
+    webdebug_addr[required_len] = '\0';
+    size_t actual_len = strnlen(webdebug_addr, (size_t)copied_len);
+
+    status = napi_create_string_utf8(env, webdebug_addr, actual_len, &result);
     free(webdebug_addr);
     NAPI_CHECK_STATUS_THROW(env, status, "Failed to create result string");
 

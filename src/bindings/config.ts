@@ -101,6 +101,17 @@ export class Config implements IConfig {
 
       this.safeSet(
         () => {
+          if(options.webDebugger){
+            this.addon.configSetWebdebuggerAddr(configRef, options.webDebugger);
+            this.addon.configSetWebdebugger(configRef, true);
+          }
+        },
+        "Web Debugger configuration",
+        options.webDebugger ? `Web Debugger address set to: ${options.webDebugger}` : undefined
+      )
+
+      this.safeSet(
+        () => {
           if (options.httpsOnly !== undefined) {
             this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
           }
@@ -659,6 +670,14 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetReconnectInterval(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting Reconnect Interval configuration:", e as Error);
+      return null;
+    }
+  }
+  public getWebdebuggerAddr(): string | null {
+    try {
+      return this.configRef ? this.addon.configGetWebdebuggerAddr(this.configRef) : null;
+    } catch (e) {
+      Logger.error("Error getting Web Debugger Address configuration:", e as Error);
       return null;
     }
   }

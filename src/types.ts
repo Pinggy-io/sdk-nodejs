@@ -475,8 +475,8 @@ export enum CallbackType {
   TunnelError = "tunnelError",
   TunnelUsageUpdate = "tunnelUsage",
   TunnelAdditionalForwarding = "tunnelAdditionalForwarding",
-  TunnelPrimaryForwarding = "tunnelPrimaryForwarding",
-  TunnelAuthenticated = "tunnelAuthenticated"
+  TunnelEstablished = "tunnelEstablished",
+  ForwardingChanged = "tunnelForwardingChanged",
 }
 
 /**
@@ -503,15 +503,18 @@ export type CallbackPayloadMap = {
     error: string;
     messages: string[];
   };
-  [CallbackType.TunnelAuthenticated]: string;
-  [CallbackType.TunnelPrimaryForwarding]: {
-    message: string;
-    address?: string[];
-  };
   [CallbackType.TunnelAdditionalForwarding]: {
     bindAddress: string;
     forwardToAddr: string;
     errorMessage: string | null;
+  };
+  [CallbackType.TunnelEstablished]: {
+    message: string;
+    urls?: string[];
+  };
+  [CallbackType.ForwardingChanged]: {
+    message: string;
+    address?: string[];
   };
 };
 

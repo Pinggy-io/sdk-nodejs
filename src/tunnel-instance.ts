@@ -299,8 +299,8 @@ export class TunnelInstance {
   * @returns {void}
   * @throws {Error} If the tunnel is not initialized.
   */
-  public setPrimaryForwardingCallback(callback: CallbackMap[CallbackType.TunnelPrimaryForwarding]): void {
-    this.setCallback(CallbackType.TunnelPrimaryForwarding, callback)
+  public setTunnelEstablishedCallback(callback: CallbackMap[CallbackType.TunnelEstablished]): void {
+    this.setCallback(CallbackType.TunnelEstablished, callback)
   }
 
   /**
@@ -312,8 +312,8 @@ export class TunnelInstance {
   * @returns {void}
   * @throws {Error} If the tunnel is not initialized.
   */
-  public setAuthenticatedCallback(callback: CallbackMap[CallbackType.TunnelAuthenticated]): void {
-    this.setCallback(CallbackType.TunnelAuthenticated, callback);
+  public setTunnelForwardingChangedCallback(callback: CallbackMap[CallbackType.ForwardingChanged]): void {
+    this.setCallback(CallbackType.ForwardingChanged, callback);
   }
 
   /**
@@ -443,6 +443,10 @@ export class TunnelInstance {
     return await this.activeConfig.getForwarding() ?? null;
   }
 
+  public async GetTunnelState(): Promise<string> {
+    const state = await this.activeTunnel.GetTunnelState();
+    return state;
+  }
 
 
   /**
@@ -571,6 +575,14 @@ export class TunnelInstance {
    */
   public async getMaxReconnectAttempts(): Promise<number | null> {
     return await this.activeConfig.getMaxReconnectAttempts();
+  }
+
+  public getWebDebuggerAddress(): string{
+    return this.activeTunnel.GetWebDebuggerAddress();
+  }
+
+  public async getWebDebuggerInfo(): Promise<string | null>{
+    return await this.activeConfig.getWebdebuggerAddr();
   }
 
   /**

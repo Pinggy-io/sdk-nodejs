@@ -1,5 +1,5 @@
 import { Logger } from "../utils/logger.js";
-import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType } from "../types.js";
+import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType, tunnelStateToString } from "../types.js";
 import { PinggyError } from "./exception.js";
 import { TunnelUsage } from "./tunnel-usage.js";
 import { PinggyOptions } from "../pinggyOptions.js";
@@ -53,6 +53,7 @@ export class Tunnel implements ITunnel {
   public authenticated: boolean;
   /** Whether primary forwarding is complete. */
   public primaryForwardingDone: boolean;
+
   /** Current status of the tunnel. */
   public status: TunnelStatus;
 
@@ -60,12 +61,9 @@ export class Tunnel implements ITunnel {
   private readonly pinggyOptions: PinggyOptions;
 
 
-  private authPromise: Promise<void>;
-  private forwardingPromise: Promise<string[]> | null = null;
-  private resolveAuth: (() => void) | null = null;
-  private rejectAuth: ((reason?: any) => void) | null = null;
-  private resolveForwarding: ((addresses: string[]) => void) | null = null;
-  private rejectForwarding: ((reason?: any) => void) | null = null;
+  private tunnelEstablished: Promise<void>;
+  private resolveTunnelEstablished: (() => void) | null = null;
+  private rejectTunnelEstablished: ((reason?: any) => void) | null = null;
   private additionalForwardingPending: AdditionalForwardingManager = new AdditionalForwardingManager();
   private _urls: string[] = [];
   private intentionallyStopped: boolean = false; // Track intentional stops
@@ -78,8 +76,8 @@ export class Tunnel implements ITunnel {
   private onTunnelErrorCallback: ((errorNo: number, error: string, recoverable: boolean) => void) | null = null;
   private onTunnelDisconnectedCallback: ((error: string, messages: string[]) => void) | null = null;
   private onAdditionalForwardingCallback: ((bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void) | null = null;
-  private onAuthenticatedCallback: ((messsage: string) => void) | null = null;
-  private onPrimaryForwardingCallback: ((message: string, address?: string[],) => void) | null = null;
+  private onTunnelEstablishedCallback: ((messsage: string, urls?: string[]) => void) | null = null;
+  private onForwardingChangedCallback: ((message: string, address?: string[]) => void) | null = null;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -96,9 +94,9 @@ export class Tunnel implements ITunnel {
     this.pinggyOptions = pinggyOptions;
 
     // Create promise that will be resolved when authentication completes
-    this.authPromise = new Promise((resolve, reject) => {
-      this.resolveAuth = resolve;
-      this.rejectAuth = reject;
+    this.tunnelEstablished = new Promise((resolve, reject) => {
+      this.resolveTunnelEstablished = resolve;
+      this.rejectTunnelEstablished = reject;
     });
   }
 
@@ -211,8 +209,7 @@ export class Tunnel implements ITunnel {
       {
         setter: 'tunnelSetOnTunnelErrorCallback',
         callback: (tunnelRef: number, errorNo: number, error: string, recoverable: boolean) => {
-          Logger.error(`Tunnel error on  (${errorNo}): ${error} (recoverable: ${recoverable})`);
-          // notify client callback if provided
+          Logger.error(`Tunnel error (${errorNo}): ${error} (recoverable: ${recoverable})`);
           if (this.onTunnelErrorCallback) {
             try {
               this.onTunnelErrorCallback(errorNo, error, recoverable);
@@ -228,17 +225,19 @@ export class Tunnel implements ITunnel {
           Logger.info(`Tunnel established: ${tunnelRef}, ${urls.join(", ")}`);
           this.primaryForwardingDone = true;
           this._urls = urls;
-          if (this.resolveForwarding) this.resolveForwarding(urls);
-            if (this.status === TunnelStatus.STARTING) {
-              this.status = TunnelStatus.LIVE;
-            }
+                    this.status = TunnelStatus.LIVE;
           
+          if(this.resolveTunnelEstablished) this.resolveTunnelEstablished();
+          this.onTunnelEstablishedCallback?.("Tunnel established", urls);
+
         }
       },
       {
         setter:'tunnelSetOnTunnelFailedCallback',
         callback: (tunnelRef: number, errorMessage: string) => {
+          if(this.rejectTunnelEstablished) this.rejectTunnelEstablished(new PinggyError(errorMessage));
           Logger.error(`Tunnel failed: ${tunnelRef}, error: ${errorMessage}`);
+          this.onTunnelEstablishedCallback?.(`Tunnel failed: ${errorMessage}`);
         }
       },
       {
@@ -246,7 +245,14 @@ export class Tunnel implements ITunnel {
         callback: (tunnelRef: number, usageJson: string) => {
           this.handleUsageUpdate(usageJson);
         }
-      }
+      },
+      {
+        setter: 'tunnelSetOnTunnelForwardingChangedCallback',
+        callback :(tunnelRef: number,  address?: string[]) => {
+        Logger.info(`Tunnel forwarding changed:, ${address}`);
+        this.onForwardingChangedCallback?.("Tunnel forwarding changed", address);
+        }
+      },
     ];
 
     // Set all callbacks
@@ -280,15 +286,7 @@ export class Tunnel implements ITunnel {
     return this.executeAddonOperation({
       operation: async () => {
         this.status = TunnelStatus.STARTING;
-
-        // Setup all callbacks
         this.setupCallbacks();
-
-        // Create forwarding promise for primary forwarding and wire its resolvers
-        this.forwardingPromise = new Promise<string[]>((resolve, reject) => {
-          this.resolveForwarding = resolve;
-          this.rejectForwarding = reject;
-        });
 
         const connected = this.addon.tunnelStartNonBlocking(this.tunnelRef);
         if (!connected) {
@@ -298,32 +296,13 @@ export class Tunnel implements ITunnel {
         Logger.info("Tunnel connected, starting authentication monitoring...");
         this.pollStart();
 
-        // Wait for forwarding to complete and return the addresses
-        const urls = await (this.forwardingPromise as Promise<string[]>);
-
-        // Auto-start web debugger if configured
-        if (this.pinggyOptions.webDebugger) {
-          try {
-            const debuggerAddress = this.pinggyOptions.webDebugger;
-            // Extract port from address (format like "localhost:8080")
-            const portMatch = debuggerAddress.match(/:(\d+)$/);
-            if (portMatch) {
-              const port = parseInt(portMatch[1], 10);
-              Logger.info(`Auto-starting web debugger on port ${port}...`);
-              await this.startWebDebugging(debuggerAddress);
-            } else {
-              Logger.info(`Invalid web debugger address format: ${debuggerAddress}. Expected format: host:port`);
-            }
-          } catch (error) {
-            Logger.error("Failed to auto-start web debugger:", error as Error);
-            // Don't throw - web debugger failure shouldn't stop the tunnel
-          }
-        }
+        // Wait for tunnel to be established (which includes forwarding URLs)
+        await this.tunnelEstablished; 
+        const urls = this._urls;  
 
         return urls;
       },
       operationName: "starting tunnel",
-
     });
   }
 
@@ -383,8 +362,8 @@ export class Tunnel implements ITunnel {
    * @throws {PinggyError|Error} If web debugging fails to start.
    */
   public async startWebDebugging(listeningAddr: string): Promise<void> {
-    await this.authPromise; // Wait for authentication
-
+    await this.tunnelEstablished; // Wait for Establishment
+    
     this.executeAddonOperation({
       operation: () => {
         const port = this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningAddr);
@@ -408,10 +387,9 @@ export class Tunnel implements ITunnel {
     remoteAddress: string,
     localAddress: string
   ): Promise<void> {
-    // Wait for primary forwarding to complete
-    await this.forwardingPromise;
+    // Wait for tunnel to be established
+    await this.tunnelEstablished; 
 
-    // Enqueue a pending promise for this remote/local pair 
     const { promise } = this.additionalForwardingPending.enqueue(remoteAddress, localAddress);
 
     this.executeAddonOperation({
@@ -516,6 +494,16 @@ export class Tunnel implements ITunnel {
     return this._latestUsage;
   }
 
+  public GetTunnelState(): string{
+    const state = this.addon.getTunnelState(this.tunnelRef);
+    return tunnelStateToString(state);
+  }
+
+  public GetWebDebuggerAddress(): string{
+    const debuggerInfo = this.addon.getTunnelWebDebuggingAddress(this.tunnelRef);
+    return debuggerInfo;
+  }
+
   public setUsageUpdateCallback(callback: (usage: TunnelUsageType) => void): void {
     this.onUsageUpdateCallback = callback;
     this.startTunnelUsageUpdate();
@@ -537,12 +525,12 @@ export class Tunnel implements ITunnel {
     this.onAdditionalForwardingCallback = callback;
   }
 
-  public setAuthenticatedCallback(callback: (message: string) => void) {
-    this.onAuthenticatedCallback = callback;
+  public setTunnelEstablishedCallback(callback: (message: string ,urls?: string[]) => void) {
+    this.onTunnelEstablishedCallback = callback;
   }
 
-  public setPrimaryForwardingCallback(callback: (message: string, address?: string[]) => void) {
-    this.onPrimaryForwardingCallback = callback;
+  public setOnTunnelForwardingChanged(callback: (message: string, urls?: string[]) => void) {
+    this.onForwardingChangedCallback = callback;
   }
 
   public getStatus(): TunnelStatus {
