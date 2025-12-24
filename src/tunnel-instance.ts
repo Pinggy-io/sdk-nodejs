@@ -3,7 +3,7 @@ import { TunnelWorkerManager } from "./worker/tunnel-worker-manager.js";
 import { Logger, LogLevel } from "./utils/logger.js"
 import { Tunnel } from "./bindings/tunnel.js";
 import { Config } from "./bindings/config.js";
-import { Callback, CallbackMap, CallbackPayloadMap, CallbackType, TunnelStatus, TunnelUsageType, workerMessageType } from "./types.js";
+import { Callback, CallbackMap, CallbackPayloadMap, CallbackType, TunnelState, TunnelStatus, TunnelUsageType, workerMessageType } from "./types.js";
 
 
 /**
@@ -140,14 +140,20 @@ export class TunnelInstance {
   public async start(): Promise<string[]> {
     return await this.activeTunnel.start();
   }
-
+  /**
+ * Enables or disables debug logging for the tunnel worker.
+ *
+ * @group Utilities
+ */
   public async setDebugLogging(enable: boolean, logLevel: LogLevel = LogLevel.INFO, logFilePath: string | null): Promise<void> {
+
     this.workerManager.setDebugLoggingInWorker(enable, logLevel, logFilePath);
   }
   /**
    * Registers a callback function to receive errors from the tunnel worker.
    * It is recommended to always set this callback to ensure your program exits gracefully,
    * since if the tunnel worker exits, the tunnel is no longer active.
+   * @group Callbacks
    * @param {function} callback - The callback function to receive errors.
    */
   public setWorkerErrorCallback(callback: Function) {
@@ -243,6 +249,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Tunnel#setUsageUpdateCallback}.
    *
+   * @group Callbacks
    * @param {function} callback - The callback function to receive usage updates.
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
@@ -256,6 +263,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Tunnel#setTunnelErrorCallback}.
    *
+   * @group Callbacks
    * @param {function} callback - The callback function to receive errors.
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
@@ -269,6 +277,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Tunnel#setTunnelDisconnectedCallback}.
    *
+   * @group Callbacks
    * @param {function} callback - The callback function to receive disconnected events.
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
@@ -282,6 +291,7 @@ export class TunnelInstance {
     *
     * Delegates to {@link Tunnel#setAdditionalForwardingCallback}.
     *
+    * @group Callbacks
     * @param {function} callback - The callback function to receive AdditionalForwarding events.
     * @returns {void}
     * @throws {Error} If the tunnel is not initialized.
@@ -295,6 +305,7 @@ export class TunnelInstance {
   *
   * Delegates to {@link Tunnel#setTunnelEstablishedCallback}.
   *
+  * @group Callbacks
   * @param {function} callback - The callback function to receive Tunnel established events.
   * @returns {void}
   * @throws {Error} If the tunnel is not initialized.
@@ -308,6 +319,7 @@ export class TunnelInstance {
   *
   * Delegates to {@link Tunnel#setOnTunnelForwardingChanged}.
   *
+  * @group Callbacks
   * @param {function} callback - The callback function to receive Forwarding change events.
   * @returns {void}
   * @throws {Error} If the tunnel is not initialized.
@@ -343,6 +355,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Config#getServerAddress}.
    *
+   * @group Configuration
    * @returns {Promise<string | null>} The server address, or null if unavailable.
    */
   public async getServerAddress(): Promise<string | null> {
@@ -354,6 +367,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Config#getToken}.
    *
+   * @group Configuration
    * @returns {Promise<string | null>} The authentication token, or null if unavailable.
    */
   public async getToken(): Promise<string | null> {
@@ -365,6 +379,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Config#getSniServerName}.
    *
+   * @group Configuration
    * @returns {Promise<string | null>} The SNI server name, or null if unavailable.
    */
   public async getSniServerName(): Promise<string | null> {
@@ -376,6 +391,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Config#getForce}.
    *
+   * @group Configuration
    * @returns {Promise<boolean | null>} The force setting, or null if unavailable.
    */
   public async getForce(): Promise<boolean | null> {
@@ -387,6 +403,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Tunnel#startWebDebugging}.
    *
+   * @group Web Debugging
    * @param {string} listenAddress - The local port to start web debugging on.
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
@@ -415,6 +432,7 @@ export class TunnelInstance {
   /**
    * Returns WebDebuggerPort configuration for this tunnel instance.
    *
+   * @group Web Debugging
    * @returns {Promise<number>} The WebDebuggerPort setting, or `null` if not configured.
    */
   public async getWebDebuggerPort(): Promise<number> {
@@ -426,6 +444,7 @@ export class TunnelInstance {
    *
    * Delegates to {@link Config#getArgument}.
    *
+   * @group Configuration
    * @returns {Promise<string | null>} The argument string, or null if unavailable.
    */
   public async getArgument(): Promise<string | null> {
@@ -437,6 +456,7 @@ export class TunnelInstance {
    * Returns a JSON string containing all forwarding rules configured for this tunnel.
    * Delegates to {@link Config#getForwarding}.
    *
+   * @group Configuration
    * @returns {Promise<string | null>} The tunnel type, or null if unavailable.
    */
   public async getForwarding(): Promise<string | null> {
@@ -448,19 +468,20 @@ export class TunnelInstance {
    *
    * Delegates to {@link Tunnel#GetTunnelState}.
    *
-   * @returns {Promise<string>} The tunnel state as a string.
+   * @group Configuration
+   * @returns {Promise<TunnelState>} The tunnel state as a string.
    */
-  public async GetTunnelState(): Promise<string> {
+  public async GetTunnelState(): Promise<TunnelState> {
     const state = await this.activeTunnel.GetTunnelState();
     return state;
   }
-
 
   /**
   * Gets the current SSL setting for the tunnel.
   *
   * Delegates to {@link Config#getTunnelSsl}.
   *
+  * @group Configuration
   * @returns {Promise<boolean | null>} The SSL setting, or null if unavailable.
   */
   public async getTunnelSsl(): Promise<boolean | null> {
@@ -471,6 +492,7 @@ export class TunnelInstance {
   /**
    * Returns whether HTTPS-only mode is enabled for the tunnel instance.
    *
+   * @group Configuration
    * @returns {Promise<boolean | null>} `true` if HTTPS-only mode is enabled, `false` if disabled, or `null` if the configuration is unavailable.
    */
   public async getHttpsOnly(): Promise<boolean | null> {
@@ -480,6 +502,7 @@ export class TunnelInstance {
   /**
    * Retrieves IP whitelist for this tunnel instance.
    *
+   * @group Configuration
    * @returns {Promise<string[]> } An array of whitelisted IP addresses, or an empty array if no whitelist is configured.
    */
   public async getIpWhiteList(): Promise<string[]> {
@@ -489,6 +512,7 @@ export class TunnelInstance {
   /**
   * Retrieves Allow-Preflight configuration for this tunnel instance.
   *
+  * @group Configuration
   * @returns {Promise<boolean | null>} The Allow-Preflight sconfig*/
   public async getAllowPreflight(): Promise<boolean | null> {
     return await this.activeConfig.getAllowPreflight() ?? null;
@@ -497,6 +521,7 @@ export class TunnelInstance {
   /**
  * Retrieves No-Reverse-Proxy configuration for this tunnel instance.
  *
+ * @group Configuration
  * @returns {Promise<boolean | null>} The No-Reverse-Proxy setting, or `null` if not configured.
  */
   public async getNoReverseProxy(): Promise<boolean | null> {
@@ -506,6 +531,7 @@ export class TunnelInstance {
   /**
  * Retrieves X-Forwarded-For configuration for this tunnel instance.
  *
+ * @group Configuration
  * @returns {Promise<boolean | null>} The X-Forwarded-For setting, or `null` if not configured.
  */
   public async getXForwardedFor(): Promise<boolean | null> {
@@ -515,6 +541,7 @@ export class TunnelInstance {
   /**
  * Retrieves Original-Request-URL configuration for this tunnel instance.
  *
+ * @group Configuration
  * @returns {Promise<boolean | null>} The Original-Request-URL setting, or `null` if not configured.
  */
   public async getOriginalRequestUrl(): Promise<boolean | null> {
@@ -524,6 +551,7 @@ export class TunnelInstance {
   /**
    * Retrieves the basic authentication values from the instance configuration.
    *
+   * @group Configuration
    * @returns {Promise<string[] | null>} An array of basic auth credentials when configured, or null if none are set.
    */
   public async getBasicAuth(): Promise<string[] | null> {
@@ -533,6 +561,7 @@ export class TunnelInstance {
   /**
    * Returns bearer token authentication values defined in the configuration.
    *
+   * @group Configuration
    * @returns {Promise<string[]>} An array of bearer token strings if present; otherwise an empty array.
    */
   public async getBearerTokenAuth(): Promise<string[]> {
@@ -542,6 +571,7 @@ export class TunnelInstance {
   /**
    * Returns header modification values defined in the configuration.
    *
+   * @group Configuration
    * @returns {Promise<string[] | null>} An array of header modification objects if present; otherwise null.
    */
   public async getHeaderModification(): Promise<string[] | null> {
@@ -551,6 +581,7 @@ export class TunnelInstance {
   /**
    * Returns local server TLS configuration for this tunnel instance.
    *
+   * @group Configuration
    * @returns {Promise<string | null>} The local server TLS setting, or `null` if not configured.
    */
   public async getLocalServerTls(): Promise<string | null> {
@@ -560,6 +591,7 @@ export class TunnelInstance {
   /**
    * Returns reconnect interval configuration for this tunnel instance.
    *
+   * @group Configuration
    * @returns {Promise<number | null>} The reconnect interval setting, or `null` if not configured.
    */
   public async getReconnectInterval(): Promise<number | null> {
@@ -569,6 +601,7 @@ export class TunnelInstance {
   /**
    * Returns auto-reconnect configuration for this tunnel instance.
    *
+   * @group Configuration
    * @returns {Promise<boolean | null>} The auto-reconnect setting, or `null` if not configured.
    */
   public async getAutoReconnect(): Promise<boolean | null> {
@@ -578,17 +611,28 @@ export class TunnelInstance {
   /**
    * Returns MaxReconnectAttempts configuration for this tunnel instance.
    *
+   * @group Configuration
    * @returns {Promise<number | null>} The MaxReconnectAttempts setting, or `null` if not configured.
    */
   public async getMaxReconnectAttempts(): Promise<number | null> {
     return await this.activeConfig.getMaxReconnectAttempts();
   }
 
-  public getWebDebuggerAddress(): string{
+  /**
+   * Returns the WebDebugger address for this tunnel instance.
+   *
+   * @group Web Debugging
+   */
+  public getWebDebuggerAddress(): string {
     return this.activeTunnel.GetWebDebuggerAddress();
   }
 
-  public async getWebDebuggerInfo(): Promise<string | null>{
+  /**
+   * Returns the WebDebugger information for this tunnel instance.
+   *
+   * @group Web Debugging
+   */
+  public async getWebDebuggerInfo(): Promise<string | null> {
     return await this.activeConfig.getWebdebuggerAddr();
   }
 
@@ -596,6 +640,7 @@ export class TunnelInstance {
   * Returns the current tunnel configuration as a `PinggyOptions` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
+  * @group Configuration
   * @returns {PinggyOptionsType | null} The tunnel configuration, or null if unavailable.
   */
   public async getConfig(): Promise<PinggyOptionsType | null> {

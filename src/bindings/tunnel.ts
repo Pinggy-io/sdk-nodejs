@@ -1,5 +1,5 @@
 import { Logger } from "../utils/logger.js";
-import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType, tunnelStateToString } from "../types.js";
+import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType, tunnelStateToString, TunnelState } from "../types.js";
 import { PinggyError } from "./exception.js";
 import { TunnelUsage } from "./tunnel-usage.js";
 import { PinggyOptions } from "../pinggyOptions.js";
@@ -494,7 +494,7 @@ export class Tunnel implements ITunnel {
     return this._latestUsage;
   }
 
-  public GetTunnelState(): string{
+  public GetTunnelState(): TunnelState {
     const state = this.addon.getTunnelState(this.tunnelRef);
     return tunnelStateToString(state);
   }

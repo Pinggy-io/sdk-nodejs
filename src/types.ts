@@ -227,7 +227,7 @@ export interface PinggyNative {
   /** Get the tunnel greet message. */
   getTunnelGreetMessage(tunnelRef: number): string;
   /** Get the tunnel state. */
-  getTunnelState(tunnelRef: number): TunnelState;
+  getTunnelState(tunnelRef: number): TunnelStateCode;
   /** Get the web debugging address for a tunnel. */
   getTunnelWebDebuggingAddress(tunnelRef: number): string;
   /** Get the web debugging port for a tunnel. */
@@ -369,12 +369,9 @@ export interface Tunnel {
   /** Check if the tunnel is active. */
   tunnelIsActive(): boolean;
 }
-/**
- * Tunnel lifecycle statuses.
- * Maps to the native pinggy_tunnel_state_t enum.
- * @public
- */
-export enum TunnelState {
+
+
+export enum TunnelStateCode {
   Invalid = 0,
   Initial = 1,
   Started = 2,
@@ -393,45 +390,68 @@ export enum TunnelState {
 }
 
 /**
- * Converts a TunnelState enum value to its string representation.
- * @param state - The TunnelState enum value
- * @returns The string name of the state (e.g., "Invalid", "Connecting", "ForwardingSucceeded")
+ * String representation of tunnel lifecycle states.
+ * Used by tunnelStateToString() to convert TunnelState enum values to human-readable strings.
  * @public
+ * @group Types
  */
-export function tunnelStateToString(state: TunnelState): string {
+export enum TunnelState {
+  Invalid = "Invalid",
+  Initial = "Initial",
+  Started = "Started",
+  ReconnectInitiated = "ReconnectInitiated",
+  Reconnecting = "Reconnecting",
+  Connecting = "Connecting",
+  Connected = "Connected",
+  SessionInitiating = "SessionInitiating",
+  SessionInitiated = "SessionInitiated",
+  Authenticating = "Authenticating",
+  Authenticated = "Authenticated",
+  ForwardingInitiated = "ForwardingInitiated",
+  ForwardingSucceeded = "ForwardingSucceeded",
+  Stopped = "Stopped",
+  Ended = "Ended",
+  Unknown = "Unknown",
+}
+
+/**
+ * Convert TunnelStateCode to TunnelState string representation.
+ * @internal
+ */
+export function tunnelStateToString(state: TunnelStateCode): TunnelState {
   switch (state) {
-    case TunnelState.Invalid:
-      return "Invalid";
-    case TunnelState.Initial:
-      return "Initial";
-    case TunnelState.Started:
-      return "Started";
-    case TunnelState.ReconnectInitiated:
-      return "ReconnectInitiated";
-    case TunnelState.Reconnecting:
-      return "Reconnecting";
-    case TunnelState.Connecting:
-      return "Connecting";
-    case TunnelState.Connected:
-      return "Connected";
-    case TunnelState.SessionInitiating:
-      return "SessionInitiating";
-    case TunnelState.SessionInitiated:
-      return "SessionInitiated";
-    case TunnelState.Authenticating:
-      return "Authenticating";
-    case TunnelState.Authenticated:
-      return "Authenticated";
-    case TunnelState.ForwardingInitiated:
-      return "ForwardingInitiated";
-    case TunnelState.ForwardingSucceeded:
-      return "ForwardingSucceeded";
-    case TunnelState.Stopped:
-      return "Stopped";
-    case TunnelState.Ended:
-      return "Ended";
+    case TunnelStateCode.Invalid:
+      return TunnelState.Invalid;
+    case TunnelStateCode.Initial:
+      return TunnelState.Initial;
+    case TunnelStateCode.Started:
+      return TunnelState.Started;
+    case TunnelStateCode.ReconnectInitiated:
+      return TunnelState.ReconnectInitiated;
+    case TunnelStateCode.Reconnecting:
+      return TunnelState.Reconnecting;
+    case TunnelStateCode.Connecting:
+      return TunnelState.Connecting;
+    case TunnelStateCode.Connected:
+      return TunnelState.Connected;
+    case TunnelStateCode.SessionInitiating:
+      return TunnelState.SessionInitiating;
+    case TunnelStateCode.SessionInitiated:
+      return TunnelState.SessionInitiated;
+    case TunnelStateCode.Authenticating:
+      return TunnelState.Authenticating;
+    case TunnelStateCode.Authenticated:
+      return TunnelState.Authenticated;
+    case TunnelStateCode.ForwardingInitiated:
+      return TunnelState.ForwardingInitiated;
+    case TunnelStateCode.ForwardingSucceeded:
+      return TunnelState.ForwardingSucceeded;
+    case TunnelStateCode.Stopped:
+      return TunnelState.Stopped;
+    case TunnelStateCode.Ended:
+      return TunnelState.Ended;
     default:
-      return `Unknown(${state})`;
+      return TunnelState.Unknown;
   }
 }
 
@@ -469,6 +489,7 @@ export type PendingCall = {
   resolve: (value: any) => void;
   reject: (reason?: any) => void;
 };
+
 
 export enum CallbackType {
   TunnelDisconnected = "tunnelDisconnected",

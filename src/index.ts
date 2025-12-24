@@ -25,7 +25,7 @@ import { Tunnel } from "./bindings/tunnel.js";
  */
 const pinggy = Pinggy.instance;
 
-export { pinggy, TunnelInstance, Config, Tunnel };
+export { pinggy, Pinggy, TunnelInstance, Config, Tunnel };
 
 /**
  * Re-export of tunnel configuration option types and interfaces.
