@@ -137,7 +137,7 @@ console.log("Tunnel 2 URLs:", await tunnel2.urls());
 
 - **Start web debugger:**
   ```ts
-  tunnel.startWebDebugging(4300); // Starts web debugger on localhost:4300
+  tunnel.startWebDebugging('localhost:4300'); // Starts web debugger on localhost:4300
   ```
 - **Request additional forwarding:** If you have multiple domains, you can route different domains to different ports as follows:
   ```ts
@@ -207,7 +207,6 @@ interface PinggyOptions {
   serverAddress?: string; // Custom Pinggy server address
   forwarding?: string | ForwardingEntry; // Local address to forward traffic to (e.g., "localhost:3000")
   webDebugger?: string; // Local address for web debugger.(e,g "localhost:8080")
-  tunnelType?: TunnelType[]; // Tunnel protocol type
   ipWhitelist?: string[]; // List of allowed client IPs
   basicAuth?: { username: string; password: string }[];; // Basic authentication users { "admin": "secret123", "user": "password" }
   bearerTokenAuth?: string[]; // Bearer tokens for authentication
@@ -232,8 +231,9 @@ interface HeaderModification {
 }
 
 interface ForwardingEntry {
-  listenAddress?: string; // empty or undefined means default forwarding
   address: string;        // e.g., http://localhost:80 or host:port 
+  type?: TunnelType;     // Optional tunnel type, default is inferred from address
+  listenAddress?: string; // empty or undefined means default forwarding
 }
 
 const enum TunnelType {
@@ -257,7 +257,6 @@ interface Optional {
 - `serverAddress`: Specify a custom Pinggy server if needed.
 - `forwarding`: The local address (host:port) to forward incoming traffic to.
 - `webDebugger`: Local address use for web debugging for this tunnel instance.
-- `tunnelType`: Choose the protocol for your tunnel (`tcp`, `tls`, `http`,`udp` or `tlstcp`).
 - `ipWhitelist`: Restrict access to specific client IPs.
 - `basicAuth`: An array of objects, where each object has a username (string) and password (string)..
 - `bearerTokenAuth`: List of bearer tokens for HTTP authentication.

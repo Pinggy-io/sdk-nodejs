@@ -1,4 +1,4 @@
-import { pinggy, PinggyOptions, TunnelType } from "@pinggy/pinggy";
+import { pinggy, PinggyOptions } from "@pinggy/pinggy";
 
 (async () => {
   console.log("=== Single Tunnel Example ===");
@@ -7,14 +7,13 @@ import { pinggy, PinggyOptions, TunnelType } from "@pinggy/pinggy";
     // Simple tunnel creation with basic options
     const options: PinggyOptions = {
       forwarding: "localhost:3000",
-      tunnelType: [TunnelType.Http],
     };
 
     const tunnel = await pinggy.forward(options);
 
-    console.log("Tunnel URLs:", tunnel.urls());
-    console.log("Status:", tunnel.getStatus());
-    console.log("Is Active:", tunnel.isActive());
+    console.log("Tunnel URLs:", await tunnel.urls());
+    console.log("Status:", await tunnel.getStatus());
+    console.log("Is Active:", await  tunnel.isActive());
 
     // Let the tunnel run for 10 seconds
     setTimeout(() => {

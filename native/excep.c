@@ -129,7 +129,7 @@ napi_value GetLastException(napi_env env, napi_callback_info info)
 napi_value InitExceptionHandling(napi_env env, napi_callback_info info)
 {
     init_tls();
-    pinggy_set_exception_callback(PinggyExceptionHandler);
+    pinggy_set_on_exception_callback(PinggyExceptionHandler);
     return NULL;
 }
 
