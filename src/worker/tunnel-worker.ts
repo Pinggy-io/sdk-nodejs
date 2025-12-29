@@ -150,20 +150,20 @@ class TunnelWorker {
         this.forwardCallback(CallbackType.TunnelError, { errorNo, error, recoverable }),
       tunnelDisconnected: (error: string, messages: string[]) =>
         this.forwardCallback(CallbackType.TunnelDisconnected, { error, messages }),
-      tunnelAuthenticated: (message: string) =>
-        this.forwardCallback(CallbackType.TunnelAuthenticated, message),
-      tunnelPrimaryForwarding: (message: string, address?: string[]) =>
-        this.forwardCallback(CallbackType.TunnelPrimaryForwarding, { message, address }),
       tunnelAdditionalForwarding: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) =>
         this.forwardCallback(CallbackType.TunnelAdditionalForwarding, { bindAddress, forwardToAddr, errorMessage }),
+      tunnelEstablishedCallback: (message: string ,urls?: string[]) =>
+        this.forwardCallback(CallbackType.TunnelEstablished, { message, urls }),
+      tunnelForwardingChanged: (message: string, address?: string[]) =>
+        this.forwardCallback(CallbackType.ForwardingChanged, { message, address }),
     };
 
     this.tunnel.setUsageUpdateCallback(callbacks.usageUpdate);
     this.tunnel.setTunnelErrorCallback(callbacks.tunnelError);
     this.tunnel.setTunnelDisconnectedCallback(callbacks.tunnelDisconnected);
     this.tunnel.setAdditionalForwardingCallback(callbacks.tunnelAdditionalForwarding)
-    this.tunnel.setAuthenticatedCallback(callbacks.tunnelAuthenticated)
-    this.tunnel.setPrimaryForwardingCallback(callbacks.tunnelPrimaryForwarding);
+    this.tunnel.setTunnelEstablishedCallback(callbacks.tunnelEstablishedCallback);
+    this.tunnel.setOnTunnelForwardingChanged(callbacks.tunnelForwardingChanged);
   }
 
   /**
@@ -251,11 +251,8 @@ class TunnelWorker {
       maxReconnectAttempts,
       autoReconnect,
       headerModificationRaw,
-      webDebuggerPort,
-      tunnelType,
-      udpType,
-      tcpForwardTo,
-      udpForwardTo,
+      webDebugger,
+      forwardingJSON,
       ssl,
       argString,
     ] = await Promise.all([
@@ -275,11 +272,8 @@ class TunnelWorker {
       this.config.getMaxReconnectAttempts(),
       this.config.getAutoReconnect(),
       this.config.getHeaderModification() as unknown as Promise<HeaderModification[]>,
-      this.tunnel.getWebDebuggerPort(),
-      this.config.getTunnelType(),
-      this.config.getUdpType(),
-      this.config.getTcpForwardTo(),
-      this.config.getUdpForwardTo(),
+      this.tunnel.GetWebDebuggerAddress(),
+      this.config.getForwarding(),
       this.config.getTunnelSsl(),
       this.config.getArgument(),
     ]);
@@ -300,7 +294,7 @@ class TunnelWorker {
     options.reconnectInterval = reconnectInterval ?? 0;
     options.maxReconnectAttempts = maxReconnectAttempts ?? 0;
     options.autoReconnect = autoReconnect ?? false;
-    options.webDebugger = `localhost:${webDebuggerPort}`;
+    options.webDebugger = webDebugger;
     options.optional!.ssl = ssl ?? false;
 
     // Handle header modification
@@ -312,18 +306,21 @@ class TunnelWorker {
       )
       : [];
 
-    // Determine tunnel type and forwarding
-    const type = tunnelType || udpType;
-    if (type && ([TunnelType.Http, TunnelType.Tcp, TunnelType.Tls, TunnelType.Udp, TunnelType.TlsTcp].includes(type as TunnelType))) {
-      options.tunnelType = [type as any];
-      if (type === "udp") {
-        options.forwarding = udpForwardTo || "";
+    // Parse forwarding JSON to extract type and forwarding address
+    if (forwardingJSON) {
+      try {
+      const forwardingRules = JSON.parse(forwardingJSON);
+      if (Array.isArray(forwardingRules) && forwardingRules.length > 0) {
+        options.forwarding = forwardingRules || null;
       } else {
-        options.forwarding = tcpForwardTo || "";
+        options.forwarding = null;
+      }
+      } catch (e) {
+      Logger.error("Failed to parse forwarding JSON:", e as Error);
+      options.forwarding = null;
       }
     } else {
-      options.tunnelType = [TunnelType.Http];
-      options.forwarding = "";
+      options.forwarding = null;
     }
 
     // Parse argument string

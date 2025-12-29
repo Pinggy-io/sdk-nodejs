@@ -38,8 +38,19 @@ export type HeaderModification = {
  */
 
 export type ForwardingEntry = {
-  listenAddress?: string; // empty or undefined means default forwarding
-  address: string;        // e.g., http://localhost:80 or https://localhost:5555 or host:port
+  /**
+   * The local address to forward to. Format: `[protocol://][host]:port`.
+   *   The `protocol` is primarily used to determine if `local_server_tls` should be
+   *   enabled for this specific rule (e.g., `https://`). It is ignored otherwise.
+   */
+  address: string;
+  /**
+   * (Optional) The remote address to bind to. Format: `[host][:port]`.
+  *   An empty string or undefined means the server will assign a default binding.
+  *   The hostname is ignored for TCP and UDP tunnels. Any schema provided will be ignored.
+   */
+  listenAddress?: string;
+  type?: TunnelType;              // "http", "tcp", "tls", "udp", "tlstcp"
 }
 
 /**
@@ -91,7 +102,6 @@ export type BasicAuthItem = { username: string; password: string };
  * ```typescript
  * const options: PinggyOptions = {
  *   forwarding: "localhost:3000",
- *   tunnelType: ["http"],
  *   debug: true,
  *   basicAuth: [{ username: "user", password: "pass" }]
  * };
@@ -112,17 +122,12 @@ export type PinggyOptionsType = {
    * Forwarding can either be a string, or a list of objects. But it is required - at least empty string or empty list.
    * @example "http://localhost:3000" or [{ address: "http://localhost:3000" }, { listenAddress: "0.tcp.pinggy.io:12345", address: "http://localhost:4000" }]
    */
-  forwarding?: string | ForwardingEntry[];
+  forwarding?: string | ForwardingEntry[] | null;
   /**
    * Local address for web debugger.
    * @example "localhost:8080"
    */
   webDebugger?: string;
-  /**
-   * Tunnel protocol types.
-   * (Required) One or more of: "http", "tcp", "tls", "udp", "tlstcp"
-   */
-  tunnelType?: TunnelType[];
   /**
    * List of whitelisted IP addresses that can access the tunnel.
    * @example ["192.168.1.1", "10.0.0.1"]
@@ -195,11 +200,10 @@ export type PinggyOptionsType = {
 };
 
 export class PinggyOptions implements PinggyOptionsType {
-  public forwarding?: string | ForwardingEntry[];
+  public forwarding?: string | ForwardingEntry[] | null;
   public token?: string;
   public serverAddress?: string;
   public webDebugger?: string;
-  public tunnelType?: TunnelType[];
   public ipWhitelist?: string[];
   public basicAuth?: { username: string; password: string }[];
   public bearerTokenAuth?: string[];
@@ -232,7 +236,6 @@ export class PinggyOptions implements PinggyOptionsType {
     this.token = options.token;
     this.serverAddress = options.serverAddress;
     this.webDebugger = options.webDebugger;
-    this.tunnelType = options.tunnelType;
     this.ipWhitelist = options.ipWhitelist;
     this.basicAuth = options.basicAuth;
     this.bearerTokenAuth = options.bearerTokenAuth;
@@ -321,6 +324,18 @@ export class PinggyOptions implements PinggyOptionsType {
     return undefined;
   }
 
+  getForwardingObjects(): string | null {
+    const f = this.forwarding;
+    if (!f) null;
+    if (typeof f === "string") return null;
+    return JSON.stringify(f);
+  }
+
+  getForwardingKind(): "string" | "array" | "none" {
+    if (!this.forwarding) return "none";
+    return typeof this.forwarding === "string" ? "string" : Array.isArray(this.forwarding) ? "array" : "none";
+  }
+
   getAdditionalForwarding(): ForwardingEntry[] {
     const f = this.forwarding;
     if (!f) return [];
@@ -336,33 +351,8 @@ export class PinggyOptions implements PinggyOptionsType {
   validate(): void {
     const errors: string[] = [];
 
-    // Validate forwarding
-    if (!this.forwarding) {
-      errors.push("Forwarding configuration is required");
-    } else if (typeof this.forwarding === "string") {
-      if (this.forwarding.trim() === "") {
-        errors.push("Forwarding string cannot be empty");
-      } else {
-        this.validateForwardingAddress(this.forwarding, errors);
-      }
-    } else if (Array.isArray(this.forwarding)) {
-      if (this.forwarding.length === 0) {
-        errors.push("Forwarding array cannot be empty");
-      } else {
-        this.forwarding.forEach((entry, index) => {
-          if (!entry.address || entry.address.trim() === "") {
-            errors.push(`Forwarding entry at index ${index} must have a valid address`);
-          } else {
-            this.validateForwardingAddress(entry.address, errors, `entry ${index}`);
-          }
-        });
-      }
-    }
+    // TODO: Validate forwarding
 
-    // Validate tunnel types
-    if (this.tunnelType && this.tunnelType.length === 0) {
-      errors.push("Tunnel types array cannot be empty if specified");
-    }
 
     // Validate IP whitelist
     if (this.ipWhitelist && this.ipWhitelist.length > 0) {
@@ -415,12 +405,7 @@ export class PinggyOptions implements PinggyOptionsType {
         errors.push("Max reconnect attempts must be greater than 0");
       }
     }
-
-    // Validate web debugger address
-    if (this.webDebugger && !this.isValidAddress(this.webDebugger)) {
-      errors.push(`Invalid web debugger address: ${this.webDebugger}`);
-    }
-
+    
     // Validate server address
     if (this.serverAddress && !this.isValidAddress(this.serverAddress)) {
       errors.push(`Invalid server address: ${this.serverAddress}`);
@@ -436,38 +421,8 @@ export class PinggyOptions implements PinggyOptionsType {
     }
   }
 
-  private validateForwardingAddress(address: string, errors: string[], context: string = "forwarding address"): void {
-    try {
-      // Check if any configured tunnel type is HTTP
-      if (this.tunnelType?.includes(TunnelType.Http)) {
-        let url: URL;
+ // TODO: validateForwardingAddress
 
-        // Allow host:port without protocol, assume http://
-        if (this.hostPortRegex.test(address)) {
-          url = new URL(`http://${address}`);
-        } else {
-          url = new URL(address);
-        }
-
-        if (!["http:", "https:"].includes(url.protocol)) {
-          errors.push(
-            `Invalid protocol in ${context}: ${url.protocol}. Must be http: or https:`
-          );
-        }
-
-      } else {
-        // For tcp, udp, tls, tlstcp → only host:port
-
-        if (!this.hostPortRegex.test(address)) {
-          errors.push(
-            `Invalid ${context} for non-http tunnel types: ${address}. Must be host:port`
-          );
-        }
-      }
-    } catch {
-      errors.push(`Invalid ${context}: ${address}`);
-    }
-  }
 
   private isValidIPorCIDR(ip: string): boolean {
 

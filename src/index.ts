@@ -25,7 +25,7 @@ import { Tunnel } from "./bindings/tunnel.js";
  */
 const pinggy = Pinggy.instance;
 
-export { pinggy, TunnelInstance, Config, Tunnel };
+export { pinggy, Pinggy, TunnelInstance, Config, Tunnel };
 
 /**
  * Re-export of tunnel configuration option types and interfaces.
@@ -36,6 +36,7 @@ export { pinggy, TunnelInstance, Config, Tunnel };
 export type { PinggyOptionsType as PinggyOptions, HeaderModification, ForwardingEntry, BasicAuthItem, Optional } from "./pinggyOptions.js";
 export { TunnelType } from "./pinggyOptions.js"
 export type { TunnelStatus, PinggyNative, TunnelUsageType } from "./types.js";
+export { TunnelState, tunnelStateToString } from "./types.js";
 export { LogLevel } from "./utils/logger.js"
 
 export { listen } from "./utils/listen.js";
