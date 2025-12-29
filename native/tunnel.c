@@ -301,7 +301,14 @@ napi_value GetTunnelWebDebuggingAddress(napi_env env, napi_callback_info info)
     pinggy_capa_t required_len = 0;
     // Call the native function to get the web debugging address length
     pinggy_const_int_t rc = pinggy_tunnel_get_webdebugging_addr_len(tunnel, 0, NULL, &required_len);
-    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to get web debugging address length");
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0, "Failed to get web debugging address length");
+
+    if (required_len == 0)
+    {
+        // If the required length is 0, return an empty string
+        status = napi_create_string_utf8(env, "", NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
 
     pinggy_char_p_t webdebug_addr = malloc(required_len + 1);
     NAPI_CHECK_CONDITION_THROW(env, webdebug_addr != NULL, "Memory allocation failed");
@@ -1008,7 +1015,14 @@ napi_value GetTunnelGreetMessage(napi_env env, napi_callback_info info)
     pinggy_capa_t required_len = 0;
     // Call the native function to get the greet message length
     pinggy_const_int_t rc = pinggy_tunnel_get_greeting_msgs_len(tunnel, 0, NULL, &required_len);
-    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to get greeting message length");
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0, "Failed to get greeting message length");
+
+    if (required_len == 0)
+    {
+        // No greeting message available, return an empty string
+        status = napi_create_string_utf8(env, "", NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
 
     pinggy_char_p_t greet_msg = malloc(required_len + 1);
     NAPI_CHECK_CONDITION_THROW(env, greet_msg != NULL, "Memory allocation failed");

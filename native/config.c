@@ -722,7 +722,14 @@ napi_value ConfigGetToken(napi_env env, napi_callback_info info)
     // Allocate buffer for the token
     pinggy_capa_t required_len = 0; // Example buffer length
     pinggy_const_int_t rc = pinggy_config_get_token_len(config, 0, NULL, &required_len);
-    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to get required length for token");
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0, "Failed to get required length for token");
+
+    if (required_len == 0)
+    {
+        // If the required length is 0, return an empty string
+        status = napi_create_string_utf8(env, "", NAPI_AUTO_LENGTH, &result);
+        return result;
+    }
     pinggy_char_p_t buffer = malloc(required_len + 1);
     NAPI_CHECK_CONDITION_THROW(env, buffer != NULL, "Memory allocation failed");
 
@@ -1534,7 +1541,15 @@ napi_value ConfigGetLocalServerTls(napi_env env, napi_callback_info info)
 
     pinggy_capa_t required_len = 0;
     pinggy_const_int_t rc = pinggy_config_get_local_server_tls_len(config, 0, NULL, &required_len);
-    NAPI_CHECK_CONDITION_THROW(env, rc >= 0 && required_len > 0, "Failed to determine local_server_tls length");
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0, "Failed to determine local_server_tls length");
+
+    if (required_len == 0)
+    {
+        // If the length is zero, return an empty string
+        napi_value result;
+        status = napi_create_string_utf8(env, "", 0, &result);
+        return result;
+    }
 
     pinggy_char_p_t local_server_tls = malloc(required_len + 1);
     NAPI_CHECK_CONDITION_THROW(env, local_server_tls != NULL, "Memory allocation failed");
