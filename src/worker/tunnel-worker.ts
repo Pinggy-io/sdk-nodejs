@@ -22,10 +22,15 @@ class TunnelWorker {
   private config: Config | null = null;
   private tunnel: Tunnel | null = null;
   private registeredCallbacks: Set<CallbackType> = new Set();
+  private parentPid: number;
+  private parentCheckInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(rawTunnelOptions: any) {
+    // Store the parent PID at startup to detect if parent dies
+    this.parentPid = process.ppid;
     this.initialize(rawTunnelOptions);
     this.registerMessageHandlers();
+    this.startParentMonitor();
   }
 
   /**
@@ -196,6 +201,9 @@ class TunnelWorker {
    * Gracefully clean up resources when the worker shuts down
    */
   private cleanup(): void {
+    // Stop monitoring parent process
+    this.stopParentMonitor();
+    
     try {
       this.tunnel?.tunnelStop();
     } catch (e) {
@@ -222,6 +230,54 @@ class TunnelWorker {
     this.addon?.setDebugLogging(enabled)
     Logger.setDebugEnabled(enabled, logFilePath)
     Logger.setLevel(logLevel);
+  }
+
+  /**
+   * Monitor if the parent process is still alive.
+   * When parent is killed, the worker's ppid changes.
+   * This catches cases where the parent is killed
+   */
+  private startParentMonitor(): void {
+    const PARENT_CHECK_INTERVAL_MS = 1000; // Check every second
+
+    this.parentCheckInterval = setInterval(() => {
+      const currentPpid = process.ppid;
+      
+      // If parent PID changed (parent died and we were adopted by init/systemd)
+      if (currentPpid !== this.parentPid) {
+        Logger.info(`[Worker] Parent process died (ppid changed from ${this.parentPid} to ${currentPpid}), cleaning up and exiting...`);
+        this.stopParentMonitor();
+        this.cleanup();
+        process.exit(0);
+      }
+      
+      // Additional check: try to verify parent is still alive using kill(pid, 0)
+      // This sends no signal but checks if process exists. To know more https://man7.org/linux/man-pages/man2/kill.2.html
+      try {
+        process.kill(this.parentPid, 0);
+      } catch (err: any) {
+        // ESRCH means process doesn't exist
+        if (err.code === 'ESRCH') {
+          Logger.info(`[Worker] Parent process ${this.parentPid} no longer exists, cleaning up and exiting...`);
+          this.stopParentMonitor();
+          this.cleanup();
+          process.exit(0);
+        }
+      }
+    }, PARENT_CHECK_INTERVAL_MS);
+
+    // Don't let this interval keep the process alive
+    this.parentCheckInterval.unref();
+  }
+
+  /**
+   * Stop the parent monitoring interval
+   */
+  private stopParentMonitor(): void {
+    if (this.parentCheckInterval) {
+      clearInterval(this.parentCheckInterval);
+      this.parentCheckInterval = null;
+    }
   }
 
   private async getTunnelConfig(msg: Extract<WorkerMessage, { type: workerMessageType.GetTunnelConfig }>) {
