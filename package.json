@@ -1,6 +1,6 @@
 {
   "name": "@pinggy/pinggy",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Pinggy SDK for Nodejs",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -52,8 +52,7 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "^2.0.0",
     "node-gyp": "^12.1.0",
-    "shlex": "^2.1.2",
-    "uuid": "^13.0.0"
+    "shlex": "^2.1.2"
   },
   "publishConfig": {
     "access": "public"
