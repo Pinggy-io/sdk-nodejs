@@ -8,11 +8,9 @@ export enum LogLevel {
 }
 
 export class Logger {
-  private static logFilePath: string = path.join(
-    __dirname,
-    "../../logs/pinggy.log"
-  );
-  private static logDir: string = path.dirname(Logger.logFilePath);
+  // Default to null - only write to file if explicitly provided via setDebugEnabled
+  private static logFilePath: string | null = null;
+  private static logDir: string | null = null;
 
   // Debug state management
   private static debugEnabled: boolean = false;
@@ -35,9 +33,20 @@ export class Logger {
     return Logger.debugEnabled;
   }
 
-  private static ensureLogDirectory(): void {
-    if (!fs.existsSync(Logger.logDir)) {
-      fs.mkdirSync(Logger.logDir, { recursive: true });
+  private static ensureLogDirectory(): boolean {
+    // Skip directory creation if no log path is set 
+    if (!Logger.logDir || !Logger.logFilePath) {
+      return false;
+    }
+    try {
+      if (!fs.existsSync(Logger.logDir)) {
+        fs.mkdirSync(Logger.logDir, { recursive: true });
+      }
+      return true;
+    } catch (err) {
+      // In PKG environment, directory creation may fail
+      // Fall back to stdout only
+      return false;
     }
   }
 
@@ -79,12 +88,14 @@ export class Logger {
     const levelName = LogLevel[level];
     const logMessage = `[${timestamp}] [${levelName.toUpperCase()}] [${location}] ${message}${errorMessage}\n`;
 
-    // Ensure log directory exists before writing
-    Logger.ensureLogDirectory();
-
-    fs.appendFile(Logger.logFilePath, logMessage, (err) => {
-      if (err) console.error("Failed to write to log file:", err);
-    });
+    // Only write to file if log path is set and directory is ensured
+    const canWriteToFile = Logger.logFilePath && Logger.ensureLogDirectory();
+    
+    if (canWriteToFile) {
+      fs.appendFile(Logger.logFilePath!, logMessage, (err) => {
+        if (err) console.error("Failed to write to log file:", err);
+      });
+    }
 
     const color = Logger.getColor(level);
     const reset = "\x1b[0m";
