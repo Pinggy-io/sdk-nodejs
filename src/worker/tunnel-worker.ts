@@ -161,6 +161,14 @@ class TunnelWorker {
         this.forwardCallback(CallbackType.TunnelEstablished, { message, urls }),
       tunnelForwardingChanged: (message: string, address?: string[]) =>
         this.forwardCallback(CallbackType.ForwardingChanged, { message, address }),
+      willReconnect: (error: string, messages: string[]) =>
+        this.forwardCallback(CallbackType.WillReconnect, { error, messages }),
+      reconnecting: (retryCnt: number) =>
+        this.forwardCallback(CallbackType.Reconnecting, { retryCnt }),
+      reconnectionCompleted: (urls: string[]) =>
+        this.forwardCallback(CallbackType.ReconnectionCompleted, { urls }),
+      reconnectionFailed: (retryCnt: number) =>
+        this.forwardCallback(CallbackType.ReconnectionFailed, { retryCnt }),
     };
 
     this.tunnel.setUsageUpdateCallback(callbacks.usageUpdate);
@@ -169,6 +177,10 @@ class TunnelWorker {
     this.tunnel.setAdditionalForwardingCallback(callbacks.tunnelAdditionalForwarding)
     this.tunnel.setTunnelEstablishedCallback(callbacks.tunnelEstablishedCallback);
     this.tunnel.setOnTunnelForwardingChanged(callbacks.tunnelForwardingChanged);
+    this.tunnel.setWillReconnectCallback(callbacks.willReconnect);
+    this.tunnel.setReconnectingCallback(callbacks.reconnecting);
+    this.tunnel.setReconnectionCompletedCallback(callbacks.reconnectionCompleted);
+    this.tunnel.setReconnectionFailedCallback(callbacks.reconnectionFailed);
   }
 
   /**

@@ -329,6 +329,54 @@ export class TunnelInstance {
   }
 
   /**
+  * Sets a callback function to receive will-reconnect events.
+  * Called when the tunnel disconnects and is about to start reconnecting.
+  *
+  * @group Callbacks
+  * @param {function} callback - The callback function to receive will-reconnect events.
+  * @returns {void}
+  */
+  public setWillReconnectCallback(callback: CallbackMap[CallbackType.WillReconnect]): void {
+    this.setCallback(CallbackType.WillReconnect, callback);
+  }
+
+  /**
+  * Sets a callback function to receive reconnecting events.
+  * Called for each reconnection attempt with the current retry count.
+  *
+  * @group Callbacks
+  * @param {function} callback - The callback function to receive reconnecting events.
+  * @returns {void}
+  */
+  public setReconnectingCallback(callback: CallbackMap[CallbackType.Reconnecting]): void {
+    this.setCallback(CallbackType.Reconnecting, callback);
+  }
+
+  /**
+  * Sets a callback function to receive reconnection-completed events.
+  * Called when reconnection succeeds with the new tunnel URLs.
+  *
+  * @group Callbacks
+  * @param {function} callback - The callback function to receive reconnection-completed events.
+  * @returns {void}
+  */
+  public setReconnectionCompletedCallback(callback: CallbackMap[CallbackType.ReconnectionCompleted]): void {
+    this.setCallback(CallbackType.ReconnectionCompleted, callback);
+  }
+
+  /**
+  * Sets a callback function to receive reconnection-failed events.
+  * Called when all reconnection attempts are exhausted.
+  *
+  * @group Callbacks
+  * @param {function} callback - The callback function to receive reconnection-failed events.
+  * @returns {void}
+  */
+  public setReconnectionFailedCallback(callback: CallbackMap[CallbackType.ReconnectionFailed]): void {
+    this.setCallback(CallbackType.ReconnectionFailed, callback);
+  }
+
+  /**
    * Checks if the tunnel is currently active.
    *
    * Delegates to {@link Tunnel#tunnelIsActive}.

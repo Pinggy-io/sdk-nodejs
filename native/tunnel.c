@@ -1426,6 +1426,79 @@ napi_value TunnelSetReconnectionFailedCallback(napi_env env, napi_callback_info 
     return js_result;
 }
 
+void on_reconnecting_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_uint16_t retry_cnt)
+{
+    napi_status status;
+    CallbackData *cb_data = (CallbackData *)user_data;
+    NAPI_CHECK_CONDITION_RETURN_VOID(NULL, cb_data != NULL, "Callback data is NULL");
+
+    napi_env env = cb_data->env;
+    NAPI_CHECK_CONDITION_RETURN_VOID(NULL, env != NULL, "N-API environment is NULL");
+
+    napi_handle_scope scope;
+    status = napi_open_handle_scope(env, &scope);
+    NAPI_CHECK_STATUS_THROW_VOID(env, status, "Failed to open handle scope");
+
+    napi_value global;
+    status = napi_get_global(env, &global);
+    NAPI_CHECK_STATUS_THROW_VOID(env, status, "Failed to get global object");
+
+    napi_value callback;
+    status = napi_get_reference_value(env, cb_data->callback_ref, &callback);
+    NAPI_CHECK_STATUS_THROW_VOID(env, status, "Failed to get callback reference");
+
+    napi_value argv[2];
+    status = napi_create_uint32(env, (uint32_t)tunnel_ref, &argv[0]);
+    NAPI_CHECK_STATUS_THROW_VOID(env, status, "Failed to create tunnel argument");
+
+    status = napi_create_uint32(env, (uint32_t)retry_cnt, &argv[1]);
+    NAPI_CHECK_STATUS_THROW_VOID(env, status, "Failed to create retry count argument");
+
+    napi_value undefined;
+    napi_get_undefined(env, &undefined);
+    napi_value js_result;
+    status = napi_call_function(env, global, callback, 2, argv, &js_result);
+    NAPI_CHECK_STATUS_THROW_VOID(env, status, "Failed to call JavaScript callback");
+    PINGGY_DEBUG_RET(js_result);
+
+    napi_close_handle_scope(env, scope);
+}
+
+napi_value TunnelSetReconnectingCallback(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+
+    NAPI_CHECK_CONDITION_THROW(env, status == napi_ok && argc >= 2, "Wrong number of arguments");
+
+    uint32_t tunnelRef;
+    status = napi_get_value_uint32(env, args[0], &tunnelRef);
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid tunnel reference");
+
+    napi_valuetype cb_type;
+    napi_typeof(env, args[1], &cb_type);
+    NAPI_CHECK_CONDITION_THROW(env, cb_type == napi_function, "Callback must be a function");
+
+    CallbackData *cb_data = malloc(sizeof(CallbackData));
+    NAPI_CHECK_CONDITION_THROW(env, cb_data != NULL, "Failed to allocate callback data");
+
+    cb_data->env = env;
+    status = napi_create_reference(env, args[1], 1, &cb_data->callback_ref);
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Unable to create reference", free(cb_data));
+
+    pinggy_bool_t result = pinggy_tunnel_set_on_reconnecting_callback((pinggy_ref_t)tunnelRef, on_reconnecting_cb, cb_data);
+    NAPI_CHECK_CONDITION_THROW_AND_CLEANUP(env, result == pinggy_true, "Failed to set reconnecting callback",
+                                           {
+                                               napi_delete_reference(env, cb_data->callback_ref);
+                                               free(cb_data);
+                                           });
+
+    napi_value js_result;
+    napi_get_boolean(env, result, &js_result);
+    return js_result;
+}
+
 void on_will_reconnect_cb(pinggy_void_p_t user_data, pinggy_ref_t tunnel_ref, pinggy_const_char_p_t error, pinggy_len_t num_msgs, pinggy_char_p_p_t messages)
 {
     CallbackData *cb_data = (CallbackData *)user_data;
@@ -1512,6 +1585,7 @@ napi_value Init2(napi_env env, napi_value exports)
         tunnel_start_fn, tunnel_start_non_blocking_fn,
         tunnel_resume_fn, tunnel_stop_fn,
         tunnel_set_will_reconnect_callback_fn,
+        tunnel_set_reconnecting_callback_fn,
         tunnel_set_usage_update_callback_fn,
         tunnel_set_reconnection_completed_callback_fn,
         tunnel_set_reconnection_failed_callback_fn,
@@ -1589,6 +1663,9 @@ napi_value Init2(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, TunnelSetWillReconnectCallback, NULL, &tunnel_set_will_reconnect_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetOnWillReconnectCallback", tunnel_set_will_reconnect_callback_fn);
+
+    napi_create_function(env, NULL, 0, TunnelSetReconnectingCallback, NULL, &tunnel_set_reconnecting_callback_fn);
+    napi_set_named_property(env, exports, "tunnelSetOnReconnectingCallback", tunnel_set_reconnecting_callback_fn);
 
     napi_create_function(env, NULL, 0, TunnelSetReconnectionCompletedCallback, NULL, &tunnel_set_reconnection_completed_callback_fn);
     napi_set_named_property(env, exports, "tunnelSetOnReconnectionCompletedCallback", tunnel_set_reconnection_completed_callback_fn);

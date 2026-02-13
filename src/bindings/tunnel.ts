@@ -78,6 +78,10 @@ export class Tunnel implements ITunnel {
   private onAdditionalForwardingCallback: ((bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void) | null = null;
   private onTunnelEstablishedCallback: ((messsage: string, urls?: string[]) => void) | null = null;
   private onForwardingChangedCallback: ((message: string, address?: string[]) => void) | null = null;
+  private onWillReconnectCallback: ((error: string, messages: string[]) => void) | null = null;
+  private onReconnectingCallback: ((retryCnt: number) => void) | null = null;
+  private onReconnectionCompletedCallback: ((urls: string[]) => void) | null = null;
+  private onReconnectionFailedCallback: ((retryCnt: number) => void) | null = null;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -251,6 +255,59 @@ export class Tunnel implements ITunnel {
         callback :(tunnelRef: number,  address?: string[]) => {
         Logger.info(`Tunnel forwarding changed:, ${address}`);
         this.onForwardingChangedCallback?.("Tunnel forwarding changed", address);
+        }
+      },
+      {
+        setter: 'tunnelSetOnWillReconnectCallback',
+        callback: (tunnelRef: number, error: string, messages: string[]) => {
+          Logger.info(`Tunnel will reconnect: error: ${error}`);
+          if (this.onWillReconnectCallback) {
+            try {
+              this.onWillReconnectCallback(error, messages);
+            } catch (cbErr) {
+              Logger.error("Error in onWillReconnectCallback:", cbErr as Error);
+            }
+          }
+        }
+      },
+      {
+        setter: 'tunnelSetOnReconnectingCallback',
+        callback: (tunnelRef: number, retryCnt: number) => {
+          Logger.info(`Tunnel reconnecting attempt: ${retryCnt}`);
+          if (this.onReconnectingCallback) {
+            try {
+              this.onReconnectingCallback(retryCnt);
+            } catch (cbErr) {
+              Logger.error("Error in onReconnectingCallback:", cbErr as Error);
+            }
+          }
+        }
+      },
+      {
+        setter: 'tunnelSetOnReconnectionCompletedCallback',
+        callback: (tunnelRef: number, urls: string[]) => {
+          Logger.info(`Tunnel reconnection completed: ${urls.join(", ")}`);
+          this._urls = urls;
+          if (this.onReconnectionCompletedCallback) {
+            try {
+              this.onReconnectionCompletedCallback(urls);
+            } catch (cbErr) {
+              Logger.error("Error in onReconnectionCompletedCallback:", cbErr as Error);
+            }
+          }
+        }
+      },
+      {
+        setter: 'tunnelSetOnReconnectionFailedCallback',
+        callback: (tunnelRef: number, retryCnt: number) => {
+          Logger.error(`Tunnel reconnection failed after ${retryCnt} attempts`);
+          if (this.onReconnectionFailedCallback) {
+            try {
+              this.onReconnectionFailedCallback(retryCnt);
+            } catch (cbErr) {
+              Logger.error("Error in onReconnectionFailedCallback:", cbErr as Error);
+            }
+          }
         }
       },
     ];
@@ -531,6 +588,22 @@ export class Tunnel implements ITunnel {
 
   public setOnTunnelForwardingChanged(callback: (message: string, urls?: string[]) => void) {
     this.onForwardingChangedCallback = callback;
+  }
+
+  public setWillReconnectCallback(callback: (error: string, messages: string[]) => void): void {
+    this.onWillReconnectCallback = callback;
+  }
+
+  public setReconnectingCallback(callback: (retryCnt: number) => void): void {
+    this.onReconnectingCallback = callback;
+  }
+
+  public setReconnectionCompletedCallback(callback: (urls: string[]) => void): void {
+    this.onReconnectionCompletedCallback = callback;
+  }
+
+  public setReconnectionFailedCallback(callback: (retryCnt: number) => void): void {
+    this.onReconnectionFailedCallback = callback;
   }
 
   public getStatus(): TunnelStatus {

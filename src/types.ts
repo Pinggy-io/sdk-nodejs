@@ -296,6 +296,11 @@ export interface PinggyNative {
     tunnelRef: number,
     callback: (tunnelRef: number, urls: string[]) => void
   ): void;
+  /** Set the callback for each reconnection attempt. */
+  tunnelSetOnReconnectingCallback(
+    tunnelRef: number,
+    callback: (tunnelRef: number, retryCnt: number) => void
+  ): void;
   /** Set the callback for will reconnect event. */
   tunnelSetOnWillReconnectCallback(
     tunnelRef: number,
@@ -498,6 +503,10 @@ export enum CallbackType {
   TunnelAdditionalForwarding = "tunnelAdditionalForwarding",
   TunnelEstablished = "tunnelEstablished",
   ForwardingChanged = "tunnelForwardingChanged",
+  WillReconnect = "tunnelWillReconnect",
+  Reconnecting = "tunnelReconnecting",
+  ReconnectionCompleted = "tunnelReconnectionCompleted",
+  ReconnectionFailed = "tunnelReconnectionFailed",
 }
 
 /**
@@ -536,6 +545,19 @@ export type CallbackPayloadMap = {
   [CallbackType.ForwardingChanged]: {
     message: string;
     address?: string[];
+  };
+  [CallbackType.WillReconnect]: {
+    error: string;
+    messages: string[];
+  };
+  [CallbackType.Reconnecting]: {
+    retryCnt: number;
+  };
+  [CallbackType.ReconnectionCompleted]: {
+    urls: string[];
+  };
+  [CallbackType.ReconnectionFailed]: {
+    retryCnt: number;
   };
 };
 
