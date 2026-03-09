@@ -1,4 +1,4 @@
-import { PinggyOptions, PinggyOptionsType } from "./pinggyOptions.js"
+import { TunnelConfiguration, TunnelConfigurationV1 } from "./tunnelConfiguration.js"
 import { TunnelWorkerManager } from "./worker/tunnel-worker-manager.js";
 import { Logger, LogLevel } from "./utils/logger.js"
 import { Tunnel } from "./bindings/tunnel.js";
@@ -78,11 +78,11 @@ export class TunnelInstance {
    * @returns 
    */
 
-  public static async create(options: PinggyOptionsType): Promise<TunnelInstance> {
+  public static async create(options: TunnelConfigurationV1): Promise<TunnelInstance> {
 
     // If the worker fails, TunnelWorkerManager.create will throw, and the error 
     // will be caught by the outer 'try/catch'.
-    const workerManager = await TunnelWorkerManager.create(new PinggyOptions(options));
+    const workerManager = await TunnelWorkerManager.create(new TunnelConfiguration(options));
 
     // Now that the worker is guaranteed to be ready
     const instance = new TunnelInstance(workerManager);
@@ -689,10 +689,10 @@ export class TunnelInstance {
   * Extracts values from the instance and parses argument strings for advanced options.
   *
   * @group Configuration
-  * @returns {PinggyOptionsType | null} The tunnel configuration, or null if unavailable.
+  * @returns {TunnelConfigurationV1 | null} The tunnel configuration, or null if unavailable.
   */
-  public async getConfig(): Promise<PinggyOptionsType | null> {
+  public async getConfig(): Promise<TunnelConfigurationV1 | null> {
     const result = await this.workerManager.call("tunnel", "", workerMessageType.GetTunnelConfig);
-    return result as PinggyOptions | null;
+    return result as TunnelConfiguration | null;
   }
 }

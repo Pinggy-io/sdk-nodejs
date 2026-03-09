@@ -8,7 +8,7 @@ import {
   PinggyError,
   initExceptionHandling,
 } from "../bindings/exception.js";
-import { BasicAuthItem, HeaderModification, PinggyOptions, PinggyOptionsType, TunnelType } from "../pinggyOptions.js";
+import { BasicAuthItem, HeaderModification, TunnelConfiguration, TunnelConfigurationV1, TunnelType } from "../tunnelConfiguration.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createRequire } from "module";
@@ -45,7 +45,7 @@ class TunnelWorker {
       initExceptionHandling(this.addon);
       this.addon.setLogEnable(false);
 
-      const options = new PinggyOptions(pinggyOptions);
+      const options = new TunnelConfiguration(pinggyOptions);
       this.config = new Config(this.addon, options);
 
       if (!this.config.configRef) throw new Error("Failed to initialize config.");
@@ -298,8 +298,8 @@ class TunnelWorker {
     this.sendResponse(id, tunnelConfig);
   }
 
-  private async getConfig(): Promise<PinggyOptionsType | null> {
-    const options: PinggyOptionsType = { optional: {} };
+  private async getConfig(): Promise<TunnelConfigurationV1 | null> {
+    const options: TunnelConfigurationV1 = { optional: {} };
     if (!this.config || !this.tunnel) return null;
     // Run all independent async calls in parallel
     const [

@@ -1,6 +1,6 @@
 import { Logger } from "../utils/logger.js";
 import { PinggyNative, Config as IConfig } from "../types.js";
-import { PinggyOptions, PinggyOptionsType } from "../pinggyOptions.js";
+import { TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
 import { PinggyError } from "./exception.js";
 
 /**
@@ -19,20 +19,20 @@ export class Config implements IConfig {
   /**
    * Creates a new Config instance and initializes it with the provided options.
    * @param addon - The native addon instance.
-   * @param {PinggyOptionsType} [options={}] - The tunnel configuration options.
+   * @param {TunnelConfigurationV1} [options={}] - The tunnel configuration options.
    */
-  constructor(addon: PinggyNative, options: PinggyOptionsType) {
+  constructor(addon: PinggyNative, options: TunnelConfigurationV1) {
     this.addon = addon;
-    this.configRef = this.initialize(new PinggyOptions(options));
+    this.configRef = this.initialize(new TunnelConfiguration(options));
   }
 
   /**
    * Initializes the configuration in the native addon and applies all options.
    * @private
-   * @param {PinggyOptions} options - The tunnel configuration options.
+   * @param {TunnelConfiguration} options - The tunnel configuration options.
    * @returns {number} The reference to the native config object.
    */
-  private initialize(options: PinggyOptions): number {
+  private initialize(options: TunnelConfiguration): number {
     try {
       const configRef = this.addon.createConfig();
       Logger.info(`Created config with reference: ${configRef}`);
