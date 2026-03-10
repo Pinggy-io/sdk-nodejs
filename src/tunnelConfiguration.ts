@@ -53,6 +53,17 @@ export type ForwardingEntry = {
   type?: TunnelType;              // "http", "tcp", "tls", "udp", "tlstcp"
 }
 
+export type RemoteManagementConfig = {
+  /**
+   * Remote management server URL. e.g. "wss://dashboard.pinggy.io"
+   */
+  serverUrl: string;
+  /**
+   * Authentication token for remote management.
+   */
+  apiKey: string;
+};
+
 /**
  * Advanced SSL and additional options for Pinggy tunnels.
  * 
@@ -85,21 +96,13 @@ export type Optional = {
    */
   manage?: string;
   /**
-   * Used in the `pinggy-cli` to specify remote management server token
+   * Used in the `pinggy-cli` to specify remote management configs
    */
-  remoteManagement?: string;
+  remoteManagement?: RemoteManagementConfig;
   /**
    * Used in the `pinggy-cli` to enable/disable TUI
    */
-  NoTui?: boolean;
-  /**
-   * Used in the `pinggy-cli` to create the configuration file based on the options provided here
-   */
-  saveconf?: string;
-  /**
-   * Used in the `pinggy-cli`. Specified configuration file is used as base. Other options will be used to override this file
-   */
-  conf?: string;
+  noTui?: boolean;
 }
 
 export const enum TunnelType {
