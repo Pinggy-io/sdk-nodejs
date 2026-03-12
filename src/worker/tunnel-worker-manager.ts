@@ -1,7 +1,7 @@
 import { Worker } from "worker_threads";
 import path from "path/win32";
 import { Logger, LogLevel } from "../utils/logger.js";
-import { PinggyOptions } from "../pinggyOptions.js";
+import { TunnelConfiguration } from "../tunnelConfiguration.js";
 import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types.js";
 import { getRandomId } from "../utils/getRandomId.js";
 import { fileURLToPath } from "url";
@@ -29,14 +29,14 @@ export class TunnelWorkerManager {
     private callbackHandler?: (event: CallbackType, data: any) => void;
     public workerErrorCallback?: Function;
 
-    public static async create(pinggyOptions: PinggyOptions): Promise<TunnelWorkerManager> {
+    public static async create(pinggyOptions: TunnelConfiguration): Promise<TunnelWorkerManager> {
         const manager = new TunnelWorkerManager(pinggyOptions);
         // Wait for the worker to signal it's ready or throw an error.
         await manager.ensureReady(); 
         return manager;
     }
 
-    private constructor(pinggyOptions: PinggyOptions) {
+    private constructor(pinggyOptions: TunnelConfiguration) {
         const workerPath = fileURLToPath(new URL('./worker/tunnel-worker.cjs', import.meta.url));
         this.worker = new Worker(workerPath, { workerData: { options: pinggyOptions } });
 

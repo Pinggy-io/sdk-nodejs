@@ -2,7 +2,7 @@ import { Logger } from "../utils/logger.js";
 import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType, tunnelStateToString, TunnelState } from "../types.js";
 import { PinggyError } from "./exception.js";
 import { TunnelUsage } from "./tunnel-usage.js";
-import { PinggyOptions } from "../pinggyOptions.js";
+import { TunnelConfiguration } from "../tunnelConfiguration.js";
 import { AdditionalForwardingManager } from "../utils/additionalForwardingManager.js";
 
 type Task = () => void;
@@ -58,7 +58,7 @@ export class Tunnel implements ITunnel {
   public status: TunnelStatus;
 
   private readonly addon: PinggyNative;
-  private readonly pinggyOptions: PinggyOptions;
+  private readonly pinggyOptions: TunnelConfiguration;
 
 
   private tunnelEstablished: Promise<void>;
@@ -88,7 +88,7 @@ export class Tunnel implements ITunnel {
    * @param {PinggyNative} addon - The native addon instance.
    * @param {number} configRef - The reference to the native config object.
    */
-  constructor(addon: PinggyNative, configRef: number, pinggyOptions: PinggyOptions) {
+  constructor(addon: PinggyNative, configRef: number, pinggyOptions: TunnelConfiguration) {
     this.addon = addon;
     this.tunnelRef = this.initialize(configRef);
     this.authenticated = false;

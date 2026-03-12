@@ -53,6 +53,17 @@ export type ForwardingEntry = {
   type?: TunnelType;              // "http", "tcp", "tls", "udp", "tlstcp"
 }
 
+export type RemoteManagementConfig = {
+  /**
+   * Remote management server URL. e.g. "wss://dashboard.pinggy.io"
+   */
+  serverUrl: string;
+  /**
+   * Authentication token for remote management.
+   */
+  apiKey: string;
+};
+
 /**
  * Advanced SSL and additional options for Pinggy tunnels.
  * 
@@ -76,6 +87,22 @@ export type Optional = {
    * @example "--tcp"
    */
   additionalArguments?: string;
+  /**
+   * Used in the `pinggy-cli` to specify file path
+   */
+  serve?: string;
+  /**
+   * Used in the `pinggy-cli` to specify remote management server url
+   */
+  manage?: string;
+  /**
+   * Used in the `pinggy-cli` to specify remote management configs
+   */
+  remoteManagement?: RemoteManagementConfig;
+  /**
+   * Used in the `pinggy-cli` to enable/disable TUI
+   */
+  noTui?: boolean;
 }
 
 export const enum TunnelType {
@@ -107,11 +134,36 @@ export type BasicAuthItem = { username: string; password: string };
  * };
  * ```
  */
-export type PinggyOptionsType = {
+export type TunnelConfigurationV1 = {
+
   /**
- * Server address to connect to.
- * @example "connect.pinggy.io"
- */
+   * Version of the Tunnel Config Spec. e.g. 1.0.
+   */
+  version?: string;
+  /**
+   * Name of the tunnel configuration. e.g. my RDP tunnel
+   */
+  name?: string;
+  /**
+   * id of the config to map a configuration to a tunnel - used by app and remote management
+   */
+  configId?: string;
+  /**
+   * If false, adds -o StrictHostKeyChecking=no in SSH. Ignored by SDKs.
+   **/
+  hostKeyCheck?: boolean;
+  /**
+   * One of "bash", "cmd", "powershell", "zsh". Ignored by SDKs.
+   **/
+  platformValue?: string;
+  /**
+   * If true, display QR code in SSH command. Ignored by SDKs.
+   */
+  isQRCode?: boolean;
+  /**
+  * Server address to connect to.
+  * @example "connect.pinggy.io"
+  */
   serverAddress?: string;
   /**
    * Authentication token for the tunnel.
@@ -197,9 +249,13 @@ export type PinggyOptionsType = {
    * @default 20
    */
   maxReconnectAttempts?: number;
+  /**
+   *  Keep-alive interval for SSH and heartbeat for SDK, in seconds. Set to 0 to disable.
+   */
+  keepAliveInterval?: number;
 };
 
-export class PinggyOptions implements PinggyOptionsType {
+export class TunnelConfiguration implements TunnelConfigurationV1 {
   public forwarding?: string | ForwardingEntry[] | null;
   public token?: string;
   public serverAddress?: string;
@@ -231,7 +287,7 @@ export class PinggyOptions implements PinggyOptionsType {
   private ipv6CidrRegex = /^((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::1|::)\/(?:[0-9]|[1-9]\d|1[01]\d|12[0-8])$/;
 
 
-  constructor(options: PinggyOptionsType = {}) {
+  constructor(options: TunnelConfigurationV1 = {}) {
     this.forwarding = options.forwarding;
     this.token = options.token;
     this.serverAddress = options.serverAddress;
@@ -300,7 +356,7 @@ export class PinggyOptions implements PinggyOptionsType {
         const maybeUrl = new URL(primaryAddress);
         const proto = maybeUrl.protocol.toLowerCase();
         if (proto === "https:") {
-          return PinggyOptions.getHostnameFromUrl(maybeUrl);
+          return TunnelConfiguration.getHostnameFromUrl(maybeUrl);
         }
       } catch {
         // Not a URL, cannot infer TLS info

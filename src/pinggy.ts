@@ -1,5 +1,5 @@
 import { PinggyNative } from "./types.js";
-import { PinggyOptionsType, PinggyOptions } from "./pinggyOptions.js";
+import { TunnelConfigurationV1, TunnelConfiguration } from "./tunnelConfiguration.js";
 import { TunnelInstance } from "./tunnel-instance.js";
 import { Logger, LogLevel } from "./utils/logger.js";
 import path from "path";
@@ -55,8 +55,8 @@ export class Pinggy {
    * @see {@link TunnelInstance}
    * @see {@link pinggy}
    */
-  public async createTunnel(options: PinggyOptionsType): Promise<TunnelInstance> {
-    const pinggyOptions = new PinggyOptions(options);
+  public async createTunnel(options: TunnelConfigurationV1): Promise<TunnelInstance> {
+    const pinggyOptions = new TunnelConfiguration(options);
     const tunnel = await TunnelInstance.create(pinggyOptions);
     this.tunnels.add(tunnel);
     // If debug was previously enabled, enable it inside this tunnel’s worker
@@ -69,12 +69,12 @@ export class Pinggy {
   /**
    * Creates and starts a new tunnel with the given options.
    *
-   * @param {PinggyOptionsType} options - The tunnel configuration options.
+   * @param {TunnelConfigurationV1} options - The tunnel configuration options.
    * @returns {Promise<TunnelInstance>} Resolves with the started tunnel instance.
    * @see {@link TunnelInstance#start}
    * @see {@link pinggy}
    */
-  public async forward(options: PinggyOptionsType): Promise<TunnelInstance> {
+  public async forward(options: TunnelConfigurationV1): Promise<TunnelInstance> {
     const tunnel = await this.createTunnel(options);
     return await tunnel.start().then(() => tunnel);
   }
