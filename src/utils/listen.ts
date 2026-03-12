@@ -1,4 +1,4 @@
-import { pinggy, PinggyOptions, TunnelInstance } from "../index.js";
+import { pinggy, TunnelConfigurationV1, TunnelInstance } from "../index.js";
 import * as http from "http";
 
 /**
@@ -30,7 +30,7 @@ import * as http from "http";
  */
 export async function listen(
   app: http.Server | any,
-  options?: PinggyOptions
+  options?: TunnelConfigurationV1
 ): Promise<http.Server & { tunnel: TunnelInstance }> {
   let server: http.Server | undefined = undefined;
   let startedHere = false;
@@ -90,7 +90,7 @@ export async function listen(
   const port = addr.port;
 
   // Merge options with detected port
-  const tunnelOptions: PinggyOptions = {
+  const tunnelOptions: TunnelConfigurationV1 = {
     ...options,
     forwarding: `localhost:${port}`,
   };
