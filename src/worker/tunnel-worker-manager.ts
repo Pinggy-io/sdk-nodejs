@@ -81,7 +81,7 @@ export class TunnelWorkerManager {
         if (type) {
             msgType = type;
         }
-        Logger.info(`[Main] Sending method call to worker thread method:${method},target:${target},type:${type},args${args},Id:${id}`)
+        Logger.debug(`[Main] Sending method call to worker thread method:${method},target:${target},type:${type},args${args},Id:${id}`)
         return new Promise<any>((resolve, reject) => {
             this.pendingCalls.set(id, { resolve, reject });
             const msg = {
