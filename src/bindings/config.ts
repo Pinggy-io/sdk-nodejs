@@ -85,9 +85,7 @@ export class Config implements IConfig {
         Logger.info(`Setting config argument: ${argument}`);
         this.addon.configSetArgument(configRef, argument);
       }
-
-
-      this.addon.configSetServerAddress(configRef, serverAddress);
+     
 
       this.safeSet(
         () => {
@@ -388,10 +386,11 @@ export class Config implements IConfig {
    * Sets the server address for the tunnel.
    * @param {string} [address="a.pinggy.io:443"] - The server address.
    */
-  public setServerAddress(address: string = "a.pinggy.io:443"): void {
+  public setServerAddress(serverAddress: string ): void {
     try {
       if (this.configRef)
-        this.addon.configSetServerAddress(this.configRef, address);
+        this.addon.configSetServerAddress(this.configRef, serverAddress);
+      Logger.info(`Server address set to: ${serverAddress}`);
     } catch (e) {
       Logger.error("Error setting server address:", e as Error);
     }

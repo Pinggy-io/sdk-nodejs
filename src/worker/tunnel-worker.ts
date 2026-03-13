@@ -1,5 +1,5 @@
 import { parentPort, workerData } from "worker_threads";
-import { CallbackPayloadMap, CallbackType, PinggyNative, TunnelUsageType, WorkerMessage, workerMessageType } from "../types.js";
+import { CallbackPayloadMap, CallbackType, PinggyNative, TunnelUsageType, TunnelWorkerLogConfig, WorkerMessage, workerMessageType } from "../types.js";
 import { Config } from "../bindings/config.js";
 import { Tunnel } from "../bindings/tunnel.js";
 import { Logger, LogLevel } from "../utils/logger.js";
@@ -8,7 +8,7 @@ import {
   PinggyError,
   initExceptionHandling,
 } from "../bindings/exception.js";
-import { BasicAuthItem, HeaderModification, TunnelConfiguration, TunnelConfigurationV1, TunnelType } from "../tunnelConfiguration.js";
+import { BasicAuthItem, HeaderModification, TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createRequire } from "module";
@@ -24,13 +24,34 @@ class TunnelWorker {
   private registeredCallbacks: Set<CallbackType> = new Set();
   private parentPid: number;
   private parentCheckInterval: ReturnType<typeof setInterval> | null = null;
+  private initialLogConfig: TunnelWorkerLogConfig;
 
-  constructor(rawTunnelOptions: any) {
-    // Store the parent PID at startup to detect if parent dies
+  constructor(rawTunnelOptions: any, logConfig?: TunnelWorkerLogConfig) {
     this.parentPid = process.ppid;
+    this.initialLogConfig = {
+      enabled: logConfig?.enabled ?? false,
+      logLevel: logConfig?.logLevel ?? LogLevel.INFO,
+      logFilePath: logConfig?.logFilePath ?? null,
+    };
+
+    this.applyJsLoggingConfig();
     this.initialize(rawTunnelOptions);
     this.registerMessageHandlers();
     this.startParentMonitor();
+  }
+
+  private applyJsLoggingConfig(): void {
+    Logger.setDebugEnabled(
+      this.initialLogConfig.enabled,
+      this.initialLogConfig.logFilePath
+    );
+    Logger.setLevel(this.initialLogConfig.logLevel);
+  }
+
+  private applyNativeLoggingConfig(): void {
+    if (!this.addon) return;
+    this.addon.setLogEnable(this.initialLogConfig.enabled);
+    this.addon.setDebugLogging(this.initialLogConfig.enabled);
   }
 
   /**
@@ -43,7 +64,9 @@ class TunnelWorker {
       if (!this.addon) throw new Error("Failed to load native addon.");
 
       initExceptionHandling(this.addon);
-      this.addon.setLogEnable(false);
+
+      // Apply worker/native logging BEFORE Config creation
+      this.applyNativeLoggingConfig();
 
       const options = new TunnelConfiguration(pinggyOptions);
       this.config = new Config(this.addon, options);
@@ -52,15 +75,12 @@ class TunnelWorker {
 
       this.tunnel = new Tunnel(this.addon, this.config.configRef, options);
 
-      if (!this.tunnel) throw new Error("Failed to initialize tunnel.")
+      if (!this.tunnel) throw new Error("Failed to initialize tunnel.");
 
-      // Attach native callbacks
       this.attachCallbacks();
 
-      // Inform main thread initialization succeeded
       this.postMessage({ type: workerMessageType.Init, success: true, error: null });
     } catch (e: any) {
-
       const pinggyError = this.convertToPinggyError(e);
       Logger.error("TunnelWorker init error:", pinggyError);
       this.postMessage({
@@ -237,11 +257,19 @@ class TunnelWorker {
     parentPort.postMessage(msg);
   }
 
-  private setDebugLogging(enabled: boolean = false, logLevel: LogLevel = LogLevel.INFO, logFilePath: string | null): void {
-    this.addon?.setLogEnable(enabled)
-    this.addon?.setDebugLogging(enabled)
-    Logger.setDebugEnabled(enabled, logFilePath)
-    Logger.setLevel(logLevel);
+  private setDebugLogging(
+    enabled: boolean = false,
+    logLevel: LogLevel = LogLevel.INFO,
+    logFilePath: string | null
+  ): void {
+    this.initialLogConfig = {
+      enabled,
+      logLevel,
+      logFilePath: logFilePath ?? null,
+    };
+
+    this.applyJsLoggingConfig();
+    this.applyNativeLoggingConfig();
   }
 
   /**
@@ -422,5 +450,5 @@ class TunnelWorker {
 }
 
 // ======== Worker Entrypoint ======== //
-const { options } = workerData;
-new TunnelWorker(options);
+const { options, logConfig } = workerData;
+new TunnelWorker(options, logConfig);
