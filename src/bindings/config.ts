@@ -85,6 +85,14 @@ export class Config implements IConfig {
         Logger.info(`Setting config argument: ${argument}`);
         this.addon.configSetArgument(configRef, argument);
       }
+
+      this.safeSet(
+        ()=>{
+           this.addon.configSetServerAddress(configRef, serverAddress);
+        },
+        "Server address configuration",
+        `Server address set to: ${serverAddress}`
+      )
      
 
       this.safeSet(
