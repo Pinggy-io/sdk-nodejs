@@ -1,11 +1,11 @@
-import { pinggy, PinggyOptions } from "@pinggy/pinggy";
+import { pinggy, TunnelConfigurationV1 } from "@pinggy/pinggy";
 
 (async () => {
   console.log("=== Single Tunnel Example ===");
 
   try {
     // Simple tunnel creation with basic options
-    const options: PinggyOptions = {
+    const options: TunnelConfigurationV1 = {
       forwarding: "localhost:3000",
     };
 

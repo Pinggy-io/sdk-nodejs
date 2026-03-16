@@ -570,6 +570,9 @@ export type CallbackMap = {
 
 export type Callback<K extends CallbackType> = CallbackMap[K];
 
-
-
+export interface TunnelWorkerLogConfig {
+  enabled: boolean;
+  logLevel: LogLevel;
+  logFilePath: string | null;
+}
 

@@ -57,12 +57,14 @@ export class Pinggy {
    */
   public async createTunnel(options: TunnelConfigurationV1): Promise<TunnelInstance> {
     const pinggyOptions = new TunnelConfiguration(options);
-    const tunnel = await TunnelInstance.create(pinggyOptions);
+
+    const tunnel = await TunnelInstance.create(pinggyOptions, {
+      enabled: Pinggy.debugEnabled,
+      logLevel: Pinggy.logLevel,
+      logFilePath: Pinggy.logFilePath,
+    });
+
     this.tunnels.add(tunnel);
-    // If debug was previously enabled, enable it inside this tunnel’s worker
-    if (Pinggy.debugEnabled) {
-      tunnel.setDebugLogging(true, Pinggy.logLevel, Pinggy.logFilePath);
-    }
     return tunnel;
   }
 
@@ -120,13 +122,13 @@ export class Pinggy {
     Pinggy.logFilePath = logFilePath ?? null;
 
     // Set debug state for JavaScript Logger
-    Logger.setDebugEnabled(enabled, logFilePath);
+    Logger.setDebugEnabled(enabled, Pinggy.logFilePath);
 
     Pinggy.logLevel = logLevel ?? LogLevel.INFO;
-    Logger.setLevel(logLevel);
+    Logger.setLevel(Pinggy.logLevel);
 
     for (const tunnel of this.tunnels) {
-      tunnel.setDebugLogging(enabled, logLevel, logFilePath!);
+      tunnel.setDebugLogging(enabled, Pinggy.logLevel, Pinggy.logFilePath);
     }
   }
 

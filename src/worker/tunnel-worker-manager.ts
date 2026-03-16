@@ -2,7 +2,7 @@ import { Worker } from "worker_threads";
 import path from "path/win32";
 import { Logger, LogLevel } from "../utils/logger.js";
 import { TunnelConfiguration } from "../tunnelConfiguration.js";
-import { CallbackType, PendingCall, WorkerMessage, workerMessageType } from "../types.js";
+import { CallbackType, PendingCall, TunnelWorkerLogConfig, WorkerMessage, workerMessageType } from "../types.js";
 import { getRandomId } from "../utils/getRandomId.js";
 import { fileURLToPath } from "url";
 
@@ -29,16 +29,16 @@ export class TunnelWorkerManager {
     private callbackHandler?: (event: CallbackType, data: any) => void;
     public workerErrorCallback?: Function;
 
-    public static async create(pinggyOptions: TunnelConfiguration): Promise<TunnelWorkerManager> {
-        const manager = new TunnelWorkerManager(pinggyOptions);
+    public static async create(pinggyOptions: TunnelConfiguration, logConfig?: TunnelWorkerLogConfig): Promise<TunnelWorkerManager> {
+        const manager = new TunnelWorkerManager(pinggyOptions, logConfig);
         // Wait for the worker to signal it's ready or throw an error.
         await manager.ensureReady(); 
         return manager;
     }
 
-    private constructor(pinggyOptions: TunnelConfiguration) {
+    private constructor(pinggyOptions: TunnelConfiguration, logConfig?: TunnelWorkerLogConfig) {
         const workerPath = fileURLToPath(new URL('./worker/tunnel-worker.cjs', import.meta.url));
-        this.worker = new Worker(workerPath, { workerData: { options: pinggyOptions } });
+        this.worker = new Worker(workerPath, { workerData: { options: pinggyOptions, logConfig } });
 
         // First message from worker can either be Ready or InitError
         this.readyPromise = new Promise((resolve, reject) => {
@@ -81,7 +81,7 @@ export class TunnelWorkerManager {
         if (type) {
             msgType = type;
         }
-        Logger.info(`[Main] Sending method call to worker thread method:${method},target:${target},type:${type},args${args},Id:${id}`)
+        Logger.debug(`[Main] Sending method call to worker thread method:${method},target:${target},type:${type},args${args},Id:${id}`)
         return new Promise<any>((resolve, reject) => {
             this.pendingCalls.set(id, { resolve, reject });
             const msg = {

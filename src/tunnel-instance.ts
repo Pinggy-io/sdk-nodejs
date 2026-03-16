@@ -3,7 +3,8 @@ import { TunnelWorkerManager } from "./worker/tunnel-worker-manager.js";
 import { Logger, LogLevel } from "./utils/logger.js"
 import { Tunnel } from "./bindings/tunnel.js";
 import { Config } from "./bindings/config.js";
-import { Callback, CallbackMap, CallbackPayloadMap, CallbackType, TunnelState, TunnelStatus, TunnelUsageType, workerMessageType } from "./types.js";
+import { Callback, CallbackMap, CallbackPayloadMap, CallbackType, TunnelState, TunnelStatus, TunnelUsageType, TunnelWorkerLogConfig, workerMessageType } from "./types.js";
+
 
 
 /**
@@ -74,15 +75,16 @@ export class TunnelInstance {
    * Creates a new TunnelInstance with the specified options.
    * Internally creates a {@link TunnelWorkerManager}, {@link Config}, and {@link Tunnel}.
    * @param options 
+   * @param logConfig 
    * @public
    * @returns 
    */
 
-  public static async create(options: TunnelConfigurationV1): Promise<TunnelInstance> {
+  public static async create(options: TunnelConfigurationV1, logConfig?: TunnelWorkerLogConfig): Promise<TunnelInstance> {
 
     // If the worker fails, TunnelWorkerManager.create will throw, and the error 
     // will be caught by the outer 'try/catch'.
-    const workerManager = await TunnelWorkerManager.create(new TunnelConfiguration(options));
+    const workerManager = await TunnelWorkerManager.create(new TunnelConfiguration(options), logConfig);
 
     // Now that the worker is guaranteed to be ready
     const instance = new TunnelInstance(workerManager);
