@@ -100,7 +100,7 @@ export class Logger {
     const color = Logger.getColor(level);
     const reset = "\x1b[0m";
     const coloredLevel = color(`[${levelName}]`);
-    console.log(`${coloredLevel} ${message}${reset}`);
+    console.log(`${coloredLevel} ${location}] ${message}${reset}`);
 
     if (error) console.error(color(error.message));
   }

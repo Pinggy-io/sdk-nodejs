@@ -25,7 +25,7 @@ export type HeaderModification = {
   /**
    * The header value (optional, required for add/update).
    */
-  value?: string[];
+  value?: string[] | null;
 
   /**
    * The action to perform: add, remove, or update.

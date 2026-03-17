@@ -189,6 +189,8 @@ class TunnelWorker {
         this.forwardCallback(CallbackType.ReconnectionCompleted, { urls }),
       reconnectionFailed: (retryCnt: number) =>
         this.forwardCallback(CallbackType.ReconnectionFailed, { retryCnt }),
+      pollingError: (error: Error) =>
+        this.forwardCallback(CallbackType.PollingError, { error }),
     };
 
     this.tunnel.setUsageUpdateCallback(callbacks.usageUpdate);
@@ -201,6 +203,7 @@ class TunnelWorker {
     this.tunnel.setReconnectingCallback(callbacks.reconnecting);
     this.tunnel.setReconnectionCompletedCallback(callbacks.reconnectionCompleted);
     this.tunnel.setReconnectionFailedCallback(callbacks.reconnectionFailed);
+    this.tunnel.setPollingErrorCallback(callbacks.pollingError);
   }
 
   /**

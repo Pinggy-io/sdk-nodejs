@@ -82,6 +82,7 @@ export class Tunnel implements ITunnel {
   private onReconnectingCallback: ((retryCnt: number) => void) | null = null;
   private onReconnectionCompletedCallback: ((urls: string[]) => void) | null = null;
   private onReconnectionFailedCallback: ((retryCnt: number) => void) | null = null;
+  private onPollingErrorCallback: (( error: Error) => void) | null = null;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -378,7 +379,12 @@ export class Tunnel implements ITunnel {
         if (!ret) {
           // Only log error if tunnel was not intentionally stopped
           if (!this.intentionallyStopped) {
-            Logger.error("Tunnel error detected, stopping polling.");
+             const lastEx = this.addon.getLastException();
+            const error = lastEx 
+              ? new PinggyError(lastEx) 
+              : new Error("Tunnel error detected during polling.");
+            Logger.error("Tunnel error detected, stopping polling.", error);
+            this.notifyPollingError(error);
           }
           this.status = TunnelStatus.CLOSED;
           return; // STOP polling
@@ -410,6 +416,20 @@ export class Tunnel implements ITunnel {
 
     // kick it off
     poll();
+  }
+
+    private notifyPollingError(error: Error): void {
+    if (this.onPollingErrorCallback) {
+      try {
+        this.onPollingErrorCallback(error);
+      } catch (cbErr) {
+        Logger.error("Error in onPollingErrorCallback:", cbErr as Error);
+      }
+    }
+  }
+
+  public setPollingErrorCallback(callback: ( error: Error) => void): void {
+    this.onPollingErrorCallback = callback;
   }
 
   /**

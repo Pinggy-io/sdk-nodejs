@@ -128,7 +128,9 @@ export class TunnelWorkerManager {
                     const pending = this.pendingCalls.get(msg.id);
                     if (!pending) { return };
                     this.pendingCalls.delete(msg.id);
-                    if (msg.error) pending.reject(new Error(msg.error));
+                    if (msg.error){
+                        pending.reject(new Error(msg.error))
+                    }
                     else pending.resolve(msg.result);
                     break;
                 }
