@@ -274,6 +274,9 @@ export class TunnelInstance {
     this.setCallback(CallbackType.TunnelError, callback);
   }
 
+  public setPollingErrorCallback(callback: CallbackMap[CallbackType.PollingError]): void {
+    this.setCallback(CallbackType.PollingError, callback);
+  }
   /**
    * Sets a callback function to receive disconnected events.
    *

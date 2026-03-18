@@ -507,6 +507,7 @@ export enum CallbackType {
   Reconnecting = "tunnelReconnecting",
   ReconnectionCompleted = "tunnelReconnectionCompleted",
   ReconnectionFailed = "tunnelReconnectionFailed",
+  PollingError = "tunnelPollingError",
 }
 
 /**
@@ -558,6 +559,9 @@ export type CallbackPayloadMap = {
   };
   [CallbackType.ReconnectionFailed]: {
     retryCnt: number;
+  };
+  [CallbackType.PollingError]: {
+    error: Error;
   };
 };
 
