@@ -522,7 +522,7 @@ export class TunnelInstance {
    * Delegates to {@link Tunnel#GetTunnelState}.
    *
    * @group Configuration
-   * @returns {Promise<TunnelState>} The tunnel state as a string.
+   * @returns {Promise<TunnelState>} The tunnel state as a TunnelState.
    */
   public async GetTunnelState(): Promise<TunnelState> {
     const state = await this.activeTunnel.GetTunnelState();

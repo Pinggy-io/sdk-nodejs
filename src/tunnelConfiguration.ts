@@ -9,13 +9,13 @@ import { PinggyError } from "./bindings/exception.js";
  * @example
  * ```typescript
  * // Add a custom header
- * { key: "X-Custom-Header", value: "my-value", action: "add" }
+ * { key: "X-Custom-Header", value: ["my-value"], type: "add" }
  *
  * // Remove a header
- * { key: "X-Unwanted-Header", action: "remove" }
+ * { key: "X-Unwanted-Header", value: [], type: "remove" }
  *
  * // Update an existing header
- * { key: "User-Agent", value: "MyApp/1.0", action: "update" }
+ * { key: "User-Agent", value: ["MyApp/1.0"], type: "update" }
  * ```
  */
 export type HeaderModification = {
@@ -446,8 +446,28 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
         if (!header.key || header.key.trim() === "") {
           errors.push(`Header modification at index ${index} must have a key`);
         }
-        if ((header.type === "add" || header.type === "update") && (!header.value || header.value.length === 0)) {
+
+        // If provided, value must always be an array.
+        if (header.value !== undefined && header.value !== null && !Array.isArray(header.value)) {
+          errors.push(`Header modification at index ${index} must have 'value' as an array`);
+        }
+
+        if (
+          (header.type === "add" || header.type === "update") &&
+          (!Array.isArray(header.value) || header.value.length === 0)
+        ) {
           errors.push(`Header modification at index ${index} with type '${header.type}' must have a value`);
+        }
+
+        if (header.type === "remove" && (!Array.isArray(header.value) || header.value.length !== 0)) {
+          errors.push(`Header modification at index ${index} with type 'remove' must have an empty value array`);
+        }
+
+        if (
+          Array.isArray(header.value) &&
+          header.value.some((v) => typeof v !== "string" || v.trim() === "")
+        ) {
+          errors.push(`Header modification at index ${index} has invalid value entries`);
         }
       });
     }
