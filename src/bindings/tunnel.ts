@@ -105,6 +105,26 @@ export class Tunnel implements ITunnel {
     });
   }
 
+  private resolveTunnelStart(): void {
+    if (this.resolveTunnelEstablished) {
+      this.resolveTunnelEstablished();
+    }
+    this.resolveTunnelEstablished = null;
+    this.rejectTunnelEstablished = null;
+  }
+
+  private rejectTunnelStart(reason: Error): void {
+    if (this.primaryForwardingDone) {
+      return;
+    }
+
+    if (this.rejectTunnelEstablished) {
+      this.rejectTunnelEstablished(reason);
+    }
+    this.resolveTunnelEstablished = null;
+    this.rejectTunnelEstablished = null;
+  }
+
 
   // Generic operation executor
   private executeAddonOperation<T>(config: TunnelOperationConfig<T>): T {
@@ -202,6 +222,10 @@ export class Tunnel implements ITunnel {
           } catch (e) {
             // ignore
           }
+          if (!this.primaryForwardingDone && !this.pinggyOptions.autoReconnect) {
+            this.status = TunnelStatus.CLOSED;
+            this.rejectTunnelStart(new PinggyError(`Tunnel disconnected before establishment: ${error}`));
+          }
           if (this.onTunnelDisconnectedCallback) {
             try {
               this.onTunnelDisconnectedCallback(error, messages);
@@ -227,12 +251,15 @@ export class Tunnel implements ITunnel {
       {
         setter: 'tunnelSetEstablishedCallback',
         callback: (tunnelRef: number, urls: string[]) => {
+          if (!this.primaryForwardingDone && !this.resolveTunnelEstablished && !this.rejectTunnelEstablished) {
+            return;
+          }
           Logger.info(`Tunnel established: ${tunnelRef}, ${urls.join(", ")}`);
           this.primaryForwardingDone = true;
           this._urls = urls;
-                    this.status = TunnelStatus.LIVE;
+          this.status = TunnelStatus.LIVE;
           
-          if(this.resolveTunnelEstablished) this.resolveTunnelEstablished();
+          this.resolveTunnelStart();
           this.onTunnelEstablishedCallback?.("Tunnel established", urls);
 
         }
@@ -240,7 +267,8 @@ export class Tunnel implements ITunnel {
       {
         setter:'tunnelSetOnTunnelFailedCallback',
         callback: (tunnelRef: number, errorMessage: string) => {
-          if(this.rejectTunnelEstablished) this.rejectTunnelEstablished(new PinggyError(errorMessage));
+          this.status = TunnelStatus.CLOSED;
+          this.rejectTunnelStart(new PinggyError(errorMessage));
           Logger.error(`Tunnel failed: ${tunnelRef}, error: ${errorMessage}`);
           this.onTunnelEstablishedCallback?.(`Tunnel failed: ${errorMessage}`);
         }
@@ -384,6 +412,7 @@ export class Tunnel implements ITunnel {
               ? new PinggyError(lastEx) 
               : new Error("Tunnel error detected during polling.");
             Logger.error("Tunnel error detected, stopping polling.", error);
+            this.rejectTunnelStart(error);
             this.notifyPollingError(error);
           }
           this.status = TunnelStatus.CLOSED;
@@ -397,11 +426,12 @@ export class Tunnel implements ITunnel {
         // Only log errors if tunnel was not intentionally stopped
         if (!this.intentionallyStopped) {
           const lastEx = this.addon.getLastException();
+          const error = lastEx ? new PinggyError(lastEx) : (e instanceof Error ? e : new Error(String(e)));
+          this.rejectTunnelStart(error);
           if (lastEx) {
-            const pinggyError = new PinggyError(lastEx);
-            Logger.error("Error during tunnel polling:", pinggyError);
+            Logger.error("Error during tunnel polling:", error);
           } else {
-            Logger.error("Error during tunnel polling:", e as Error);
+            Logger.error("Error during tunnel polling:", error);
           }
         }
         return; // STOP polling
