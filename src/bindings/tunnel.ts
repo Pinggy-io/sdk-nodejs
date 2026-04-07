@@ -1,5 +1,5 @@
 import { Logger } from "../utils/logger.js";
-import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType, tunnelStateToString, TunnelState } from "../types.js";
+import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType, tunnelStateToString, TunnelState, tunnelStateToStatus } from "../types.js";
 import { PinggyError } from "./exception.js";
 import { TunnelUsage } from "./tunnel-usage.js";
 import { TunnelConfiguration } from "../tunnelConfiguration.js";
@@ -657,6 +657,8 @@ export class Tunnel implements ITunnel {
   }
 
   public getStatus(): TunnelStatus {
-    return this.status;
+    // This is temporary workaround in future we need directly use getTunnelState 
+    const nativeState = this.GetTunnelState();
+    return tunnelStateToStatus(nativeState);
   }
 }
