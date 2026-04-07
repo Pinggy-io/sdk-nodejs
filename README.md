@@ -226,7 +226,7 @@ interface PinggyOptions {
 
 interface HeaderModification {
   key: string;
-  value?: string;
+  value?: string[];
   type: "add" | "remove" | "update";
 }
 
