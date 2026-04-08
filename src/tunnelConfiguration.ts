@@ -448,7 +448,7 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
         }
 
         // If provided, value must always be an array.
-        if (header.value !== undefined && header.value !== null && !Array.isArray(header.value)) {
+        if (!Array.isArray(header.value)) {
           errors.push(`Header modification at index ${index} must have 'value' as an array`);
         }
 

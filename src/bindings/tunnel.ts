@@ -114,10 +114,6 @@ export class Tunnel implements ITunnel {
   }
 
   private rejectTunnelStart(reason: Error): void {
-    if (this.primaryForwardingDone) {
-      return;
-    }
-
     if (this.rejectTunnelEstablished) {
       this.rejectTunnelEstablished(reason);
     }
@@ -222,7 +218,8 @@ export class Tunnel implements ITunnel {
           } catch (e) {
             // ignore
           }
-          if (!this.primaryForwardingDone && !this.pinggyOptions.autoReconnect) {
+          // Always reject if the tunnel was not yet established.
+          if (!this.primaryForwardingDone) {
             this.status = TunnelStatus.CLOSED;
             this.rejectTunnelStart(new PinggyError(`Tunnel disconnected before establishment: ${error}`));
           }
@@ -239,6 +236,14 @@ export class Tunnel implements ITunnel {
         setter: 'tunnelSetOnTunnelErrorCallback',
         callback: (tunnelRef: number, errorNo: number, error: string, recoverable: boolean) => {
           Logger.error(`Tunnel error (${errorNo}): ${error} (recoverable: ${recoverable})`);
+
+          if (!recoverable) {
+              // Fatal error — reject if not yet established, update status either way
+              this.status = TunnelStatus.CLOSED;
+              this.rejectTunnelStart(
+                new PinggyError(`Unrecoverable tunnel error (${errorNo}): ${error}`)
+              );
+         }
           if (this.onTunnelErrorCallback) {
             try {
               this.onTunnelErrorCallback(errorNo, error, recoverable);
@@ -251,14 +256,17 @@ export class Tunnel implements ITunnel {
       {
         setter: 'tunnelSetEstablishedCallback',
         callback: (tunnelRef: number, urls: string[]) => {
-          if (!this.primaryForwardingDone && !this.resolveTunnelEstablished && !this.rejectTunnelEstablished) {
+          if (!this.resolveTunnelEstablished && !this.rejectTunnelEstablished) {
+            // Promise already settled; this is a reconnect fire — handle via reconnect callback.
+            this._urls = urls;
+            this.onTunnelEstablishedCallback?.("Tunnel re-established", urls);
             return;
           }
           Logger.info(`Tunnel established: ${tunnelRef}, ${urls.join(", ")}`);
           this.primaryForwardingDone = true;
           this._urls = urls;
           this.status = TunnelStatus.LIVE;
-          
+ 
           this.resolveTunnelStart();
           this.onTunnelEstablishedCallback?.("Tunnel established", urls);
 
@@ -383,68 +391,50 @@ export class Tunnel implements ITunnel {
         this.pollStart();
 
         // Wait for tunnel to be established (which includes forwarding URLs)
-        await this.tunnelEstablished; 
-        const urls = this._urls;  
-
-        return urls;
+        await this.tunnelEstablished;
+        return this._urls;
       },
       operationName: "starting tunnel",
     });
   }
 
   private pollStart(): void {
-    // A simple sync-style poll that schedules itself only on success:
-    const poll = (): void => {
-      // Check if tunnel was intentionally stopped
-      if (this.intentionallyStopped) {
-        return; // STOP polling silently
-      }
 
-      let shouldContinue: boolean;
-      try {
-        // tunnelResume returns boolean
-        const ret = this.addon.tunnelResumeWithTimeout(this.tunnelRef, 100);
-        if (!ret) {
-          // Only log error if tunnel was not intentionally stopped
-          if (!this.intentionallyStopped) {
-             const lastEx = this.addon.getLastException();
-            const error = lastEx 
-              ? new PinggyError(lastEx) 
-              : new Error("Tunnel error detected during polling.");
-            Logger.error("Tunnel error detected, stopping polling.", error);
-            this.rejectTunnelStart(error);
-            this.notifyPollingError(error);
-          }
-          this.status = TunnelStatus.CLOSED;
-          return; // STOP polling
-        }
-        this.functionQueue.dequeueAndRun();
-        shouldContinue = true;
-      } catch (e) {
-        this.status = TunnelStatus.CLOSED;
-
-        // Only log errors if tunnel was not intentionally stopped
-        if (!this.intentionallyStopped) {
-          const lastEx = this.addon.getLastException();
-          const error = lastEx ? new PinggyError(lastEx) : (e instanceof Error ? e : new Error(String(e)));
-          this.rejectTunnelStart(error);
-          if (lastEx) {
-            Logger.error("Error during tunnel polling:", error);
-          } else {
-            Logger.error("Error during tunnel polling:", error);
-          }
-        }
-        return; // STOP polling
-      }
-
-      // only schedule next poll if no error and not intentionally stopped
-      if (shouldContinue && !this.intentionallyStopped) {
-        // use setImmediate to avoid blowing the stack
-        setImmediate(poll);
+    const handlePollError = (e: unknown): void => {
+      const lastEx = this.addon.getLastException();
+      const error = lastEx
+        ? new PinggyError(lastEx)
+        : (e instanceof Error ? e : new Error(String(e)));
+      this.status = TunnelStatus.CLOSED;
+      this.rejectTunnelStart(error);
+      this.notifyPollingError(error);
+      if (!this.intentionallyStopped) {
+        Logger.error("Tunnel polling failed:", error);
       }
     };
 
-    // kick it off
+    const poll = (): void => {
+      if (this.intentionallyStopped){
+        console.log("Tunnel polling stopped intentionally.");
+        handlePollError(new Error("Polling stopped intentionally."));
+        return;
+      };
+
+      try {
+        if (!this.addon.tunnelResumeWithTimeout(this.tunnelRef, 100)) {
+          handlePollError(new Error("Tunnel error detected during polling."));
+          return;
+        }
+        this.functionQueue.dequeueAndRun();
+      } catch (e) {
+        handlePollError(e);
+        return;
+      }
+
+      if (!this.intentionallyStopped) {
+        setImmediate(poll);
+      }
+    };
     poll();
   }
 
