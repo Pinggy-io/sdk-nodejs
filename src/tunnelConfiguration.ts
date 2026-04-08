@@ -31,7 +31,7 @@ export type HeaderModification = {
    * The action to perform: add, remove, or update.
    */
   type: "add" | "remove" | "update";
-}
+};
 /**
  * @group Types
  * @public
@@ -46,12 +46,12 @@ export type ForwardingEntry = {
   address: string;
   /**
    * (Optional) The remote address to bind to. Format: `[host][:port]`.
-  *   An empty string or undefined means the server will assign a default binding.
-  *   The hostname is ignored for TCP and UDP tunnels. Any schema provided will be ignored.
+   *   An empty string or undefined means the server will assign a default binding.
+   *   The hostname is ignored for TCP and UDP tunnels. Any schema provided will be ignored.
    */
   listenAddress?: string;
-  type?: TunnelType;              // "http", "tcp", "tls", "udp", "tlstcp"
-}
+  type?: TunnelType; // "http", "tcp", "tls", "udp", "tlstcp"
+};
 
 export type RemoteManagementConfig = {
   /**
@@ -66,7 +66,7 @@ export type RemoteManagementConfig = {
 
 /**
  * Advanced SSL and additional options for Pinggy tunnels.
- * 
+ *
  * @group Types
  * @public
  */
@@ -103,7 +103,7 @@ export type Optional = {
    * Used in the `pinggy-cli` to enable/disable TUI
    */
   noTui?: boolean;
-}
+};
 
 export const enum TunnelType {
   Http = "http",
@@ -135,7 +135,6 @@ export type BasicAuthItem = { username: string; password: string };
  * ```
  */
 export type TunnelConfigurationV1 = {
-
   /**
    * Version of the Tunnel Config Spec. e.g. 1.0.
    */
@@ -161,9 +160,9 @@ export type TunnelConfigurationV1 = {
    */
   isQRCode?: boolean;
   /**
-  * Server address to connect to.
-  * @example "connect.pinggy.io"
-  */
+   * Server address to connect to.
+   * @example "connect.pinggy.io"
+   */
   serverAddress?: string;
   /**
    * Authentication token for the tunnel.
@@ -278,14 +277,16 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
 
   private hostPortRegex = /^[a-zA-Z0-9.-]+:\d+$/;
   // IPv4
-  private ipv4Regex = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+  private ipv4Regex =
+    /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
   // IPv4 with CIDR (/0 - /32)
-  private ipv4CidrRegex = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\/(?:[0-9]|[1-2]\d|3[0-2])$/;
+  private ipv4CidrRegex =
+    /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\/(?:[0-9]|[1-2]\d|3[0-2])$/;
   // IPv6
   private ipv6Regex = /^((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::1|::)$/;
   // IPv6 with CIDR (/0 - /128)
-  private ipv6CidrRegex = /^((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::1|::)\/(?:[0-9]|[1-9]\d|1[01]\d|12[0-8])$/;
-
+  private ipv6CidrRegex =
+    /^((?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::1|::)\/(?:[0-9]|[1-9]\d|1[01]\d|12[0-8])$/;
 
   constructor(options: TunnelConfigurationV1 = {}) {
     this.forwarding = options.forwarding;
@@ -326,7 +327,6 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
     }
     return this.getSniFromServerAddress();
   }
-
 
   /**
    * Get additional arguments configuration.
@@ -374,7 +374,10 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
     if (!f) return undefined;
     if (typeof f === "string") return f;
     if (Array.isArray(f) && f.length > 0) {
-      const primary = f.find((e: ForwardingEntry) => !e.listenAddress || e.listenAddress.trim() === "");
+      const primary = f.find(
+        (e: ForwardingEntry) =>
+          !e.listenAddress || e.listenAddress.trim() === "",
+      );
       return (primary ?? f[0]).address;
     }
     return undefined;
@@ -389,14 +392,20 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
 
   getForwardingKind(): "string" | "array" | "none" {
     if (!this.forwarding) return "none";
-    return typeof this.forwarding === "string" ? "string" : Array.isArray(this.forwarding) ? "array" : "none";
+    return typeof this.forwarding === "string"
+      ? "string"
+      : Array.isArray(this.forwarding)
+        ? "array"
+        : "none";
   }
 
   getAdditionalForwarding(): ForwardingEntry[] {
     const f = this.forwarding;
     if (!f) return [];
     if (typeof f === "string") return [];
-    const primary = f.find((e: ForwardingEntry) => !e.listenAddress || e.listenAddress.trim() === "");
+    const primary = f.find(
+      (e: ForwardingEntry) => !e.listenAddress || e.listenAddress.trim() === "",
+    );
     return f.filter((e: ForwardingEntry) => e !== primary);
   }
 
@@ -408,7 +417,6 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
     const errors: string[] = [];
 
     // TODO: Validate forwarding
-
 
     // Validate IP whitelist
     if (this.ipWhitelist && this.ipWhitelist.length > 0) {
@@ -423,10 +431,14 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
     if (this.basicAuth && this.basicAuth.length > 0) {
       this.basicAuth.forEach((auth, index) => {
         if (!auth.username || auth.username.trim() === "") {
-          errors.push(`Basic auth entry at index ${index} must have a username`);
+          errors.push(
+            `Basic auth entry at index ${index} must have a username`,
+          );
         }
         if (!auth.password || auth.password.trim() === "") {
-          errors.push(`Basic auth entry at index ${index} must have a password`);
+          errors.push(
+            `Basic auth entry at index ${index} must have a password`,
+          );
         }
       });
     }
@@ -448,26 +460,37 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
         }
 
         // If provided, value must always be an array.
-        if (header.value !== undefined && header.value !== null && !Array.isArray(header.value)) {
-          errors.push(`Header modification at index ${index} must have 'value' as an array`);
+        if (!Array.isArray(header.value)) {
+          errors.push(
+            `Header modification at index ${index} must have 'value' as an array`,
+          );
         }
 
         if (
           (header.type === "add" || header.type === "update") &&
           (!Array.isArray(header.value) || header.value.length === 0)
         ) {
-          errors.push(`Header modification at index ${index} with type '${header.type}' must have a value`);
+          errors.push(
+            `Header modification at index ${index} with type '${header.type}' must have a value`,
+          );
         }
 
-        if (header.type === "remove" && (!Array.isArray(header.value) || header.value.length !== 0)) {
-          errors.push(`Header modification at index ${index} with type 'remove' must have an empty value array`);
+        if (
+          header.type === "remove" &&
+          (!Array.isArray(header.value) || header.value.length !== 0)
+        ) {
+          errors.push(
+            `Header modification at index ${index} with type 'remove' must have an empty value array`,
+          );
         }
 
         if (
           Array.isArray(header.value) &&
           header.value.some((v) => typeof v !== "string" || v.trim() === "")
         ) {
-          errors.push(`Header modification at index ${index} has invalid value entries`);
+          errors.push(
+            `Header modification at index ${index} has invalid value entries`,
+          );
         }
       });
     }
@@ -477,11 +500,14 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
       if (this.reconnectInterval !== undefined && this.reconnectInterval <= 0) {
         errors.push("Reconnect interval must be greater than 0");
       }
-      if (this.maxReconnectAttempts !== undefined && this.maxReconnectAttempts <= 0) {
+      if (
+        this.maxReconnectAttempts !== undefined &&
+        this.maxReconnectAttempts <= 0
+      ) {
         errors.push("Max reconnect attempts must be greater than 0");
       }
     }
-    
+
     // Validate server address
     if (this.serverAddress && !this.isValidAddress(this.serverAddress)) {
       errors.push(`Invalid server address: ${this.serverAddress}`);
@@ -493,15 +519,15 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
     }
 
     if (errors.length > 0) {
-      throw new PinggyError(`Validation failed:\n${errors.map(err => `- ${err}`).join('\n')}`);
+      throw new PinggyError(
+        `Validation failed:\n${errors.map((err) => `- ${err}`).join("\n")}`,
+      );
     }
   }
 
- // TODO: validateForwardingAddress
-
+  // TODO: validateForwardingAddress
 
   private isValidIPorCIDR(ip: string): boolean {
-
     return (
       this.ipv4Regex.test(ip) ||
       this.ipv4CidrRegex.test(ip) ||
@@ -509,7 +535,6 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
       this.ipv6CidrRegex.test(ip)
     );
   }
-
 
   private isValidAddress(address: string): boolean {
     try {
