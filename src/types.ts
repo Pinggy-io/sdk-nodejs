@@ -469,6 +469,52 @@ export enum TunnelStatus {
   STARTING = "starting",
   LIVE = "live",
   CLOSED = "closed",
+  RECONNECTING = "reconnecting",
+  UNKNOWN = "unknown",
+  INVALID = "invalid",
+}
+
+/**
+ * Convert TunnelState to TunnelStatus for higher-level status reporting.
+ * Maps intermediate native states to simplified tunnel status values.
+ * @internal
+ */
+export function tunnelStateToStatus(state: TunnelState): TunnelStatus {
+  switch (state) {
+    // Starting/connection states
+    case TunnelState.Initial:
+    case TunnelState.Started:
+    case TunnelState.Connecting:
+    case TunnelState.Connected:
+    case TunnelState.SessionInitiating:
+    case TunnelState.SessionInitiated:
+    case TunnelState.Authenticating:
+    case TunnelState.Authenticated:
+    case TunnelState.ForwardingInitiated:
+      return TunnelStatus.STARTING;
+    
+    // Reconnection states
+    case TunnelState.ReconnectInitiated:
+    case TunnelState.Reconnecting:
+      return TunnelStatus.RECONNECTING;
+    
+    // Live/established state
+    case TunnelState.ForwardingSucceeded:
+      return TunnelStatus.LIVE;
+    
+    // Closed/ended states
+    case TunnelState.Stopped:
+    case TunnelState.Ended:
+      return TunnelStatus.CLOSED;
+    
+    // Invalid/unknown
+    case TunnelState.Invalid:
+      return TunnelStatus.INVALID;
+    
+    case TunnelState.Unknown:
+    default:
+      return TunnelStatus.UNKNOWN;
+  }
 }
 
 export enum workerMessageType {
