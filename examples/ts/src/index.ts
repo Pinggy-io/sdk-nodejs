@@ -1,18 +1,36 @@
-import { pinggy } from "@pinggy/pinggy";
+import { LogLevel, pinggy, TunnelConfigurationV1, TunnelType } from "@pinggy/pinggy";
 
 (async () => {
-  console.log("Quick demonstration - creating a simple tunnel to localhost:3000 for 20 seconds:");
+  pinggy.setDebugLogging(true, LogLevel.DEBUG);
+  console.log(
+    "Quick demonstration - creating a simple tunnel to localhost:3000 for 20 seconds:",
+  );
   try {
-    const tunnel = await pinggy.forward({ forwarding: "localhost:3000" });
-    console.log("Tunnel created successfully!");
-    console.log("URLs:", await tunnel.urls());
-    console.log("Greet Message:", await tunnel.getGreetMessage());
+    const config: TunnelConfigurationV1 = {
+      forwarding: [
+        {
+          type: "http" as TunnelType,
+          listenAddress: "",
+          address: "http://localhost:8005",
+        },
+      ],
+      serverAddress:"a.pinggy.io:443",
+      webDebugger: "localhost:4300",
+      token: "",
+      autoReconnect:true,
+      force: true,
+    };
 
-    // Clean up immediately
-    setTimeout(() => {
-      tunnel.stop();
-      console.log("Demo tunnel stopped.");
-    }, 20000);
+
+     const tunnel = await pinggy.createTunnel(config);
+     await tunnel.start();
+     await new Promise((resolve) => setTimeout(resolve, 5000));
+     await new Promise((resolve) => setTimeout(resolve, 5000));
+     await tunnel.stop();
+
+     await new Promise((resolve) => setTimeout(resolve, 50000));
+
+    // Clean up immediately;
   } catch (error) {
     console.error("Failed to create demo tunnel:", error);
   }
