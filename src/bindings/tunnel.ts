@@ -1,5 +1,13 @@
 import { Logger } from "../utils/logger.js";
-import { PinggyNative, Tunnel as ITunnel, TunnelStatus, TunnelUsageType, tunnelStateToString, TunnelState, tunnelStateToStatus } from "../types.js";
+import {
+  PinggyNative,
+  Tunnel as ITunnel,
+  TunnelStatus,
+  TunnelUsageType,
+  tunnelStateToString,
+  TunnelState,
+  tunnelStateToStatus,
+} from "../types.js";
 import { PinggyError } from "./exception.js";
 import { TunnelUsage } from "./tunnel-usage.js";
 import { TunnelConfiguration } from "../tunnelConfiguration.js";
@@ -37,7 +45,6 @@ interface TunnelOperationConfig<T> {
   skipInitCheck?: boolean;
 }
 
-
 /**
  * Represents a Pinggy tunnel instance, managing its lifecycle and forwarding.
  * Handles authentication, forwarding, and additional tunnel operations via the native addon.
@@ -60,11 +67,11 @@ export class Tunnel implements ITunnel {
   private readonly addon: PinggyNative;
   private readonly pinggyOptions: TunnelConfiguration;
 
-
   private tunnelEstablished: Promise<void>;
   private resolveTunnelEstablished: (() => void) | null = null;
   private rejectTunnelEstablished: ((reason?: any) => void) | null = null;
-  private additionalForwardingPending: AdditionalForwardingManager = new AdditionalForwardingManager();
+  private additionalForwardingPending: AdditionalForwardingManager =
+    new AdditionalForwardingManager();
   private _urls: string[] = [];
   private intentionallyStopped: boolean = false; // Track intentional stops
   private functionQueue: FunctionQueue;
@@ -73,23 +80,45 @@ export class Tunnel implements ITunnel {
 
   // user provided callbacks
   private onUsageUpdateCallback: ((usage: TunnelUsage) => void) | null = null;
-  private onTunnelErrorCallback: ((errorNo: number, error: string, recoverable: boolean) => void) | null = null;
-  private onTunnelDisconnectedCallback: ((error: string, messages: string[]) => void) | null = null;
-  private onAdditionalForwardingCallback: ((bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void) | null = null;
-  private onTunnelEstablishedCallback: ((messsage: string, urls?: string[]) => void) | null = null;
-  private onForwardingChangedCallback: ((message: string, address?: string[]) => void) | null = null;
-  private onWillReconnectCallback: ((error: string, messages: string[]) => void) | null = null;
+  private onTunnelErrorCallback:
+    | ((errorNo: number, error: string, recoverable: boolean) => void)
+    | null = null;
+  private onTunnelDisconnectedCallback:
+    | ((error: string, messages: string[]) => void)
+    | null = null;
+  private onAdditionalForwardingCallback:
+    | ((
+        bindAddress: string,
+        forwardToAddr: string,
+        errorMessage: string | null,
+      ) => void)
+    | null = null;
+  private onTunnelEstablishedCallback:
+    | ((messsage: string, urls?: string[]) => void)
+    | null = null;
+  private onForwardingChangedCallback:
+    | ((message: string, address?: string[]) => void)
+    | null = null;
+  private onWillReconnectCallback:
+    | ((error: string, messages: string[]) => void)
+    | null = null;
   private onReconnectingCallback: ((retryCnt: number) => void) | null = null;
-  private onReconnectionCompletedCallback: ((urls: string[]) => void) | null = null;
-  private onReconnectionFailedCallback: ((retryCnt: number) => void) | null = null;
-  private onPollingErrorCallback: (( error: Error) => void) | null = null;
+  private onReconnectionCompletedCallback: ((urls: string[]) => void) | null =
+    null;
+  private onReconnectionFailedCallback: ((retryCnt: number) => void) | null =
+    null;
+  private onPollingErrorCallback: ((error: Error) => void) | null = null;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
    * @param {PinggyNative} addon - The native addon instance.
    * @param {number} configRef - The reference to the native config object.
    */
-  constructor(addon: PinggyNative, configRef: number, pinggyOptions: TunnelConfiguration) {
+  constructor(
+    addon: PinggyNative,
+    configRef: number,
+    pinggyOptions: TunnelConfiguration,
+  ) {
     this.addon = addon;
     this.tunnelRef = this.initialize(configRef);
     this.authenticated = false;
@@ -120,7 +149,6 @@ export class Tunnel implements ITunnel {
     this.resolveTunnelEstablished = null;
     this.rejectTunnelEstablished = null;
   }
-
 
   // Generic operation executor
   private executeAddonOperation<T>(config: TunnelOperationConfig<T>): T {
@@ -162,9 +190,7 @@ export class Tunnel implements ITunnel {
       skipInitCheck: true,
     });
     return value;
-
   }
-
 
   private ensureTunnelInitialized(): void {
     if (!this.tunnelRef) {
@@ -175,75 +201,122 @@ export class Tunnel implements ITunnel {
   private setupCallbacks(): void {
     const callbackConfigs = [
       {
-        setter: 'tunnelSetAdditionalForwardingSucceededCallback',
-        callback: (tunnelRef: number, bindAddr: string, forwardToAddr: string) => {
-          Logger.info(`Additional forwarding succeeded for tunnel ${tunnelRef}: ${bindAddr} -> ${forwardToAddr}`);
+        setter: "tunnelSetAdditionalForwardingSucceededCallback",
+        callback: (
+          tunnelRef: number,
+          bindAddr: string,
+          forwardToAddr: string,
+        ) => {
+          Logger.info(
+            `Additional forwarding succeeded for tunnel ${tunnelRef}: ${bindAddr} -> ${forwardToAddr}`,
+          );
           // Resolve the oldest pending promise for this bindAddr (remote) + forwardToAddr (local)
           this.additionalForwardingPending.resolveOne(bindAddr, forwardToAddr);
           if (this.onAdditionalForwardingCallback) {
             try {
-              this.onAdditionalForwardingCallback(bindAddr, forwardToAddr, null);
+              this.onAdditionalForwardingCallback(
+                bindAddr,
+                forwardToAddr,
+                null,
+              );
             } catch (error) {
-              Logger.error("Error in additionalforwardingCallback", error as Error);
+              Logger.error(
+                "Error in additionalforwardingCallback",
+                error as Error,
+              );
             }
           }
-        }
+        },
       },
       {
-        setter: 'tunnelSetAdditionalForwardingFailedCallback',
-        callback: (tunnelRef: number, bindAddress: string, forwardToAddr: string, errorMessage: string) => {
-          Logger.error(`Additional forwarding failed for ${bindAddress} -> ${forwardToAddr} on tunnel ${tunnelRef}: ${errorMessage}`);
+        setter: "tunnelSetAdditionalForwardingFailedCallback",
+        callback: (
+          tunnelRef: number,
+          bindAddress: string,
+          forwardToAddr: string,
+          errorMessage: string,
+        ) => {
+          Logger.error(
+            `Additional forwarding failed for ${bindAddress} -> ${forwardToAddr} on tunnel ${tunnelRef}: ${errorMessage}`,
+          );
           // Reject the oldest pending promise for this bindAddress (remote) + forwardToAddr (local)
           this.additionalForwardingPending.rejectOne(
             bindAddress,
             forwardToAddr,
-            new PinggyError(`Additional forwarding failed for ${bindAddress} -> ${forwardToAddr}: ${errorMessage}`)
+            new PinggyError(
+              `Additional forwarding failed for ${bindAddress} -> ${forwardToAddr}: ${errorMessage}`,
+            ),
           );
           if (this.onAdditionalForwardingCallback) {
             try {
-              this.onAdditionalForwardingCallback(bindAddress, forwardToAddr, errorMessage);
+              this.onAdditionalForwardingCallback(
+                bindAddress,
+                forwardToAddr,
+                errorMessage,
+              );
             } catch (error) {
-              Logger.error("Error in additionalforwardingCallback", error as Error);
+              Logger.error(
+                "Error in additionalforwardingCallback",
+                error as Error,
+              );
             }
           }
-        }
+        },
       },
       {
-        setter: 'tunnelSetOnDisconnectedCallback',
+        setter: "tunnelSetOnDisconnectedCallback",
         callback: (tunnelRef: number, error: string, messages: string[]) => {
           Logger.info(`Tunnel disconnected: error: ${error}`);
           // Clear any pending additional forwarding promises since tunnel is disconnected
           try {
-            this.additionalForwardingPending.clearAll(new PinggyError(`Tunnel disconnected: ${error}`));
+            this.additionalForwardingPending.clearAll(
+              new PinggyError(`Tunnel disconnected: ${error}`),
+            );
           } catch (e) {
             // ignore
           }
           // Always reject if the tunnel was not yet established.
           if (!this.primaryForwardingDone) {
             this.status = TunnelStatus.CLOSED;
-            this.rejectTunnelStart(new PinggyError(`Tunnel disconnected before establishment: ${error}`));
+            this.rejectTunnelStart(
+              new PinggyError(
+                `Tunnel disconnected before establishment: ${error}`,
+              ),
+            );
           }
           if (this.onTunnelDisconnectedCallback) {
             try {
               this.onTunnelDisconnectedCallback(error, messages);
             } catch (cbErr) {
-              Logger.error("Error in onTunnelDisconnectedCallback:", cbErr as Error);
+              Logger.error(
+                "Error in onTunnelDisconnectedCallback:",
+                cbErr as Error,
+              );
             }
           }
-        }
+        },
       },
       {
-        setter: 'tunnelSetOnTunnelErrorCallback',
-        callback: (tunnelRef: number, errorNo: number, error: string, recoverable: boolean) => {
-          Logger.error(`Tunnel error (${errorNo}): ${error} (recoverable: ${recoverable})`);
+        setter: "tunnelSetOnTunnelErrorCallback",
+        callback: (
+          tunnelRef: number,
+          errorNo: number,
+          error: string,
+          recoverable: boolean,
+        ) => {
+          Logger.error(
+            `Tunnel error (${errorNo}): ${error} (recoverable: ${recoverable})`,
+          );
 
           if (!recoverable) {
-              // Fatal error — reject if not yet established, update status either way
-              this.status = TunnelStatus.CLOSED;
-              this.rejectTunnelStart(
-                new PinggyError(`Unrecoverable tunnel error (${errorNo}): ${error}`)
-              );
-         }
+            // Fatal error — reject if not yet established, update status either way
+            this.status = TunnelStatus.CLOSED;
+            this.rejectTunnelStart(
+              new PinggyError(
+                `Unrecoverable tunnel error (${errorNo}): ${error}`,
+              ),
+            );
+          }
           if (this.onTunnelErrorCallback) {
             try {
               this.onTunnelErrorCallback(errorNo, error, recoverable);
@@ -251,10 +324,10 @@ export class Tunnel implements ITunnel {
               Logger.error("Error in onTunnelErrorCallback:", cbErr as Error);
             }
           }
-        }
+        },
       },
       {
-        setter: 'tunnelSetEstablishedCallback',
+        setter: "tunnelSetEstablishedCallback",
         callback: (tunnelRef: number, urls: string[]) => {
           if (!this.resolveTunnelEstablished && !this.rejectTunnelEstablished) {
             // Promise already settled; this is a reconnect fire — handle via reconnect callback.
@@ -266,36 +339,38 @@ export class Tunnel implements ITunnel {
           this.primaryForwardingDone = true;
           this._urls = urls;
           this.status = TunnelStatus.LIVE;
- 
+
           this.resolveTunnelStart();
           this.onTunnelEstablishedCallback?.("Tunnel established", urls);
-
-        }
+        },
       },
       {
-        setter:'tunnelSetOnTunnelFailedCallback',
+        setter: "tunnelSetOnTunnelFailedCallback",
         callback: (tunnelRef: number, errorMessage: string) => {
           this.status = TunnelStatus.CLOSED;
           this.rejectTunnelStart(new PinggyError(errorMessage));
           Logger.error(`Tunnel failed: ${tunnelRef}, error: ${errorMessage}`);
           this.onTunnelEstablishedCallback?.(`Tunnel failed: ${errorMessage}`);
-        }
+        },
       },
       {
-        setter: 'tunnelSetOnUsageUpdateCallback',
+        setter: "tunnelSetOnUsageUpdateCallback",
         callback: (tunnelRef: number, usageJson: string) => {
           this.handleUsageUpdate(usageJson);
-        }
+        },
       },
       {
-        setter: 'tunnelSetOnTunnelForwardingChangedCallback',
-        callback :(tunnelRef: number,  address?: string[]) => {
-        Logger.info(`Tunnel forwarding changed:, ${address}`);
-        this.onForwardingChangedCallback?.("Tunnel forwarding changed", address);
-        }
+        setter: "tunnelSetOnTunnelForwardingChangedCallback",
+        callback: (tunnelRef: number, address?: string[]) => {
+          Logger.info(`Tunnel forwarding changed:, ${address}`);
+          this.onForwardingChangedCallback?.(
+            "Tunnel forwarding changed",
+            address,
+          );
+        },
       },
       {
-        setter: 'tunnelSetOnWillReconnectCallback',
+        setter: "tunnelSetOnWillReconnectCallback",
         callback: (tunnelRef: number, error: string, messages: string[]) => {
           Logger.info(`Tunnel will reconnect: error: ${error}`);
           if (this.onWillReconnectCallback) {
@@ -305,10 +380,10 @@ export class Tunnel implements ITunnel {
               Logger.error("Error in onWillReconnectCallback:", cbErr as Error);
             }
           }
-        }
+        },
       },
       {
-        setter: 'tunnelSetOnReconnectingCallback',
+        setter: "tunnelSetOnReconnectingCallback",
         callback: (tunnelRef: number, retryCnt: number) => {
           Logger.info(`Tunnel reconnecting attempt: ${retryCnt}`);
           if (this.onReconnectingCallback) {
@@ -318,10 +393,10 @@ export class Tunnel implements ITunnel {
               Logger.error("Error in onReconnectingCallback:", cbErr as Error);
             }
           }
-        }
+        },
       },
       {
-        setter: 'tunnelSetOnReconnectionCompletedCallback',
+        setter: "tunnelSetOnReconnectionCompletedCallback",
         callback: (tunnelRef: number, urls: string[]) => {
           Logger.info(`Tunnel reconnection completed: ${urls.join(", ")}`);
           this._urls = urls;
@@ -329,23 +404,29 @@ export class Tunnel implements ITunnel {
             try {
               this.onReconnectionCompletedCallback(urls);
             } catch (cbErr) {
-              Logger.error("Error in onReconnectionCompletedCallback:", cbErr as Error);
+              Logger.error(
+                "Error in onReconnectionCompletedCallback:",
+                cbErr as Error,
+              );
             }
           }
-        }
+        },
       },
       {
-        setter: 'tunnelSetOnReconnectionFailedCallback',
+        setter: "tunnelSetOnReconnectionFailedCallback",
         callback: (tunnelRef: number, retryCnt: number) => {
           Logger.error(`Tunnel reconnection failed after ${retryCnt} attempts`);
           if (this.onReconnectionFailedCallback) {
             try {
               this.onReconnectionFailedCallback(retryCnt);
             } catch (cbErr) {
-              Logger.error("Error in onReconnectionFailedCallback:", cbErr as Error);
+              Logger.error(
+                "Error in onReconnectionFailedCallback:",
+                cbErr as Error,
+              );
             }
           }
-        }
+        },
       },
     ];
 
@@ -399,12 +480,13 @@ export class Tunnel implements ITunnel {
   }
 
   private pollStart(): void {
-
     const handlePollError = (e: unknown): void => {
       const lastEx = this.addon.getLastException();
       const error = lastEx
         ? new PinggyError(lastEx)
-        : (e instanceof Error ? e : new Error(String(e)));
+        : e instanceof Error
+          ? e
+          : new Error(String(e));
       this.status = TunnelStatus.CLOSED;
       this.rejectTunnelStart(error);
       this.notifyPollingError(error);
@@ -414,11 +496,10 @@ export class Tunnel implements ITunnel {
     };
 
     const poll = (): void => {
-      if (this.intentionallyStopped){
-        console.log("Tunnel polling stopped intentionally.");
+      if (this.intentionallyStopped) {
         handlePollError(new Error("Polling stopped intentionally."));
         return;
-      };
+      }
 
       try {
         if (!this.addon.tunnelResumeWithTimeout(this.tunnelRef, 100)) {
@@ -430,15 +511,12 @@ export class Tunnel implements ITunnel {
         handlePollError(e);
         return;
       }
-
-      if (!this.intentionallyStopped) {
-        setImmediate(poll);
-      }
+      setImmediate(poll);
     };
     poll();
   }
 
-    private notifyPollingError(error: Error): void {
+  private notifyPollingError(error: Error): void {
     if (this.onPollingErrorCallback) {
       try {
         this.onPollingErrorCallback(error);
@@ -448,7 +526,7 @@ export class Tunnel implements ITunnel {
     }
   }
 
-  public setPollingErrorCallback(callback: ( error: Error) => void): void {
+  public setPollingErrorCallback(callback: (error: Error) => void): void {
     this.onPollingErrorCallback = callback;
   }
 
@@ -460,16 +538,19 @@ export class Tunnel implements ITunnel {
    */
   public async startWebDebugging(listeningAddr: string): Promise<void> {
     await this.tunnelEstablished; // Wait for Establishment
-    
+
     this.executeAddonOperation({
       operation: () => {
-        const port = this.addon.tunnelStartWebDebugging(this.tunnelRef, listeningAddr);
+        const port = this.addon.tunnelStartWebDebugging(
+          this.tunnelRef,
+          listeningAddr,
+        );
         if (port && port > 0) {
           this.webDebuggerPort = port;
         }
       },
       operationName: "starting web debugging",
-      successMessage: `Web debugging started on  ${listeningAddr}`
+      successMessage: `Web debugging started on  ${listeningAddr}`,
     });
   }
 
@@ -482,17 +563,25 @@ export class Tunnel implements ITunnel {
    */
   public async tunnelRequestAdditionalForwarding(
     remoteAddress: string,
-    localAddress: string
+    localAddress: string,
   ): Promise<void> {
     // Wait for tunnel to be established
-    await this.tunnelEstablished; 
+    await this.tunnelEstablished;
 
-    const { promise } = this.additionalForwardingPending.enqueue(remoteAddress, localAddress);
+    const { promise } = this.additionalForwardingPending.enqueue(
+      remoteAddress,
+      localAddress,
+    );
 
     this.executeAddonOperation({
-      operation: () => this.addon.tunnelRequestAdditionalForwarding(this.tunnelRef, remoteAddress, localAddress),
+      operation: () =>
+        this.addon.tunnelRequestAdditionalForwarding(
+          this.tunnelRef,
+          remoteAddress,
+          localAddress,
+        ),
       operationName: "requesting additional forwarding",
-      successMessage: `Requested additional forwarding from ${remoteAddress} to ${localAddress}`
+      successMessage: `Requested additional forwarding from ${remoteAddress} to ${localAddress}`,
     });
 
     return promise;
@@ -565,7 +654,7 @@ export class Tunnel implements ITunnel {
     this.executeAddonOperation({
       operation: () => this.addon.startTunnelUsageUpdate(this.tunnelRef),
       operationName: "starting tunnel usage update",
-      successMessage: `Started tunnel usage update for tunnel ${this.tunnelRef}`
+      successMessage: `Started tunnel usage update for tunnel ${this.tunnelRef}`,
     });
   }
 
@@ -573,7 +662,7 @@ export class Tunnel implements ITunnel {
     this.executeAddonOperation({
       operation: () => this.addon.stopTunnelUsageUpdate(this.tunnelRef),
       operationName: "stopping tunnel usage update",
-      successMessage: `Stopped tunnel usage update for tunnel ${this.tunnelRef}`
+      successMessage: `Stopped tunnel usage update for tunnel ${this.tunnelRef}`,
     });
   }
 
@@ -581,7 +670,8 @@ export class Tunnel implements ITunnel {
     return this.executeAddonOperation({
       operation: () => this.addon.getTunnelUsages(this.tunnelRef),
       operationName: "getting tunnel usages",
-      logResult: (usages) => Logger.info(`Tunnel usages for ${this.tunnelRef}: ${usages}`),
+      logResult: (usages) =>
+        Logger.info(`Tunnel usages for ${this.tunnelRef}: ${usages}`),
       defaultValue: "",
     });
   }
@@ -596,12 +686,16 @@ export class Tunnel implements ITunnel {
     return tunnelStateToString(state);
   }
 
-  public GetWebDebuggerAddress(): string{
-    const debuggerInfo = this.addon.getTunnelWebDebuggingAddress(this.tunnelRef);
+  public GetWebDebuggerAddress(): string {
+    const debuggerInfo = this.addon.getTunnelWebDebuggingAddress(
+      this.tunnelRef,
+    );
     return debuggerInfo;
   }
 
-  public setUsageUpdateCallback(callback: (usage: TunnelUsageType) => void): void {
+  public setUsageUpdateCallback(
+    callback: (usage: TunnelUsageType) => void,
+  ): void {
     this.onUsageUpdateCallback = callback;
     this.startTunnelUsageUpdate();
   }
@@ -610,27 +704,43 @@ export class Tunnel implements ITunnel {
     return this.webDebuggerPort;
   }
 
-  public setTunnelErrorCallback(callback: (errorNo: number, error: string, recoverable: boolean) => void): void {
+  public setTunnelErrorCallback(
+    callback: (errorNo: number, error: string, recoverable: boolean) => void,
+  ): void {
     this.onTunnelErrorCallback = callback;
   }
 
-  public setTunnelDisconnectedCallback(callback: (error: string, messages: string[]) => void): void {
+  public setTunnelDisconnectedCallback(
+    callback: (error: string, messages: string[]) => void,
+  ): void {
     this.onTunnelDisconnectedCallback = callback;
   }
 
-  public setAdditionalForwardingCallback(callback: (bindAddress: string, forwardToAddr: string, errorMessage: string | null) => void): void {
+  public setAdditionalForwardingCallback(
+    callback: (
+      bindAddress: string,
+      forwardToAddr: string,
+      errorMessage: string | null,
+    ) => void,
+  ): void {
     this.onAdditionalForwardingCallback = callback;
   }
 
-  public setTunnelEstablishedCallback(callback: (message: string ,urls?: string[]) => void) {
+  public setTunnelEstablishedCallback(
+    callback: (message: string, urls?: string[]) => void,
+  ) {
     this.onTunnelEstablishedCallback = callback;
   }
 
-  public setOnTunnelForwardingChanged(callback: (message: string, urls?: string[]) => void) {
+  public setOnTunnelForwardingChanged(
+    callback: (message: string, urls?: string[]) => void,
+  ) {
     this.onForwardingChangedCallback = callback;
   }
 
-  public setWillReconnectCallback(callback: (error: string, messages: string[]) => void): void {
+  public setWillReconnectCallback(
+    callback: (error: string, messages: string[]) => void,
+  ): void {
     this.onWillReconnectCallback = callback;
   }
 
@@ -638,16 +748,20 @@ export class Tunnel implements ITunnel {
     this.onReconnectingCallback = callback;
   }
 
-  public setReconnectionCompletedCallback(callback: (urls: string[]) => void): void {
+  public setReconnectionCompletedCallback(
+    callback: (urls: string[]) => void,
+  ): void {
     this.onReconnectionCompletedCallback = callback;
   }
 
-  public setReconnectionFailedCallback(callback: (retryCnt: number) => void): void {
+  public setReconnectionFailedCallback(
+    callback: (retryCnt: number) => void,
+  ): void {
     this.onReconnectionFailedCallback = callback;
   }
 
   public getStatus(): TunnelStatus {
-    // This is temporary workaround in future we need directly use getTunnelState 
+    // This is temporary workaround in future we need directly use getTunnelState
     const nativeState = this.GetTunnelState();
     return tunnelStateToStatus(nativeState);
   }

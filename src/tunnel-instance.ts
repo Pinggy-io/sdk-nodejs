@@ -400,7 +400,12 @@ export class TunnelInstance {
    * @returns {Promise<TunnelStatus>} The tunnel status.
    */
   public async getStatus(): Promise<TunnelStatus> {
-    return await this.activeTunnel.getStatus();
+    try{
+      return await this.activeTunnel.getStatus();
+    } catch (error) {
+      Logger.error(`Error getting tunnel status:", ${error}`);
+      return TunnelStatus.CLOSED;
+    }
   }
 
   /**
