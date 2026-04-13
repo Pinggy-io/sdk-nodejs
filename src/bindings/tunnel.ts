@@ -400,6 +400,14 @@ export class Tunnel implements ITunnel {
         callback: (tunnelRef: number, urls: string[]) => {
           Logger.info(`Tunnel reconnection completed: ${urls.join(", ")}`);
           this._urls = urls;
+
+          if (this.resolveTunnelEstablished) {
+            this.primaryForwardingDone = true;
+            this.status = TunnelStatus.LIVE;
+            this.resolveTunnelStart();
+            this.onTunnelEstablishedCallback?.("Tunnel established", urls);
+          }
+
           if (this.onReconnectionCompletedCallback) {
             try {
               this.onReconnectionCompletedCallback(urls);
@@ -481,27 +489,26 @@ export class Tunnel implements ITunnel {
 
   private pollStart(): void {
     const handlePollError = (e: unknown): void => {
+      this.status = TunnelStatus.CLOSED;
+      
       const lastEx = this.addon.getLastException();
       const error = lastEx
         ? new PinggyError(lastEx)
         : e instanceof Error
           ? e
           : new Error(String(e));
-      this.status = TunnelStatus.CLOSED;
+
       this.rejectTunnelStart(error);
-      this.notifyPollingError(error);
+
       if (!this.intentionallyStopped) {
+        this.notifyPollingError(error);
         Logger.error("Tunnel polling failed:", error);
       }
     };
 
     const poll = (): void => {
-      if (this.intentionallyStopped) {
-        handlePollError(new Error("Polling stopped intentionally."));
-        return;
-      }
-
       try {
+        
         if (!this.addon.tunnelResumeWithTimeout(this.tunnelRef, 100)) {
           handlePollError(new Error("Tunnel error detected during polling."));
           return;
