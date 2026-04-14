@@ -182,10 +182,13 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public async stop(): Promise<void> {
+
     await this.activeTunnel.tunnelStop();
+
+    // Calling unref() on a worker allows the thread to exit if this is the only active handle in the event system
+    this.workerManager.unrefWorker();
     this.tunnel = null;
     this.config = null;
-    await this.workerManager.terminate();
   }
 
   /**

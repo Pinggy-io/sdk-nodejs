@@ -117,9 +117,11 @@ export class TunnelWorkerManager {
             return undefined;
         }
     }
-    /**
-     * Incoming messages from worker thread to main thread
-     */
+
+    public unrefWorker(): void {
+        this.worker.unref();
+    }
+
     private registerWorkerListeners(): void {
         this.worker.on("message", (msg: WorkerMessage) => {
             Logger.debug(`[Main] Recived msg from worker ${JSON.stringify(msg)}`)
