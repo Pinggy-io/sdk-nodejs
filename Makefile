@@ -4,7 +4,6 @@ clean:
 	rm -rf lib
 	rm -rf node_modules
 	rm -rf build
-	rm -rf libpinggy-0.0.14-linux-x86_64.tgz
 	rm -f libpinggy.so
 	rm -f pinggy.lib
 	rm -f pinggy.dll

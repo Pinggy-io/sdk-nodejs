@@ -554,6 +554,7 @@ export enum CallbackType {
   ReconnectionCompleted = "tunnelReconnectionCompleted",
   ReconnectionFailed = "tunnelReconnectionFailed",
   PollingError = "tunnelPollingError",
+  TunnelCleanupComplete = "tunnelCleanupComplete",
 }
 
 /**
@@ -609,6 +610,7 @@ export type CallbackPayloadMap = {
   [CallbackType.PollingError]: {
     error: Error;
   };
+  [CallbackType.TunnelCleanupComplete]: {};
 };
 
 

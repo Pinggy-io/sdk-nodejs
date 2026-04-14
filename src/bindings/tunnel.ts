@@ -108,6 +108,7 @@ export class Tunnel implements ITunnel {
   private onReconnectionFailedCallback: ((retryCnt: number) => void) | null =
     null;
   private onPollingErrorCallback: ((error: Error) => void) | null = null;
+  private onCleanupCompleteCallback: (() => void) | null = null;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -400,6 +401,14 @@ export class Tunnel implements ITunnel {
         callback: (tunnelRef: number, urls: string[]) => {
           Logger.info(`Tunnel reconnection completed: ${urls.join(", ")}`);
           this._urls = urls;
+
+          if (this.resolveTunnelEstablished) {
+            this.primaryForwardingDone = true;
+            this.status = TunnelStatus.LIVE;
+            this.resolveTunnelStart();
+            this.onTunnelEstablishedCallback?.("Tunnel established", urls);
+          }
+
           if (this.onReconnectionCompletedCallback) {
             try {
               this.onReconnectionCompletedCallback(urls);
@@ -481,27 +490,34 @@ export class Tunnel implements ITunnel {
 
   private pollStart(): void {
     const handlePollError = (e: unknown): void => {
+      this.status = TunnelStatus.CLOSED;
+      
       const lastEx = this.addon.getLastException();
       const error = lastEx
         ? new PinggyError(lastEx)
         : e instanceof Error
           ? e
           : new Error(String(e));
-      this.status = TunnelStatus.CLOSED;
-      this.rejectTunnelStart(error);
-      this.notifyPollingError(error);
-      if (!this.intentionallyStopped) {
-        Logger.error("Tunnel polling failed:", error);
-      }
-    };
 
-    const poll = (): void => {
-      if (this.intentionallyStopped) {
-        handlePollError(new Error("Polling stopped intentionally."));
-        return;
+      this.rejectTunnelStart(error);
+
+      if (!this.intentionallyStopped) {
+        this.notifyPollingError(error);
+        Logger.error("Tunnel polling failed:", error);
+      } else {
+        Logger.info("Tunnel polling stopped due to intentional tunnel stop.");
       }
 
       try {
+        this.onCleanupCompleteCallback?.();
+      } catch(cbErr) {
+        Logger.error("Error in onCleanupCompleteCallback:", cbErr as Error);
+      };
+    };
+
+    const poll = (): void => {
+      try {
+        
         if (!this.addon.tunnelResumeWithTimeout(this.tunnelRef, 100)) {
           handlePollError(new Error("Tunnel error detected during polling."));
           return;
@@ -529,6 +545,11 @@ export class Tunnel implements ITunnel {
   public setPollingErrorCallback(callback: (error: Error) => void): void {
     this.onPollingErrorCallback = callback;
   }
+
+  public setCleanupCompleteCallback(callback: () => void): void {
+    this.onCleanupCompleteCallback = callback;
+  }
+
 
   /**
    * Starts web debugging for the tunnel on the specified local port.

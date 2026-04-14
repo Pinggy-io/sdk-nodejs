@@ -191,6 +191,10 @@ class TunnelWorker {
         this.forwardCallback(CallbackType.ReconnectionFailed, { retryCnt }),
       pollingError: (error: Error) =>
         this.forwardCallback(CallbackType.PollingError, { error }),
+      cleanupComplete:()=>{
+        Logger.info("Tunnel cleanup completed.");
+        this.forwardCallback(CallbackType.TunnelCleanupComplete, {});
+      }
     };
 
     this.tunnel.setUsageUpdateCallback(callbacks.usageUpdate);
@@ -204,6 +208,7 @@ class TunnelWorker {
     this.tunnel.setReconnectionCompletedCallback(callbacks.reconnectionCompleted);
     this.tunnel.setReconnectionFailedCallback(callbacks.reconnectionFailed);
     this.tunnel.setPollingErrorCallback(callbacks.pollingError);
+    this.tunnel.setCleanupCompleteCallback(callbacks.cleanupComplete);
   }
 
   /**
