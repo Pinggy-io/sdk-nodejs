@@ -1,4 +1,5 @@
 import { PinggyError } from "./bindings/exception.js";
+import { isIP } from "node:net";
 
 /**
  * Configuration for modifying HTTP headers in tunnel requests.
@@ -11,7 +12,11 @@ import { PinggyError } from "./bindings/exception.js";
  * // Add a custom header
  * { key: "X-Custom-Header", value: ["my-value"], type: "add" }
  *
- * // Remove a header
+ * // Remove a header (value should be undefined, null, or empty array)
+ * { key: "X-Unwanted-Header", type: "remove" }
+ * // or
+ * { key: "X-Unwanted-Header", value: null, type: "remove" }
+ * // or
  * { key: "X-Unwanted-Header", value: [], type: "remove" }
  *
  * // Update an existing header
@@ -23,7 +28,8 @@ export type HeaderModification = {
   key: string;
 
   /**
-   * The header value (optional, required for add/update).
+   * The header value. Required for "add" and "update" types.
+   * For "remove" type, this field should be undefined, null, or an empty array.
    */
   value?: string[] | null;
 
@@ -459,38 +465,36 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
           errors.push(`Header modification at index ${index} must have a key`);
         }
 
-        // If provided, value must always be an array.
-        if (!Array.isArray(header.value)) {
-          errors.push(
-            `Header modification at index ${index} must have 'value' as an array`,
-          );
+        // For "add" and "update" types, value must be an array with at least one element
+        if (header.type === "add" || header.type === "update") {
+          if (!Array.isArray(header.value) || header.value.length === 0) {
+            errors.push(
+              `Header modification at index ${index} with type '${header.type}' must have a value array`,
+            );
+          }
+
+          // Check for invalid entries in value array
+          if (
+            Array.isArray(header.value) &&
+            header.value.some((v) => typeof v !== "string" || v.trim() === "")
+          ) {
+            errors.push(
+              `Header modification at index ${index} has invalid value entries`,
+            );
+          }
         }
 
-        if (
-          (header.type === "add" || header.type === "update") &&
-          (!Array.isArray(header.value) || header.value.length === 0)
-        ) {
-          errors.push(
-            `Header modification at index ${index} with type '${header.type}' must have a value`,
-          );
-        }
-
-        if (
-          header.type === "remove" &&
-          (!Array.isArray(header.value) || header.value.length !== 0)
-        ) {
-          errors.push(
-            `Header modification at index ${index} with type 'remove' must have an empty value array`,
-          );
-        }
-
-        if (
-          Array.isArray(header.value) &&
-          header.value.some((v) => typeof v !== "string" || v.trim() === "")
-        ) {
-          errors.push(
-            `Header modification at index ${index} has invalid value entries`,
-          );
+        // For "remove" type, value must be absent (undefined), null, or empty array
+        if (header.type === "remove") {
+          if (
+            header.value !== undefined &&
+            header.value !== null &&
+            !(Array.isArray(header.value) && header.value.length === 0)
+          ) {
+            errors.push(
+              `Header modification at index ${index} with type 'remove' must not have a value (should be undefined, null, or empty array)`,
+            );
+          }
         }
       });
     }
@@ -537,6 +541,11 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
   }
 
   private isValidAddress(address: string): boolean {
+    // Accept raw IP literals (IPv4 or IPv6)
+    if (isIP(address) !== 0) {
+      return true;
+    }
+
     try {
       new URL(`http://${address}`);
       return true;
