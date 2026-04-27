@@ -2,41 +2,11 @@ import { PinggyNative } from "./types.js";
 import { TunnelConfigurationV1, TunnelConfiguration } from "./tunnelConfiguration.js";
 import { TunnelInstance } from "./tunnel-instance.js";
 import { Logger, LogLevel } from "./utils/logger.js";
+import { loadAddon } from "./utils/loadAddon.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createRequire } from "module";
-import fs from "fs";
-import os from "os";
-import crypto from "crypto";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
-
-// When packaged with pkg on Windows, addon.node is extracted to a tmp cache dir but
-// pinggy.dll is not. Windows DLL loading searches relative to addon.node's location,
-// so both files must live in the same directory. We handle this by extracting them
-// ourselves into a stable temp dir keyed by the addon's content hash.
-function loadAddon(): PinggyNative {
-  const addonPath = path.join(__dirname, "../lib/addon.node");
-  const isPkgWindows = process.platform === "win32" && !!(process as any).pkg;
-
-  if (!isPkgWindows) return require(addonPath);
-
-  const addonBytes = fs.readFileSync(addonPath);
-  const hash = crypto.createHash("sha256").update(addonBytes).digest("hex").slice(0, 16);
-  const extractDir = path.join(os.tmpdir(), "pinggy-native", hash);
-  fs.mkdirSync(extractDir, { recursive: true });
-
-  const files = ["addon.node", "pinggy.dll"] as const;
-  const sources = [addonBytes, fs.readFileSync(path.join(__dirname, "../lib/pinggy.dll"))];
-
-  files.forEach((file, i) => {
-    const dest = path.join(extractDir, file);
-    if (!fs.existsSync(dest)) fs.writeFileSync(dest, sources[i]);
-  });
-
-  return require(path.join(extractDir, "addon.node"));
-}
 
 /**
  * Main entry point for managing Pinggy tunnels.
@@ -55,7 +25,7 @@ export class Pinggy {
   private static debugEnabled = false;
   private static logFilePath: string | null = null;
   private static logLevel: LogLevel = LogLevel.INFO;
-  private static addon: PinggyNative = loadAddon();
+  private static addon: PinggyNative = loadAddon(path.join(__dirname, "../lib/addon.node")) as PinggyNative;
   private tunnels: Set<TunnelInstance> = new Set();
 
   /**
