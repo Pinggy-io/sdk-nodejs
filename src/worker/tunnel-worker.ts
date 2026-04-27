@@ -9,12 +9,11 @@ import {
   initExceptionHandling,
 } from "../bindings/exception.js";
 import { BasicAuthItem, HeaderModification, TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
+import { loadAddon } from "../utils/loadAddon.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createRequire } from "module";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
 
 
 class TunnelWorker {
@@ -59,8 +58,7 @@ class TunnelWorker {
    */
   private initialize(pinggyOptions: any): void {
     try {
-      const addonPath = path.join(__dirname, "../../lib/addon.node");
-      this.addon = require(addonPath);
+      this.addon = loadAddon(path.join(__dirname, "../../lib/addon.node")) as PinggyNative;
       if (!this.addon) throw new Error("Failed to load native addon.");
 
       initExceptionHandling(this.addon);

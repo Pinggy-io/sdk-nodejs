@@ -2,12 +2,11 @@ import { PinggyNative } from "./types.js";
 import { TunnelConfigurationV1, TunnelConfiguration } from "./tunnelConfiguration.js";
 import { TunnelInstance } from "./tunnel-instance.js";
 import { Logger, LogLevel } from "./utils/logger.js";
+import { loadAddon } from "./utils/loadAddon.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createRequire } from "module";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
 
 /**
  * Main entry point for managing Pinggy tunnels.
@@ -26,7 +25,7 @@ export class Pinggy {
   private static debugEnabled = false;
   private static logFilePath: string | null = null;
   private static logLevel: LogLevel = LogLevel.INFO;
-  private static addon: PinggyNative = require(path.join(__dirname, "../lib/addon.node"));
+  private static addon: PinggyNative = loadAddon(path.join(__dirname, "../lib/addon.node")) as PinggyNative;
   private tunnels: Set<TunnelInstance> = new Set();
 
   /**
