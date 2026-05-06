@@ -10,16 +10,6 @@ const { pinggy, LogLevel } = require("@pinggy/pinggy");
         address: "localhost:7878",
 
       },
-      // {
-      //   address: "localhost:8082",
-      //   type: "tcp",
-      //   listenAddress: "a.test.sysmos.me:18463"
-      // },
-      //  {
-      //   address: "localhost:8081",
-      //   type: "http",
-      //   listenAddress: "b.test.sysmos.me"
-      // }
     ],
     webDebugger: "localhost:8100"
   };
