@@ -21,7 +21,6 @@ const { pinggy, LogLevel } = require("@pinggy/pinggy");
       //   listenAddress: "b.test.sysmos.me"
       // }
     ],
-    token: "0gRnXarciSB",
     webDebugger: "localhost:8100"
   };
 
