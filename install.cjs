@@ -2,13 +2,53 @@
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
+const { execSync } = require("child_process");
 const https = require("follow-redirects").https;
 const tar = require("tar");
 const AdmZip = require("adm-zip");
 
-// Detect current platform and architecture
+// Detect current platform
 const platform = os.platform(); // 'linux', 'win32', 'darwin'
-const arch = os.arch(); // 'x64', 'arm64', etc.
+
+// Detect the host architecture, ignoring the architecture Node was built for.
+
+function detectHostArch() {
+  try {
+    if (platform === "win32") {
+      // Read PROCESSOR_ARCHITECTURE from the system environment via the registry.
+      const out = execSync(
+        'reg query "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" /v PROCESSOR_ARCHITECTURE',
+        { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
+      );
+      const m = out.match(/PROCESSOR_ARCHITECTURE\s+REG_SZ\s+(\S+)/i);
+      if (m) {
+        const v = m[1].toUpperCase();
+        if (v === "ARM64") return "arm64";
+        if (v === "AMD64") return "x64";
+        if (v === "X86") return "ia32";
+      }
+    } else if (platform === "darwin") {
+      // sysctl.proc_translated === "1" means we are an x86_64 process under Rosetta
+      // on an Apple Silicon host.
+      const translated = execSync("sysctl -n sysctl.proc_translated", {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim();
+      if (translated === "1") return "arm64";
+    } else if (platform === "linux") {
+      const m = execSync("uname -m", { encoding: "utf8" }).trim();
+      if (m === "aarch64" || m === "arm64") return "arm64";
+      if (m === "x86_64" || m === "amd64") return "x64";
+      if (m === "i686" || m === "i386") return "ia32";
+      if (m.startsWith("armv")) return "arm";
+    }
+  } catch (_) {
+    // Detection commands can fail in locked-down environments; fall back below.
+  }
+  return os.arch();
+}
+
+const arch = detectHostArch();
 
 // Map Node.js platform names to our naming convention
 const osMap = {
@@ -55,7 +95,7 @@ if (!fileName) {
 }
 
 // Define the version of libpinggy to download
-const version = "0.1.6";
+const version = "0.1.7";
 
 // Build artifact filename and URL based on OS and architecture
 function getArtifactInfo(os, arch) {
@@ -144,24 +184,70 @@ function extractArchive(archivePath, outDir, innerLibName, destLibPath) {
   });
 }
 
+// If LIBPINGGY_PATH is set, resolve it to the library source on disk.
+// Accepts: a directory containing innerLibName, an archive (.tgz/.zip), or a direct path to the lib file.
+async function useLocalLibpinggy(localPath) {
+  if (!fs.existsSync(localPath)) {
+    throw new Error(`LIBPINGGY_PATH does not exist: ${localPath}`);
+  }
+  const stat = fs.statSync(localPath);
+
+  if (stat.isDirectory()) {
+    const sourceLib = path.join(localPath, innerLibName);
+    if (!fs.existsSync(sourceLib)) {
+      throw new Error(
+        `LIBPINGGY_PATH directory does not contain ${innerLibName}: ${localPath}`
+      );
+    }
+    fs.copyFileSync(sourceLib, destLibPath);
+    console.log(`[Pinggy Prebuild] Copied ${innerLibName} from ${localPath}`);
+    return;
+  }
+
+  if (localPath.endsWith(".tgz") || localPath.endsWith(".zip")) {
+    console.log(`[Pinggy Prebuild] Extracting local archive ${localPath}...`);
+    await extractArchive(localPath, __dirname, innerLibName, destLibPath);
+    return;
+  }
+
+  fs.copyFileSync(localPath, destLibPath);
+  console.log(`[Pinggy Prebuild] Copied library file from ${localPath}`);
+}
+
 // Main execution block - orchestrates the download, extraction, and cleanup process
 (async () => {
   try {
-    // Step 1: Download the prebuilt library archive
-    console.log(
-      `[Pinggy Prebuild] Downloading ${artifactName} from ${artifactUrl}...`
-    );
+    const localLibPath = process.env.LIBPINGGY_PATH;
 
-    // Todo: If environment variable LIBPINGGY_PATH is set, then copy it instead of downloading.
-    await download(artifactUrl, destArchivePath);
+    if (localLibPath) {
+      console.log(
+        `[Pinggy Prebuild] LIBPINGGY_PATH is set, using local source: ${localLibPath}`
+      );
+      await useLocalLibpinggy(localLibPath);
+    } else {
+      // Step 1: Download the prebuilt library archive
+      console.log(
+        `[Pinggy Prebuild] Downloading ${artifactName} from ${artifactUrl}...`
+      );
+      await download(artifactUrl, destArchivePath);
 
-    // Step 2: Extract the library from the downloaded archive
-    console.log(`[Pinggy Prebuild] Extracting ${artifactName}...`);
-    await extractArchive(destArchivePath, __dirname, innerLibName, destLibPath);
+      // Step 2: Extract the library from the downloaded archive
+      console.log(`[Pinggy Prebuild] Extracting ${artifactName}...`);
+      await extractArchive(
+        destArchivePath,
+        __dirname,
+        innerLibName,
+        destLibPath
+      );
 
-    // Step 3: Clean up the downloaded archive file
-    fs.unlinkSync(destArchivePath);
-    console.log(`[Pinggy Prebuild] Successfully extracted ${innerLibName}`);
+      // Step 3: Clean up the downloaded archive file
+      fs.unlinkSync(destArchivePath);
+    }
+
+    if (!fs.existsSync(destLibPath)) {
+      throw new Error(`Library was not placed at ${destLibPath}`);
+    }
+    console.log(`[Pinggy Prebuild] Successfully prepared ${innerLibName}`);
 
     // Step 4: Create a marker file to indicate successful completion
     fs.writeFileSync(path.join(__dirname, ".prebuild-step-done"), "done");
