@@ -28,6 +28,9 @@ export class TunnelWorkerManager {
     private readyPromise: Promise<void>;
     private callbackHandler?: (event: CallbackType, data: any) => void;
     public workerErrorCallback?: Function;
+    private logBuffer: Array<{ source: "libpinggy" | "sdk-js"; level: LogLevel; line: string }> = [];
+    private logListener: ((msg: { source: "libpinggy" | "sdk-js"; level: LogLevel; line: string }) => void) | null = null;
+    private static readonly LOG_BUFFER_CAP = 10000;
 
     public static async create(pinggyOptions: TunnelConfiguration, logConfig?: TunnelWorkerLogConfig): Promise<TunnelWorkerManager> {
         const manager = new TunnelWorkerManager(pinggyOptions, logConfig);
@@ -40,24 +43,28 @@ export class TunnelWorkerManager {
         const workerPath = fileURLToPath(new URL('./worker/tunnel-worker.cjs', import.meta.url));
         this.worker = new Worker(workerPath, { workerData: { options: pinggyOptions, logConfig } });
 
-        // First message from worker can either be Ready or InitError
+        // First message from worker can either be Ready or InitError.
+        // Log messages arriving before Init are buffered by registerWorkerListeners - skip them here.
         this.readyPromise = new Promise((resolve, reject) => {
             const onMessage = (msg: WorkerMessage) => {
+                if (msg?.type === workerMessageType.Log) {
+                    // Pre-Init log messages are buffered in registerWorkerListeners; ignore here.
+                    return;
+                }
+                this.worker.off("message", onMessage);
                 if (msg?.type === workerMessageType.Init) {
                     if (msg?.success) {
                         Logger.info("TunnelWorker ready.");
                         this.ready = true;
                         resolve();
                     } else {
-                        Logger.error(`Worker initialization failed:", ${msg?.error}`);
-                        reject(new Error(msg?.error || undefined))
+                        Logger.error(`Worker initialization failed: ${msg?.error}`);
+                        reject(new Error(msg?.error || undefined));
                     }
-                }
-                else {
-                    Logger.error(`Unexpected message from worker expected Init. Received:", ${msg}`);
+                } else {
+                    Logger.error(`Unexpected message from worker expected Init. Received: ${JSON.stringify(msg)}`);
                     reject(new Error("Unexpected message"));
                 }
-                this.worker.off("message", onMessage);
             };
             this.worker.on("message", onMessage);
         });
@@ -67,6 +74,15 @@ export class TunnelWorkerManager {
 
     public setCallbackHandler(fn: (event: CallbackType, data: any) => void) {
         this.callbackHandler = fn;
+    }
+
+    public setLogListener(fn: (msg: { source: "libpinggy" | "sdk-js"; level: LogLevel; line: string }) => void): void {
+        this.logListener = fn;
+        // Drain buffer in order
+        for (const msg of this.logBuffer) {
+            fn(msg);
+        }
+        this.logBuffer = [];
     }
 
     public async ensureReady() {
@@ -140,6 +156,23 @@ export class TunnelWorkerManager {
                 case workerMessageType.Callback:
                     if (this.callbackHandler) this.callbackHandler(msg.event, msg.data);
                     break;
+
+                case workerMessageType.Log: {
+                    const logMsg = { source: msg.source, level: msg.level, line: msg.line };
+                    if (this.logListener) {
+                        this.logListener(logMsg);
+                    } else {
+                        if (this.logBuffer.length < TunnelWorkerManager.LOG_BUFFER_CAP) {
+                            this.logBuffer.push(logMsg);
+                        } else {
+                            if (this.logBuffer[this.logBuffer.length - 1]?.line !== `[log-buffer overflow]`) {
+                                const dropped = this.logBuffer.length;
+                                this.logBuffer.push({ source: "sdk-js", level: LogLevel.ERROR, line: `[log-buffer overflow: ${dropped} messages dropped]` });
+                            }
+                        }
+                    }
+                    break;
+                }
 
                 default:
                     Logger.info(`Unknown message from worker: ${JSON.stringify(msg)}`);

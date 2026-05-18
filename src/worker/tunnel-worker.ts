@@ -42,6 +42,9 @@ class TunnelWorker {
       this.initialLogConfig.logFilePath
     );
     Logger.setLevel(this.initialLogConfig.logLevel);
+    Logger.setSink((level, line) => {
+      parentPort?.postMessage({ type: workerMessageType.Log, source: "sdk-js", level, line });
+    });
   }
 
   private applyNativeLoggingConfig(): void {
@@ -73,6 +76,13 @@ class TunnelWorker {
       if (!this.tunnel) throw new Error("Failed to initialize tunnel.");
 
       this.attachCallbacks();
+
+      // Register native log callback if supported
+      if (typeof (this.addon as any).setLogCallback === 'function' && this.tunnel) {
+        (this.addon as any).setLogCallback(this.tunnel.tunnelRef, (level: LogLevel, line: string) => {
+          parentPort?.postMessage({ type: workerMessageType.Log, source: "libpinggy", level, line });
+        });
+      }
 
       this.postMessage({ type: workerMessageType.Init, success: true, error: null });
     } catch (e: any) {
@@ -241,6 +251,7 @@ class TunnelWorker {
     } catch (e) {
       Logger.error(`TunnelWorker cleanup error: ${e}`);
     }
+    Logger.setSink(null);
     this.tunnel = null;
     this.config = null;
     this.addon = null;

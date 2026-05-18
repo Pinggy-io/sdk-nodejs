@@ -16,6 +16,12 @@ export class Logger {
   private static debugEnabled: boolean = false;
   private static level: LogLevel = LogLevel.INFO; // Default: INFO
 
+  private static sink: ((level: LogLevel, line: string) => void) | null = null;
+
+  public static setSink(fn: ((level: LogLevel, line: string) => void) | null): void {
+    Logger.sink = fn;
+  }
+
   public static setLevel(level: LogLevel = LogLevel.INFO): void {
     Logger.level = level;
   }
@@ -87,6 +93,12 @@ export class Logger {
     }
     const levelName = LogLevel[level];
     const logMessage = `[${timestamp}] [${levelName.toUpperCase()}] [${location}] ${message}${errorMessage}\n`;
+
+    // Route through sink if set (worker -> main IPC channel)
+    if (Logger.sink) {
+      const sinkLine = `[${timestamp}] [${levelName.toUpperCase()}] [${location}] ${message}${errorMessage}`;
+      Logger.sink(level, sinkLine);
+    }
 
     // Only write to file if log path is set and directory is ensured
     const canWriteToFile = Logger.logFilePath && Logger.ensureLogDirectory();

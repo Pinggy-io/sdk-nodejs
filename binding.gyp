@@ -7,7 +7,8 @@
                 "native/config.c",
                 "native/tunnel.c",
                 "native/excep.c",
-                "native/debug.c"
+                "native/debug.c",
+                "native/log_callback.c"
             ],
             "actions": [
                 {
@@ -18,7 +19,7 @@
                         "node", "./install.cjs"
                     ]
                 }
-            ],
+            ], 
             "include_dirs": [
                 "<(module_root_dir)",
                 "<!(node -p \"require('node-api-headers').include\")"

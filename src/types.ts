@@ -222,6 +222,8 @@ export interface PinggyNative {
 
   /** Enable or disable debug logging. */
   setDebugLogging(enabled: boolean): void;
+  /** Set a log callback for per-tunnel log delivery (optional — requires updated libpinggy). */
+  setLogCallback?(tunnelRef: number, cb: (level: LogLevel, message: string) => void): void;
   /** Get the Pinggy SDK version. */
   getPinggyVersion(): string;
   /** Get the tunnel greet message. */
@@ -524,7 +526,8 @@ export enum workerMessageType {
   Callback = "callback",
   RegisterCallback = "registerCallback",
   EnableLogger = "enableLogger",
-  GetTunnelConfig = "getConfig"
+  GetTunnelConfig = "getConfig",
+  Log = "log",
 }
 
 export type WorkerMessage =
@@ -534,7 +537,8 @@ export type WorkerMessage =
   | { type: workerMessageType.Callback; event: CallbackType; data: any }
   | { type: workerMessageType.RegisterCallback; event: CallbackType }
   | { type: workerMessageType.EnableLogger; enabled: boolean, logLevel: LogLevel, logFilePath: string | null }
-  | { type: workerMessageType.GetTunnelConfig; id: string };
+  | { type: workerMessageType.GetTunnelConfig; id: string }
+  | { type: workerMessageType.Log; source: "libpinggy" | "sdk-js"; level: LogLevel; line: string };
 
 export type PendingCall = {
   resolve: (value: any) => void;
@@ -625,6 +629,7 @@ export type Callback<K extends CallbackType> = CallbackMap[K];
 export interface TunnelWorkerLogConfig {
   enabled: boolean;
   logLevel: LogLevel;
+  /** @deprecated Use setLogListener on TunnelWorkerManager instead. Kept for backward compat. */
   logFilePath: string | null;
 }
 
