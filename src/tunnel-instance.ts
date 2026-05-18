@@ -151,6 +151,17 @@ export class TunnelInstance {
 
     this.workerManager.setDebugLoggingInWorker(enable, logLevel, logFilePath);
   }
+
+  /**
+   * Sets a listener to receive log lines from the tunnel worker.
+   * Drains any buffered log messages immediately, then delivers future messages as they arrive.
+   *
+   * @group Utilities
+   * @param fn - Callback receiving each log message with its source, level, and line text.
+   */
+  public setLogListener(fn: (msg: { source: "libpinggy" | "sdk-js"; level: import("./utils/logger.js").LogLevel; line: string }) => void): void {
+    this.workerManager.setLogListener(fn);
+  }
   /**
    * Registers a callback function to receive errors from the tunnel worker.
    * It is recommended to always set this callback to ensure your program exits gracefully,
