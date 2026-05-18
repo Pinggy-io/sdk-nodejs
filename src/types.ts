@@ -207,7 +207,8 @@ export interface PinggyNative {
   tunnelRequestAdditionalForwarding(
     tunnelRef: number,
     remoteAddress: string,
-    localAddress: string
+    localAddress: string,
+    forwardingType: string
   ): void;
 
   /** Stop a tunnel. */
@@ -367,7 +368,8 @@ export interface Tunnel {
   /** Request additional forwarding. */
   tunnelRequestAdditionalForwarding(
     remoteAddress: string,
-    localAddress: string
+    localAddress: string,
+    forwardingType?: string
   ): void;
   /** Stop the tunnel. */
   tunnelStop(): boolean;

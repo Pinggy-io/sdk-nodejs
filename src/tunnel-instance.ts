@@ -480,14 +480,16 @@ export class TunnelInstance {
    *
    * @param {string} hostname - The remote address to forward from.
    * @param {string} target - The local address to forward to.
+   * @param {string} [forwardingType] - The forwarding type: "http", "tcp", "tls", "tlstcp", or "udp". 
    * @returns {Promise<void>}
    * @throws {Error} If the tunnel is not initialized.
    */
   public async tunnelRequestAdditionalForwarding(
     hostname: string,
-    target: string
+    target: string,
+    forwardingType: string = ""
   ): Promise<void> {
-    await this.activeTunnel.tunnelRequestAdditionalForwarding(hostname, target);
+    await this.activeTunnel.tunnelRequestAdditionalForwarding(hostname, target, forwardingType);
   }
 
   /**

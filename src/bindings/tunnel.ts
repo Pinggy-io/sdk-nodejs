@@ -235,6 +235,7 @@ export class Tunnel implements ITunnel {
           tunnelRef: number,
           bindAddress: string,
           forwardToAddr: string,
+          _forwardingType: string,
           errorMessage: string,
         ) => {
           Logger.error(
@@ -585,6 +586,7 @@ export class Tunnel implements ITunnel {
   public async tunnelRequestAdditionalForwarding(
     remoteAddress: string,
     localAddress: string,
+    forwardingType: string = "",
   ): Promise<void> {
     // Wait for tunnel to be established
     await this.tunnelEstablished;
@@ -600,6 +602,7 @@ export class Tunnel implements ITunnel {
           this.tunnelRef,
           remoteAddress,
           localAddress,
+          forwardingType,
         ),
       operationName: "requesting additional forwarding",
       successMessage: `Requested additional forwarding from ${remoteAddress} to ${localAddress}`,
