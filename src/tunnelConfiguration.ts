@@ -45,18 +45,26 @@ export type HeaderModification = {
 
 export type ForwardingEntry = {
   /**
-   * The local address to forward to. Format: `[protocol://][host]:port`.
+   *   The local address to forward to. Format: `[protocol://][host]:port`.
    *   The `protocol` is primarily used to determine if `local_server_tls` should be
    *   enabled for this specific rule (e.g., `https://`). It is ignored otherwise.
    */
+
   address: string;
   /**
-   * (Optional) The remote address to bind to. Format: `[host][:port]`.
+   * The tunnel type for this forwarding rule.
+   * One of: "http", "tcp", "tls", "udp", "tlstcp".
+   * @see {@link TunnelType}
+   */
+
+  type: TunnelType;
+  
+  /**
+   *  (Optional) The remote address to bind to. Format: `[host][:port]`.
    *   An empty string or undefined means the server will assign a default binding.
    *   The hostname is ignored for TCP and UDP tunnels. Any schema provided will be ignored.
    */
   listenAddress?: string;
-  type?: TunnelType; // "http", "tcp", "tls", "udp", "tlstcp"
 };
 
 export type RemoteManagementConfig = {
@@ -176,7 +184,8 @@ export type TunnelConfigurationV1 = {
   token?: string;
   /**
    * Forwarding can either be a string, or a list of objects. But it is required - at least empty string or empty list.
-   * @example "http://localhost:3000" or [{ address: "http://localhost:3000" }, { listenAddress: "0.tcp.pinggy.io:12345", address: "http://localhost:4000" }]
+   * When using the object form, each entry must include a `type` (see {@link TunnelType}).
+   * @example "http://localhost:3000" or [{ address: "http://localhost:3000", type: TunnelType.Http }, { listenAddress: "0.tcp.pinggy.io:12345", address: "http://localhost:4000", type: TunnelType.Tcp }]
    */
   forwarding?: string | ForwardingEntry[] | null;
   /**
