@@ -133,9 +133,8 @@ export type BasicAuthItem = { username: string; password: string };
  * @public
  * @example
  * ```typescript
- * const options: PinggyOptions = {
+ * const options: TunnelConfigurationV1 = {
  *   forwarding: "localhost:3000",
- *   debug: true,
  *   basicAuth: [{ username: "user", password: "pass" }]
  * };
  * ```
@@ -228,7 +227,7 @@ export type TunnelConfigurationV1 = {
   allowPreflight?: boolean;
   /**
    * Disable reverse proxy behavior.
-   * @default false
+   * @default true
    */
   reverseProxy?: boolean;
   /**

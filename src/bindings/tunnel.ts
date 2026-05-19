@@ -553,8 +553,8 @@ export class Tunnel implements ITunnel {
 
 
   /**
-   * Starts web debugging for the tunnel on the specified local port.
-   * @param {string} listeningAddr - The local port to start web debugging on.
+   * Starts web debugging for the tunnel on the specified local address.
+   * @param {string} listeningAddr - The local listening address (e.g. "localhost:4300") to start web debugging on.
    * @returns {Promise<void>} Resolves when web debugging is started.
    * @throws {PinggyError|Error} If web debugging fails to start.
    */
@@ -580,6 +580,7 @@ export class Tunnel implements ITunnel {
    * Requests additional forwarding for the tunnel.
    * @param {string} remoteAddress - The remote address to forward from.
    * @param {string} localAddress - The local address to forward to.
+   * @param {string} [forwardingType] - The forwarding type: "http", "tcp", "tls", "tlstcp", or "udp". Defaults to "" (server inferred).
    * @returns {Promise<void>} Resolves when additional forwarding is set up.
    * @throws {PinggyError|Error} If additional forwarding fails.
    */

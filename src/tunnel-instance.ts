@@ -143,10 +143,14 @@ export class TunnelInstance {
     return await this.activeTunnel.start();
   }
   /**
- * Enables or disables debug logging for the tunnel worker.
- *
- * @group Utilities
- */
+   * Enables or disables debug logging for the tunnel worker.
+   *
+   * @group Utilities
+   * @param {boolean} enable - Whether to enable debug logging.
+   * @param {LogLevel} [logLevel=LogLevel.INFO] - Optional logging level to apply.
+   * @param {string | null} logFilePath - Optional file path to write logs to; pass null to disable file logging.
+   * @returns {Promise<void>}
+   */
   public async setDebugLogging(enable: boolean, logLevel: LogLevel = LogLevel.INFO, logFilePath: string | null): Promise<void> {
 
     this.workerManager.setDebugLoggingInWorker(enable, logLevel, logFilePath);
@@ -460,12 +464,12 @@ export class TunnelInstance {
   }
 
   /**
-   * Starts web debugging for the tunnel on the specified local port.
+   * Starts web debugging for the tunnel on the specified local address.
    *
    * Delegates to {@link Tunnel#startWebDebugging}.
    *
    * @group Web Debugging
-   * @param {string} listenAddress - The local port to start web debugging on.
+   * @param {string} listenAddress - The local listening address (e.g. "localhost:4300") to start web debugging on.
    * @returns {void}
    * @throws {Error} If the tunnel is not initialized.
    */
@@ -700,11 +704,11 @@ export class TunnelInstance {
   }
 
   /**
-  * Returns the current tunnel configuration as a `PinggyOptions` object.
+  * Returns the current tunnel configuration as a `TunnelConfigurationV1` object.
   * Extracts values from the instance and parses argument strings for advanced options.
   *
   * @group Configuration
-  * @returns {TunnelConfigurationV1 | null} The tunnel configuration, or null if unavailable.
+  * @returns {Promise<TunnelConfigurationV1 | null>} The tunnel configuration, or null if unavailable.
   */
   public async getConfig(): Promise<TunnelConfigurationV1 | null> {
     const result = await this.workerManager.call("tunnel", "", workerMessageType.GetTunnelConfig);
