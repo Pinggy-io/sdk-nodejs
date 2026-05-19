@@ -23,7 +23,7 @@ app.get("/", (req, res) => res.send("Hello from Express over Pinggy!"));
   const server = await listen(app);
 
   // Access the tunnel instance via server.tunnel
-  console.log("Tunnel public URL:", server.tunnel.urls()[0]);
+  console.log("Tunnel public URL:", (await server.tunnel.urls())[0]);
   console.log("Local server port:", server.address().port);
 
   // Clean up when done
@@ -41,8 +41,8 @@ const { listen } = require("@pinggy/pinggy");
 const app = express();
 app.get("/", (req, res) => res.send("Hello from Express over Pinggy!"));
 
-listen(app).then((server) => {
-  console.log("Tunnel public URL:", server.tunnel.urls()[0]);
+listen(app).then(async (server) => {
+  console.log("Tunnel public URL:", (await server.tunnel.urls())[0]);
   console.log("Local server port:", server.address().port);
 
   // Clean up when done

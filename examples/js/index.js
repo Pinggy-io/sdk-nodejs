@@ -1,77 +1,53 @@
-const { pinggy, LogLevel } = require("@pinggy/pinggy");
+/**
+ * Pinggy SDK — JavaScript example
+ *
+ * Creates a Pinggy tunnel that exposes a local HTTP service running on
+ * localhost:7878, prints the public URLs, and stops the tunnel cleanly
+ * after a fixed duration or on Ctrl-C.
+ *
+ * Run: node index.js
+ */
 
-(async () => {
-  console.log("Starting Pinggy tunnel forwarding to localhost:7878");
- // pinggy.setDebugLogging(true, LogLevel.DEBUG);
+const { pinggy } = require("@pinggy/pinggy");
+
+const TUNNEL_DURATION_MS = 20_000;
+
+async function main() {
+  // Optional: enable verbose logs to stdout for troubleshooting.
+  // pinggy.setDebugLogging(true, "debug");
+
   const options = {
-    forwarding: [
-      {
-        type: "http",
-        address: "localhost:7878",
-
-      },
-    ],
-    webDebugger: "localhost:8100"
+    forwarding: [{ address: "localhost:7878", type: "http" }],
+    webDebugger: "localhost:8100",
   };
 
-
-  // Create and start tunnel using forward method
   const tunnel = await pinggy.createTunnel(options);
-   console.log("Current Tunnel State:", await tunnel.GetTunnelState());
 
-  tunnel.setTunnelForwardingChangedCallback((data, address) => {
-    console.log("Forwarding Changed callback:", data, address);
-  });
-
-  tunnel.setTunnelEstablishedCallback((message, urls) => {
-    console.log("TunnelEstablished callback",message, urls);
-  });
-
-  console.log("webdebug", await tunnel.getWebDebuggerInfo());
 
   await tunnel.start();
 
-  (async () => {
-    for (let i = 0; i < 5; i++) {
-      console.log("Current Tunnel State:", await tunnel.GetTunnelState());
-      await new Promise(res => setTimeout(res, 1000));
-    }
-  })();
-  console.log("config", await tunnel.getConfig());
-  console.log("Tunnel URLs:", await tunnel.urls());
+  const urls = await tunnel.urls();
+  console.log("Tunnel URLs:        ", urls);
+  console.log("Tunnel status:      ", await tunnel.getStatus());
+  console.log("Web debugger:       ", await tunnel.getWebDebuggerInfo());
 
-  console.log("Status:", await tunnel.getStatus());
-  console.log("Greet Message:", await tunnel.getGreetMessage());
-
-  // Start web debugging interface
-  // tunnel.startWebDebugging("http://localhost:8080");
-  // console.log("Web debugging available at: http://localhost:8080");
-
-  // Stop tunnel after 20 seconds
-  setTimeout(() => {
+  const stop = async (reason) => {
+    console.log(`\nStopping tunnel (${reason})...`);
     try {
-      console.log("Stopping tunnel...");
-      tunnel.stop();
-      console.log("Tunnel cleanly closed.");
+      await tunnel.stop();
+      console.log("Tunnel stopped cleanly.");
     } catch (err) {
-      console.error("Failed to close tunnel:", err);
+      console.error("Failed to stop tunnel:", err);
+    } finally {
+      process.exit(0);
     }
-  }, 20000);
-})();
+  };
 
-// Additional configurations can be passed to the "options" object, such as:
-// token: "terminateAtUsages",
-// TunnelType: "http", // defaults to http if not provided
-// originalRequestUrl: true,
-// allowPreflight: true,
-// reverseProxy: true,
-// httpsOnly: true,
-// xForwardedFor: true,
-// bearerTokenAuth: ["hello"],
-// basicAuth: { username: "password" },
-// ipWhitelist: [""],
-// headerModification: {
-//   key: "x-custom-header",
-//   value: "value",
-//   type: "add", // or "remove" or "update"
-// },
+  process.once("SIGINT", () => stop("SIGINT"));
+  setTimeout(() => stop("timeout"), TUNNEL_DURATION_MS);
+}
+
+main().catch((err) => {
+  console.error("Tunnel failed:", err);
+  process.exit(1);
+});

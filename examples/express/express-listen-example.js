@@ -5,16 +5,31 @@ const { listen } = require("@pinggy/pinggy");
 const app = express();
 
 app.get("/", (req, res) => res.send("Hello from Express over Pinggy!"));
+app.get("/health", (req, res) => res.json({ ok: true }));
 
-// Define more routes
+(async () => {
+  try {
+    const server = await listen(app, {
+       // token: "", // optional; omit for a free tunnel
+      // other TunnelConfigurationV1 options can go here
+    });
 
-listen(app, {
-  /* you can add PinggyOptions here, e.g. token: "..." */
-}).then(async (server) => {
-  console.log("Tunnel public URL:", await server.tunnel.urls());
-  console.log("Local server port:", server.address().port);
+    const urls = await server.tunnel.urls();
+    console.log("Tunnel public URLs:", urls);
+    console.log("Local server port:", server.address().port);
 
-  // Clean up when done
-  // server.close();
-  // server.tunnel.stop();
-});
+    const shutdown = async () => {
+      console.log("\nShutting down...");
+      try {
+        await server.tunnel.stop();
+      } finally {
+        server.close(() => process.exit(0));
+      }
+    };
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
+  } catch (err) {
+    console.error("Failed to start tunnel:", err);
+    process.exit(1);
+  }
+})();
