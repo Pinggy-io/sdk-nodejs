@@ -207,7 +207,8 @@ export interface PinggyNative {
   tunnelRequestAdditionalForwarding(
     tunnelRef: number,
     remoteAddress: string,
-    localAddress: string
+    localAddress: string,
+    forwardingType: string
   ): void;
 
   /** Stop a tunnel. */
@@ -222,6 +223,8 @@ export interface PinggyNative {
 
   /** Enable or disable debug logging. */
   setDebugLogging(enabled: boolean): void;
+  /** Set a log callback for per-tunnel log delivery (optional - requires updated libpinggy). */
+  setLogCallback?(tunnelRef: number, cb: (level: LogLevel, message: string) => void): void;
   /** Get the Pinggy SDK version. */
   getPinggyVersion(): string;
   /** Get the tunnel greet message. */
@@ -367,7 +370,8 @@ export interface Tunnel {
   /** Request additional forwarding. */
   tunnelRequestAdditionalForwarding(
     remoteAddress: string,
-    localAddress: string
+    localAddress: string,
+    forwardingType?: string
   ): void;
   /** Stop the tunnel. */
   tunnelStop(): boolean;

@@ -25,7 +25,7 @@ import * as http from "http";
  * app.get('/', (req, res) => res.send('Hello World!'));
  *
  * const server = await listen(app, { token: 'your-token' });
- * console.log('Tunnel URLs:', server.tunnel.urls());
+ * console.log('Tunnel URLs:', await server.tunnel.urls());
  * ```
  */
 export async function listen(

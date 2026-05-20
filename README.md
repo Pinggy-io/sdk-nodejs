@@ -4,7 +4,6 @@
 
 This guide will help you get started with installation, creating tunnels, managing multiple tunnels, and using advanced features.
 
-
 ## Installation
 
 Install the SDK via npm:
@@ -20,9 +19,7 @@ npm install @pinggy/pinggy
 >   - **Node.js 19 or newer** for **Windows arm64**
 > - Other platforms and Node.js versions are not supported as of now.
 
-
 ## Quick Start
-
 
 ```ts
 import { pinggy } from "@pinggy/pinggy";
@@ -40,7 +37,7 @@ const tunnel = await pinggy.forward({ forwarding: "localhost:5000" });
 console.log("Tunnel URLs:", await tunnel.urls());
 ```
 
-**Authorization:** Create persistent tunnels with your own domains by using tokens obtained from <a href="https://dashboard.pinggy.io" target="_blank">dashboard.pinggy.io</a>.
+**Authorization:** Create persistent tunnels with your own domains using tokens obtained from [dashboard.pinggy.io](https://dashboard.pinggy.io).
 
 ```ts
 const tunnel = await pinggy.forward({ forwarding: "localhost:5000", token: "YOUR_TOKEN" });
@@ -48,7 +45,6 @@ console.log("Tunnel URLs:", await tunnel.urls());
 ```
 
 Find complete examples at [examples](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples).
-
 
 ## Managing Multiple Tunnels
 
@@ -63,6 +59,64 @@ console.log("Tunnel 1 URLs:", await tunnel1.urls());
 console.log("Tunnel 2 URLs:", await tunnel2.urls());
 ```
 
+## TCP / UDP / TLS / TLSTCP tunnels
+
+Pinggy supports `tcp`, `udp`, `tls`, and `tlstcp` tunnels for exposing non-HTTP services (e.g. SSH, a database, a game server, or any raw socket server). The examples below use TCP; the same patterns apply to `udp`, `tls`, and `tlstcp` - just swap the prefix in the string form or the `TunnelType` value in the structured form.
+
+> **Note:** `tlstcp` is only available to Pro plan users.
+
+You can use the simple string form with a `tcp://` prefix:
+
+```ts
+import { pinggy } from "@pinggy/pinggy";
+
+// Simple string form - the "tcp://" prefix selects a TCP tunnel
+const tunnel = await pinggy.forward({ forwarding: "tcp://localhost:22" });
+console.log("TCP Tunnel URLs:", await tunnel.urls());
+```
+
+Or the structured form with an explicit `TunnelType`:
+
+```ts
+import { pinggy, TunnelType } from "@pinggy/pinggy";
+
+const tunnel = await pinggy.forward({
+  forwarding: [{ address: "localhost:8001", type: TunnelType.Tcp }],
+});
+console.log("TCP Tunnel URLs:", await tunnel.urls());
+```
+
+To create a UDP, TLS, or TLSTCP tunnel, replace `tcp://` with `udp://`, `tls://`, or `tlstcp://` in the string form, or use `TunnelType.Udp`, `TunnelType.Tls`, or `TunnelType.TlsTcp` in the structured form. `TunnelType.Http` is also supported for explicit HTTP tunnels.
+
+## Multiple Forwardings on a Single Tunnel
+
+A single tunnel can route different remote bindings to different local services. Pass `forwarding` as an array of `ForwardingEntry` objects - the first entry without a `listenAddress` is treated as the primary forwarding, and the rest are registered as additional forwardings:
+
+```ts
+
+import { pinggy, TunnelType } from "@pinggy/pinggy";
+
+const tunnel = await pinggy.forward({
+  forwarding: [
+    // Primary forwarding (no listenAddress): the server assigns a public URL
+     { 
+      address: "localhost:3000"
+      type: TunnelType.Http
+     },
+
+    // Additional forwarding bound to a specific remote address
+    {
+      listenAddress: "app.example.com",
+      address: "http://localhost:4000",
+      type: TunnelType.Http,
+    },
+  ],
+});
+
+console.log("Tunnel URLs:", await tunnel.urls());
+```
+
+You can also register additional forwardings dynamically after the tunnel has started - see [`tunnelRequestAdditionalForwarding`](#advanced-features). The domain can be configured from [https://dashboard.pinggy.io/domains](https://dashboard.pinggy.io/domains). To know more visit [docs](https://pinggy.io/docs/http_tunnels/multi_port_forwarding).
 
 ---
 
@@ -71,26 +125,26 @@ console.log("Tunnel 2 URLs:", await tunnel2.urls());
 [Degit](https://www.npmjs.com/package/degit) can be used for cloning and running an example directory for the following available examples:
 
 - **[Next.js](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/nextjs)** - Next.js with Pinggy tunneling
+
   ```bash
   npx degit github:Pinggy-io/sdk-nodejs/examples/nextjs nextjs-example
   cd nextjs-example && npm i
   npm run dev
   ```
-
 - **[JavaScript](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/js)** - Basic JavaScript usage examples
+
   ```bash
   npx degit github:Pinggy-io/sdk-nodejs/examples/js js-example
   cd js-example && npm i
   node index.js
   ```
-
 - **[TypeScript](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/ts)** - TypeScript examples with full type safety
+
   ```bash
   npx degit github:Pinggy-io/sdk-nodejs/examples/ts ts-example
   cd ts-example && npm i
   npm run start
   ```
-
 - **[Express](https://github.com/Pinggy-io/sdk-nodejs/tree/master/examples/express)** - Using `pinggy.listen` with Express
 
   ```bash
@@ -99,9 +153,7 @@ console.log("Tunnel 2 URLs:", await tunnel2.urls());
   node express-listen-example.js
   ```
 
-
 **Note:** Each example includes its own README with detailed setup and usage instructions.
-
 
 ## Tunnel Management
 
@@ -115,9 +167,9 @@ console.log("Tunnel 2 URLs:", await tunnel2.urls());
   await tunnel.getStatus(); // "starting" | "live" | "closed"
   ```
 - **Check tunnel stats:**
-   ```ts
-   await tunnel.getLatestUsage(); // {"elapsedTime":7,"numLiveConnections":6,"numTotalConnections":6,"numTotalReqBytes":16075,"numTotalResBytes":815760,"numTotalTxBytes":831835}
-   ```
+  ```ts
+  await tunnel.getLatestUsage(); // {"elapsedTime":7,"numLiveConnections":6,"numTotalConnections":6,"numTotalReqBytes":16075,"numTotalResBytes":815760,"numTotalTxBytes":831835}
+  ```
 - **Check if tunnel is active:**
   ```ts
   await tunnel.isActive(); // true or false
@@ -137,13 +189,14 @@ console.log("Tunnel 2 URLs:", await tunnel2.urls());
 
 - **Start web debugger:**
   ```ts
-  tunnel.startWebDebugging('localhost:4300'); // Starts web debugger on localhost:4300
+  tunnel.startWebDebugging('localhost:4300'); // Starts web debugger on the given local listening address
   ```
 - **Request additional forwarding:** If you have multiple domains, you can route different domains to different ports as follows:
   ```ts
   await tunnel.tunnelRequestAdditionalForwarding(
     "mydomain.com:443",
-    "localhost:6000"
+    "localhost:6000",
+    "http" // optional: "http" | "tcp" | "tls" | "tlstcp" | "udp"
   );
   ```
 
@@ -157,7 +210,7 @@ console.log("Tunnel 2 URLs:", await tunnel2.urls());
 import {
   pinggy,
   TunnelInstance,
-  type PinggyOptions,
+  type TunnelConfigurationV1,
   listen,
   TunnelType
 } from "@pinggy/pinggy";
@@ -165,21 +218,21 @@ import {
 
 ### `pinggy`
 
-- `createTunnel(options: PinggyOptions): TunnelInstance` — Create a new tunnel (does not start it).
-- `forward(options: PinggyOptions): Promise<TunnelInstance>` — Create and start a tunnel, returns the instance when ready.
-- `closeAllTunnels(): void` — Stop and remove all tunnels.
+- `createTunnel(options: PinggyOptions): TunnelInstance` - Create a new tunnel (does not start it).
+- `forward(options: PinggyOptions): Promise<TunnelInstance>` - Create and start a tunnel, returns the instance when ready.
+- `closeAllTunnels(): void` - Stop and remove all tunnels.
 
 ### `TunnelInstance`
 
-- `start(): Promise<string[]>` — Start the tunnel.
-- `stop(): void` — Stop the tunnel and clean up resources.
-- `isActive(): boolean` — Check if the tunnel is active.
-- `getStatus(): "starting" | "live" | "closed"` — Get the tunnel's current status.
-- `urls(): string[]` — **Get the array of public addresses returned by the tunnel's primary forwarding callback.**
-- `getServerAddress(): string | null` — **Get the address of the Pinggy backend server this tunnel is connected to.**
-- `getToken(): string | null` — Get the tunnel token.
-- `startWebDebugging(port: number): void` — Start web debugging on a local port.
-- `tunnelRequestAdditionalForwarding(hostname: string, target: string): void` — Request additional forwarding.
+- `start(): Promise<string[]>` - Start the tunnel.
+- `stop(): void` - Stop the tunnel and clean up resources.
+- `isActive(): boolean` - Check if the tunnel is active.
+- `getStatus(): "starting" | "live" | "closed"` - Get the tunnel's current status.
+- `urls(): string[]` - **Get the array of public addresses returned by the tunnel's primary forwarding callback.**
+- `getServerAddress(): string | null` - **Get the address of the Pinggy backend server this tunnel is connected to.**
+- `getToken(): string | null` - Get the tunnel token.
+- `startWebDebugging(port: number): void` - Start web debugging on a local port.
+- `tunnelRequestAdditionalForwarding(hostname: string, target: string): void` - Request additional forwarding.
 - `getconfig(): PinggyOptions | null`  
   Return the tunnel's current runtime configuration object `PinggyOptions`. Returns `null` if no config is loaded.
 - `getGreetMessage(): string`  
@@ -188,21 +241,22 @@ import {
   Register a callback that will be invoked when the SDK receives usage updates from the backend or tunnel process.
 
   Example:
+
   ```ts
-  pinggy.setUsageUpdateCallback((usage) => {
+  tunnel.setUsageUpdateCallback((usage) => {
     console.log("Usage update:", usage);
   });
 
   ```
-- `getLatestUsage(): UsageData | null`  
+- `getLatestUsage(): Promise<TunnelUsageType | null>`
   Return the most recently received usage snapshot, or `null` if no usage data has been received yet.
 
-### `PinggyOptions`
+### `TunnelConfigurationV1`
 
-The `PinggyOptions` interface defines all available configuration options for creating a tunnel. Here are the available fields:
+The `TunnelConfigurationV1` interface defines all available configuration options for creating a tunnel. Here are the available fields:
 
 ```ts
-interface PinggyOptions {
+interface TunnelConfigurationV1 {
   token?: string; // Optional authentication token for the tunnel
   serverAddress?: string; // Custom Pinggy server address
   forwarding?: string | ForwardingEntry; // Local address to forward traffic to (e.g., "localhost:3000")
@@ -266,7 +320,7 @@ interface Optional {
 - `originalRequestUrl`: Pass the full request URL to your backend.
 - `allowPreflight`: Allow CORS preflight (OPTIONS) requests.
 - `reverseProxy`: Disable reverse proxy features if not needed.
-- `force`: Force specific tunnel settings or bypass certain server-side restrictions. 
+- `force`: Force specific tunnel settings or bypass certain server-side restrictions.
 - `autoReconnect`: Automatically try to reconnect the tunnel if the connection drops. Set to `true` to enable automatic reconnection.
 - `reconnectInterval`: Time in seconds between automatic reconnection attempts (default: 5). Increase to reduce retry frequency.
 - `maxReconnectAttempts`: Maximum number of reconnection attempts before the tunnel gives up (default: 20).
@@ -293,6 +347,7 @@ interface Optional {
 - For advanced debugging, enable logs in your application (see SDK source for details).
 - **Enable Debug Logs:**
   To get detailed logs for troubleshooting, enable debug logging:
+
   ```ts
   pinggy.setDebugLogging(true);
   ```

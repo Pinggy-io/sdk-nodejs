@@ -235,6 +235,7 @@ export class Tunnel implements ITunnel {
           tunnelRef: number,
           bindAddress: string,
           forwardToAddr: string,
+          _forwardingType: string,
           errorMessage: string,
         ) => {
           Logger.error(
@@ -310,7 +311,7 @@ export class Tunnel implements ITunnel {
           );
 
           if (!recoverable) {
-            // Fatal error — reject if not yet established, update status either way
+            // Fatal error - reject if not yet established, update status either way
             this.status = TunnelStatus.CLOSED;
             this.rejectTunnelStart(
               new PinggyError(
@@ -331,7 +332,7 @@ export class Tunnel implements ITunnel {
         setter: "tunnelSetEstablishedCallback",
         callback: (tunnelRef: number, urls: string[]) => {
           if (!this.resolveTunnelEstablished && !this.rejectTunnelEstablished) {
-            // Promise already settled; this is a reconnect fire — handle via reconnect callback.
+            // Promise already settled; this is a reconnect fire - handle via reconnect callback.
             this._urls = urls;
             this.onTunnelEstablishedCallback?.("Tunnel re-established", urls);
             return;
@@ -552,8 +553,8 @@ export class Tunnel implements ITunnel {
 
 
   /**
-   * Starts web debugging for the tunnel on the specified local port.
-   * @param {string} listeningAddr - The local port to start web debugging on.
+   * Starts web debugging for the tunnel on the specified local address.
+   * @param {string} listeningAddr - The local listening address (e.g. "localhost:4300") to start web debugging on.
    * @returns {Promise<void>} Resolves when web debugging is started.
    * @throws {PinggyError|Error} If web debugging fails to start.
    */
@@ -579,12 +580,14 @@ export class Tunnel implements ITunnel {
    * Requests additional forwarding for the tunnel.
    * @param {string} remoteAddress - The remote address to forward from.
    * @param {string} localAddress - The local address to forward to.
+   * @param {string} [forwardingType] - The forwarding type: "http", "tcp", "tls", "tlstcp", or "udp". Defaults to "" (server inferred).
    * @returns {Promise<void>} Resolves when additional forwarding is set up.
    * @throws {PinggyError|Error} If additional forwarding fails.
    */
   public async tunnelRequestAdditionalForwarding(
     remoteAddress: string,
     localAddress: string,
+    forwardingType: string,
   ): Promise<void> {
     // Wait for tunnel to be established
     await this.tunnelEstablished;
@@ -600,6 +603,7 @@ export class Tunnel implements ITunnel {
           this.tunnelRef,
           remoteAddress,
           localAddress,
+          forwardingType,
         ),
       operationName: "requesting additional forwarding",
       successMessage: `Requested additional forwarding from ${remoteAddress} to ${localAddress}`,

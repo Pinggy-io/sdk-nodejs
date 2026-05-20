@@ -45,7 +45,7 @@ void cleanup_tls() {
     g_lock_initialized = FALSE;
   }
 #else
-  /* Static mutex — no explicit destroy needed for our use-case. */
+  /* Static mutex - no explicit destroy needed for our use-case. */
 #endif
 }
 

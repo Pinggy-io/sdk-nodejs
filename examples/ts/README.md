@@ -48,7 +48,7 @@ import { pinggy } from "@pinggy/pinggy";
 
 (async () => {
   // Create and start a tunnel
-  const tunnel = await pinggy.forward({ forwardTo: "localhost:3000" });
+  const tunnel = await pinggy.forward({ forwarding: "localhost:3000" });
   console.log("Tunnel URLs:", await tunnel.urls());
 
   // Stop the tunnel when done
@@ -61,12 +61,12 @@ import { pinggy } from "@pinggy/pinggy";
 ### Multiple Tunnels with Type Safety
 
 ```typescript
-import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
+import { pinggy, TunnelConfigurationV1, TunnelInstance } from "@pinggy/pinggy";
 
 (async () => {
   // Create multiple tunnels with typed options
-  const options1: PinggyOptions = { forwardTo: "localhost:3000" };
-  const options2: PinggyOptions = { forwardTo: "localhost:4000" };
+  const options1: TunnelConfigurationV1 = { forwarding: "localhost:3000" };
+  const options2: TunnelConfigurationV1 = { forwarding: "localhost:4000" };
 
   const tunnel1: TunnelInstance = await pinggy.createTunnel(options1);
   const tunnel2: TunnelInstance = await pinggy.createTunnel(options2);
@@ -94,7 +94,7 @@ import { pinggy, PinggyOptions, TunnelInstance } from "@pinggy/pinggy";
 ## API Reference
 
 ### `TunnelInstance` Methods
-To learn more about the methods available on `TunnelInstance` objects—used for managing the lifecycle of tunnels and performing common operations such as creating, closing, and handling tunnel events—please visit the [documentation](https://pinggy-io.github.io/sdk-nodejs/classes/TunnelInstance.html)
+To learn more about the methods available on `TunnelInstance` objects (used for managing the lifecycle of tunnels and performing common operations such as creating, closing, and handling tunnel events), please visit the [documentation](https://pinggy-io.github.io/sdk-nodejs/classes/TunnelInstance.html)
 
 
 ## Troubleshooting

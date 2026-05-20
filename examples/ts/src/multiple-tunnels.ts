@@ -4,7 +4,9 @@ import { pinggy, TunnelConfigurationV1 } from "@pinggy/pinggy";
   console.log("=== Multiple Tunnels Example ===");
 
   try {
-    // Create multiple tunnels with different configurations
+    // Two independent tunnel instances, each forwarding to a different service.
+    
+
     const options1: TunnelConfigurationV1 = {
       forwarding: "localhost:3000",
     };
@@ -13,35 +15,31 @@ import { pinggy, TunnelConfigurationV1 } from "@pinggy/pinggy";
       forwarding: "localhost:4000",
     };
 
-    // Create tunnel instances
     const tunnel1 = await pinggy.createTunnel(options1);
     const tunnel2 = await pinggy.createTunnel(options2);
 
-    // Start both tunnels
-    await tunnel1.start();
-    await tunnel2.start();
+    await Promise.all([tunnel1.start(), tunnel2.start()]);
 
-    // Display tunnel information
     console.log("Tunnel 1 URLs:", await tunnel1.urls());
     console.log("Tunnel 1 Status:", await tunnel1.getStatus());
 
     console.log("Tunnel 2 URLs:", await tunnel2.urls());
     console.log("Tunnel 2 Status:", await tunnel2.getStatus());
 
-    // Check all active tunnels
-    const allTunnels = pinggy.getAllTunnels();
-    console.log("Total active tunnels:", allTunnels.length);
+    console.log("Total active tunnels:", pinggy.getAllTunnels().length);
+    console.log("Press Ctrl+C to stop.");
 
-    // Stop tunnels after 10 seconds
-    setTimeout(async () => {
-      console.log("Stopping all tunnels...");
-      await tunnel1.stop();
-      await tunnel2.stop();
+    const shutdown = async () => {
+      console.log("\nStopping all tunnels...");
+      await Promise.all([tunnel1.stop(), tunnel2.stop()]);
       console.log("All tunnels stopped.");
-
       console.log("Remaining active tunnels:", pinggy.getAllTunnels().length);
-    }, 10000);
+      process.exit(0);
+    };
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
   } catch (error) {
     console.error("Failed to create tunnels:", error);
+    process.exit(1);
   }
 })();

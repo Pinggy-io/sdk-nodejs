@@ -392,7 +392,7 @@ export class Config implements IConfig {
 
   /**
    * Sets the server address for the tunnel.
-   * @param {string} [address="a.pinggy.io:443"] - The server address.
+   * @param {string} serverAddress - The server address (e.g. "a.pinggy.io:443").
    */
   public setServerAddress(serverAddress: string ): void {
     try {
