@@ -1,5 +1,5 @@
 /**
- * Pinggy SDK — JavaScript example
+ * Pinggy SDK - JavaScript example
  *
  * Creates a Pinggy tunnel that exposes a local HTTP service running on
  * localhost:7878, prints the public URLs, and stops the tunnel cleanly

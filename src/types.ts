@@ -223,6 +223,8 @@ export interface PinggyNative {
 
   /** Enable or disable debug logging. */
   setDebugLogging(enabled: boolean): void;
+  /** Set a log callback for per-tunnel log delivery (optional - requires updated libpinggy). */
+  setLogCallback?(tunnelRef: number, cb: (level: LogLevel, message: string) => void): void;
   /** Get the Pinggy SDK version. */
   getPinggyVersion(): string;
   /** Get the tunnel greet message. */

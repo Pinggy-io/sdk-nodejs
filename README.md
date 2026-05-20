@@ -59,19 +59,23 @@ console.log("Tunnel 1 URLs:", await tunnel1.urls());
 console.log("Tunnel 2 URLs:", await tunnel2.urls());
 ```
 
-## TCP Tunnel
+## TCP / UDP / TLS / TLSTCP tunnels
 
-To expose a non-HTTP service (e.g. SSH, a database, or any raw TCP server), use a TCP forwarding rule. You can use the simple string form with a `tcp://` prefix, or the structured form with `TunnelType.Tcp`:
+Pinggy supports `tcp`, `udp`, `tls`, and `tlstcp` tunnels for exposing non-HTTP services (e.g. SSH, a database, a game server, or any raw socket server). The examples below use TCP; the same patterns apply to `udp`, `tls`, and `tlstcp` - just swap the prefix in the string form or the `TunnelType` value in the structured form.
+
+> **Note:** `tlstcp` is only available to Pro plan users.
+
+You can use the simple string form with a `tcp://` prefix:
 
 ```ts
 import { pinggy } from "@pinggy/pinggy";
 
-// Simple string form — the "tcp://" prefix selects a TCP tunnel
+// Simple string form - the "tcp://" prefix selects a TCP tunnel
 const tunnel = await pinggy.forward({ forwarding: "tcp://localhost:22" });
 console.log("TCP Tunnel URLs:", await tunnel.urls());
 ```
 
-Or using the structured form:
+Or the structured form with an explicit `TunnelType`:
 
 ```ts
 import { pinggy, TunnelType } from "@pinggy/pinggy";
@@ -82,11 +86,11 @@ const tunnel = await pinggy.forward({
 console.log("TCP Tunnel URLs:", await tunnel.urls());
 ```
 
-Other supported types are `TunnelType.Http`, `TunnelType.Tls`, `TunnelType.TlsTcp`, and `TunnelType.Udp`.
+To create a UDP, TLS, or TLSTCP tunnel, replace `tcp://` with `udp://`, `tls://`, or `tlstcp://` in the string form, or use `TunnelType.Udp`, `TunnelType.Tls`, or `TunnelType.TlsTcp` in the structured form. `TunnelType.Http` is also supported for explicit HTTP tunnels.
 
 ## Multiple Forwardings on a Single Tunnel
 
-A single tunnel can route different remote bindings to different local services. Pass `forwarding` as an array of `ForwardingEntry` objects — the first entry without a `listenAddress` is treated as the primary forwarding, and the rest are registered as additional forwardings:
+A single tunnel can route different remote bindings to different local services. Pass `forwarding` as an array of `ForwardingEntry` objects - the first entry without a `listenAddress` is treated as the primary forwarding, and the rest are registered as additional forwardings:
 
 ```ts
 
@@ -112,7 +116,7 @@ const tunnel = await pinggy.forward({
 console.log("Tunnel URLs:", await tunnel.urls());
 ```
 
-You can also register additional forwardings dynamically after the tunnel has started — see [`tunnelRequestAdditionalForwarding`](#advanced-features). The domain can be configured from [https://dashboard.pinggy.io/domains](https://dashboard.pinggy.io/domains). To know more visit [docs](https://pinggy.io/docs/http_tunnels/multi_port_forwarding).
+You can also register additional forwardings dynamically after the tunnel has started - see [`tunnelRequestAdditionalForwarding`](#advanced-features). The domain can be configured from [https://dashboard.pinggy.io/domains](https://dashboard.pinggy.io/domains). To know more visit [docs](https://pinggy.io/docs/http_tunnels/multi_port_forwarding).
 
 ---
 
@@ -214,24 +218,27 @@ import {
 
 ### `pinggy`
 
-- `createTunnel(options: TunnelConfigurationV1): Promise<TunnelInstance>` — Create a new tunnel (does not start it).
-- `forward(options: TunnelConfigurationV1): Promise<TunnelInstance>` — Create and start a tunnel, returns the instance when ready.
-- `closeAllTunnels(): Promise<void>` — Stop and remove all tunnels.
+- `createTunnel(options: PinggyOptions): TunnelInstance` - Create a new tunnel (does not start it).
+- `forward(options: PinggyOptions): Promise<TunnelInstance>` - Create and start a tunnel, returns the instance when ready.
+- `closeAllTunnels(): void` - Stop and remove all tunnels.
 
 ### `TunnelInstance`
 
-- `start(): Promise<string[]>` — Start the tunnel.
-- `stop(): Promise<void>` — Stop the tunnel and clean up resources.
-- `isActive(): Promise<boolean>` — Check if the tunnel is active.
-- `getStatus(): Promise<TunnelStatus>` — Get the tunnel's current status (e.g. `"starting" | "live" | "closed"`).
-- `urls(): Promise<string[]>` — **Get the array of public addresses returned by the tunnel's primary forwarding callback.**
-- `getServerAddress(): Promise<string | null>` — **Get the address of the Pinggy backend server this tunnel is connected to.**
-- `getToken(): Promise<string | null>` — Get the tunnel token.
-- `startWebDebugging(listenAddress: string): void` — Start web debugging on a local listening address (e.g. `"localhost:4300"`).
-- `tunnelRequestAdditionalForwarding(hostname: string, target: string, forwardingType?: string): Promise<void>` — Request additional forwarding. `forwardingType` can be `"http"`, `"tcp"`, `"tls"`, `"tlstcp"`, or `"udp"`.
-- `getConfig(): Promise<TunnelConfigurationV1 | null>`Return the tunnel's current runtime configuration object `TunnelConfigurationV1`. Returns `null` if no config is loaded.
-- `getGreetMessage(): Promise<string[]>`Return a list of human-readable greeting messages from the tunnel.
-- `setUsageUpdateCallback(cb: (usage: TunnelUsageType) => void): void`Register a callback that will be invoked when the SDK receives usage updates from the backend or tunnel process.
+- `start(): Promise<string[]>` - Start the tunnel.
+- `stop(): void` - Stop the tunnel and clean up resources.
+- `isActive(): boolean` - Check if the tunnel is active.
+- `getStatus(): "starting" | "live" | "closed"` - Get the tunnel's current status.
+- `urls(): string[]` - **Get the array of public addresses returned by the tunnel's primary forwarding callback.**
+- `getServerAddress(): string | null` - **Get the address of the Pinggy backend server this tunnel is connected to.**
+- `getToken(): string | null` - Get the tunnel token.
+- `startWebDebugging(port: number): void` - Start web debugging on a local port.
+- `tunnelRequestAdditionalForwarding(hostname: string, target: string): void` - Request additional forwarding.
+- `getconfig(): PinggyOptions | null`  
+  Return the tunnel's current runtime configuration object `PinggyOptions`. Returns `null` if no config is loaded.
+- `getGreetMessage(): string`  
+  Return a short human-readable greeting. Always returns a string.
+- `setUsageUpdateCallback(cb: (usage: Record<string, any>) => void): void`  
+  Register a callback that will be invoked when the SDK receives usage updates from the backend or tunnel process.
 
   Example:
 

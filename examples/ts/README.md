@@ -94,7 +94,7 @@ import { pinggy, TunnelConfigurationV1, TunnelInstance } from "@pinggy/pinggy";
 ## API Reference
 
 ### `TunnelInstance` Methods
-To learn more about the methods available on `TunnelInstance` objects—used for managing the lifecycle of tunnels and performing common operations such as creating, closing, and handling tunnel events—please visit the [documentation](https://pinggy-io.github.io/sdk-nodejs/classes/TunnelInstance.html)
+To learn more about the methods available on `TunnelInstance` objects (used for managing the lifecycle of tunnels and performing common operations such as creating, closing, and handling tunnel events), please visit the [documentation](https://pinggy-io.github.io/sdk-nodejs/classes/TunnelInstance.html)
 
 
 ## Troubleshooting

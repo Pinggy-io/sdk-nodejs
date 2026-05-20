@@ -311,7 +311,7 @@ export class Tunnel implements ITunnel {
           );
 
           if (!recoverable) {
-            // Fatal error — reject if not yet established, update status either way
+            // Fatal error - reject if not yet established, update status either way
             this.status = TunnelStatus.CLOSED;
             this.rejectTunnelStart(
               new PinggyError(
@@ -332,7 +332,7 @@ export class Tunnel implements ITunnel {
         setter: "tunnelSetEstablishedCallback",
         callback: (tunnelRef: number, urls: string[]) => {
           if (!this.resolveTunnelEstablished && !this.rejectTunnelEstablished) {
-            // Promise already settled; this is a reconnect fire — handle via reconnect callback.
+            // Promise already settled; this is a reconnect fire - handle via reconnect callback.
             this._urls = urls;
             this.onTunnelEstablishedCallback?.("Tunnel re-established", urls);
             return;
