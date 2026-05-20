@@ -491,7 +491,7 @@ export class TunnelInstance {
   public async tunnelRequestAdditionalForwarding(
     hostname: string,
     target: string,
-    forwardingType: string = ""
+    forwardingType: string 
   ): Promise<void> {
     await this.activeTunnel.tunnelRequestAdditionalForwarding(hostname, target, forwardingType);
   }

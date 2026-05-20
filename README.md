@@ -37,7 +37,7 @@ const tunnel = await pinggy.forward({ forwarding: "localhost:5000" });
 console.log("Tunnel URLs:", await tunnel.urls());
 ```
 
-**Authorization:** Create persistent tunnels with your own domains by using tokens obtained from `<a href="https://dashboard.pinggy.io" target="_blank">`dashboard.pinggy.io`</a>`.
+**Authorization:** Create persistent tunnels with your own domains using tokens obtained from [dashboard.pinggy.io](https://dashboard.pinggy.io).
 
 ```ts
 const tunnel = await pinggy.forward({ forwarding: "localhost:5000", token: "YOUR_TOKEN" });

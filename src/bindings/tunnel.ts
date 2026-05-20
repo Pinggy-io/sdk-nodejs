@@ -587,7 +587,7 @@ export class Tunnel implements ITunnel {
   public async tunnelRequestAdditionalForwarding(
     remoteAddress: string,
     localAddress: string,
-    forwardingType: string = "",
+    forwardingType: string,
   ): Promise<void> {
     // Wait for tunnel to be established
     await this.tunnelEstablished;
