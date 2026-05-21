@@ -28,6 +28,7 @@ class TunnelWorker {
       enabled: logConfig?.enabled ?? false,
       logLevel: logConfig?.logLevel ?? LogLevel.INFO,
       logFilePath: logConfig?.logFilePath ?? null,
+      libpinggyLogPath: logConfig?.libpinggyLogPath ?? null,
     };
 
     this.applyJsLoggingConfig();
@@ -48,6 +49,9 @@ class TunnelWorker {
     if (!this.addon) return;
     this.addon.setLogEnable(this.initialLogConfig.enabled);
     this.addon.setDebugLogging(this.initialLogConfig.enabled);
+    if (this.initialLogConfig.libpinggyLogPath) {
+      this.addon.setLogPath(this.initialLogConfig.libpinggyLogPath);
+    }
   }
 
   /**
