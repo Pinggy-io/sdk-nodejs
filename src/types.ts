@@ -630,5 +630,5 @@ export interface TunnelWorkerLogConfig {
   enabled: boolean;
   logLevel: LogLevel;
   logFilePath: string | null;
+  libpinggyLogPath?: string | null;
 }
-
