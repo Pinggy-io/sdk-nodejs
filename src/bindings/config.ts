@@ -210,16 +210,23 @@ export class Config implements IConfig {
           : undefined
       );
 
-      // Set header modifications if provided
+      // Set header modifications if provided.
+      // Normalize add/update entries with missing value to [""]
+      const normalizedHeaderModification = options.headerModification?.map((h) => {
+        if ((h.type === "add" || h.type === "update") && (h.value === undefined || h.value === null)) {
+          return { ...h, value: [""] };
+        }
+        return h;
+      });
       this.safeSet(
         () => {
-          if (options.headerModification && options.headerModification?.length > 0) {
-            this.addon.configSetHeaderModification(configRef, JSON.stringify(options.headerModification));
+          if (normalizedHeaderModification && normalizedHeaderModification.length > 0) {
+            this.addon.configSetHeaderModification(configRef, JSON.stringify(normalizedHeaderModification));
           }
         },
         "Header modification configuration",
-        options.headerModification && options.headerModification?.length > 0
-          ? `Header modification set to: ${JSON.stringify(options.headerModification)}`
+        normalizedHeaderModification && normalizedHeaderModification.length > 0
+          ? `Header modification set to: ${JSON.stringify(normalizedHeaderModification)}`
           : undefined
       );
 

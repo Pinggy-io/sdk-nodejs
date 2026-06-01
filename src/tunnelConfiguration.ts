@@ -473,22 +473,21 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
           errors.push(`Header modification at index ${index} must have a key`);
         }
 
-        // For "add" and "update" types, value must be an array with at least one element
+        // For "add" and "update" types, value is optional (header name only is allowed).
+        // If a value is provided, it must be an array of non-empty strings.
         if (header.type === "add" || header.type === "update") {
-          if (!Array.isArray(header.value) || header.value.length === 0) {
-            errors.push(
-              `Header modification at index ${index} with type '${header.type}' must have a value array`,
-            );
-          }
-
-          // Check for invalid entries in value array
-          if (
-            Array.isArray(header.value) &&
-            header.value.some((v) => typeof v !== "string" || v.trim() === "")
-          ) {
-            errors.push(
-              `Header modification at index ${index} has invalid value entries`,
-            );
+          if (header.value !== undefined && header.value !== null) {
+            if (!Array.isArray(header.value)) {
+              errors.push(
+                `Header modification at index ${index} with type '${header.type}' must have a value array if provided`,
+              );
+            } else if (
+              header.value.some((v) => typeof v !== "string")
+            ) {
+              errors.push(
+                `Header modification at index ${index} has invalid value entries`,
+              );
+            }
           }
         }
 
