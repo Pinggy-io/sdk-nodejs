@@ -136,6 +136,8 @@ export interface PinggyNative {
   configSetWebdebugger(configRef: number, enabled: boolean): void;
   /** Set webdebugger address */
   configSetWebdebuggerAddr(configRef: number, addr: string): void;
+  /** Set the HAProxy PROXY protocol version ("v1" or "v2", empty string to disable) for a config. */
+  configSetHaproxy(configRef: number, version: string): void;
   /** Reset all forwardings for a config. */
   configResetForwardings(configRef: number): void;
 
@@ -184,6 +186,8 @@ export interface PinggyNative {
   configGetWebdebugger(configRef: number): boolean;
   /** Get webdebugger address */
   configGetWebdebuggerAddr(configRef: number): string;
+  /** Get the HAProxy PROXY protocol version for a config (empty string if not configured). */
+  configGetHaproxy(configRef: number): string;
 
   /** Initiate a tunnel and return its reference. */
   tunnelInitiate(configRef: number): number;

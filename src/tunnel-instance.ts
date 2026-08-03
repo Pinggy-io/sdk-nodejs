@@ -464,6 +464,18 @@ export class TunnelInstance {
   }
 
   /**
+   * Gets the current HAProxy PROXY protocol version for the tunnel.
+   *
+   * Delegates to {@link Config#getHaProxy}.
+   *
+   * @group Configuration
+   * @returns {Promise<string | null>} The HAProxy version ("v1" or "v2"), or null if not configured.
+   */
+  public async getHaProxy(): Promise<string | null> {
+    return await this.activeConfig.getHaProxy() ?? null;
+  }
+
+  /**
    * Starts web debugging for the tunnel on the specified local address.
    *
    * Delegates to {@link Tunnel#startWebDebugging}.

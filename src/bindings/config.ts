@@ -118,6 +118,16 @@ export class Config implements IConfig {
 
       this.safeSet(
         () => {
+          if (options.haProxy) {
+            this.addon.configSetHaproxy(configRef, options.haProxy);
+          }
+        },
+        "HAProxy configuration",
+        options.haProxy ? `HAProxy PROXY protocol version set to: ${options.haProxy}` : undefined
+      );
+
+      this.safeSet(
+        () => {
           if (options.httpsOnly !== undefined) {
             this.addon.configSetHttpsOnly(configRef, options.httpsOnly as boolean);
           }
@@ -692,6 +702,21 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetWebdebuggerAddr(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting Web Debugger Address configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the current HAProxy PROXY protocol version.
+   * @returns {string | null} The HAProxy version ("v1" or "v2"), or null if not configured.
+   */
+  public getHaProxy(): string | null {
+    try {
+      return this.configRef
+        ? this.addon.configGetHaproxy(this.configRef) || null
+        : null;
+    } catch (e) {
+      Logger.error("Error getting HAProxy configuration:", e as Error);
       return null;
     }
   }

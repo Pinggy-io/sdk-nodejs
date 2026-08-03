@@ -233,7 +233,7 @@ import {
 - `getToken(): string | null` - Get the tunnel token.
 - `startWebDebugging(port: number): void` - Start web debugging on a local port.
 - `tunnelRequestAdditionalForwarding(hostname: string, target: string): void` - Request additional forwarding.
-- `getconfig(): PinggyOptions | null`  
+- `getConfig(): PinggyOptions | null`  
   Return the tunnel's current runtime configuration object `PinggyOptions`. Returns `null` if no config is loaded.
 - `getGreetMessage(): string`  
   Return a short human-readable greeting. Always returns a string.
@@ -270,6 +270,7 @@ interface TunnelConfigurationV1 {
   originalRequestUrl?: boolean; // Provide full request URL to backend
   allowPreflight?: boolean; // Allow CORS preflight requests
   reverseProxy?: boolean; // Disable reverse proxy behavior
+  haProxy?: "v1" | "v2"; // Enable HAProxy PROXY protocol header ("v1" or "v2")
   force?: boolean; // Force specific tunnel settings or bypass certain restrictions.
   autoReconnect?: boolean; // Auto-reconnect configuration for the tunnel.
   reconnectInterval?:number; // Time interval (in seconds) between reconnection attempts.(default: 5)
@@ -320,6 +321,7 @@ interface Optional {
 - `originalRequestUrl`: Pass the full request URL to your backend.
 - `allowPreflight`: Allow CORS preflight (OPTIONS) requests.
 - `reverseProxy`: Disable reverse proxy features if not needed.
+- `haProxy`: Enable the HAProxy PROXY protocol header so your local server can recover the original client address. Set to `"v1"` or `"v2"` to choose the PROXY protocol version.
 - `force`: Force specific tunnel settings or bypass certain server-side restrictions.
 - `autoReconnect`: Automatically try to reconnect the tunnel if the connection drops. Set to `true` to enable automatic reconnection.
 - `reconnectInterval`: Time in seconds between automatic reconnection attempts (default: 5). Increase to reduce retry frequency.

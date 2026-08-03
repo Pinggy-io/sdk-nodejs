@@ -325,6 +325,7 @@ class TunnelWorker {
       forwardingJSON,
       ssl,
       argString,
+      haProxy,
     ] = await Promise.all([
       this.config.getServerAddress(),
       this.config.getToken(),
@@ -346,6 +347,7 @@ class TunnelWorker {
       this.config.getForwarding(),
       this.config.getTunnelSsl(),
       this.config.getArgument(),
+      this.config.getHaProxy(),
     ]);
 
     // Assign simple values
@@ -366,6 +368,7 @@ class TunnelWorker {
     options.autoReconnect = autoReconnect ?? false;
     options.webDebugger = webDebugger;
     options.optional!.ssl = ssl ?? false;
+    options.haProxy = (haProxy as "v1" | "v2") || undefined;
 
     // Handle header modification
     options.headerModification = Array.isArray(headerModificationRaw)
