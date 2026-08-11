@@ -1,6 +1,6 @@
 import { Logger } from "../utils/logger.js";
 import { PinggyNative, Config as IConfig } from "../types.js";
-import { TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
+import { TunnelConfiguration, TunnelConfigurationV1, HaProxyVersion } from "../tunnelConfiguration.js";
 import { PinggyError } from "./exception.js";
 
 /**
@@ -708,12 +708,12 @@ export class Config implements IConfig {
 
   /**
    * Gets the current HAProxy PROXY protocol version.
-   * @returns {string | null} The HAProxy version ("v1" or "v2"), or null if not configured.
+   * @returns {HaProxyVersion | null} The HAProxy version, or null if not configured.
    */
-  public getHaProxy(): string | null {
+  public getHaProxy(): HaProxyVersion | null {
     try {
       return this.configRef
-        ? this.addon.configGetHaproxy(this.configRef) || null
+        ? (this.addon.configGetHaproxy(this.configRef) as HaProxyVersion) || null
         : null;
     } catch (e) {
       Logger.error("Error getting HAProxy configuration:", e as Error);

@@ -212,7 +212,8 @@ import {
   TunnelInstance,
   type TunnelConfigurationV1,
   listen,
-  TunnelType
+  TunnelType,
+  HaProxyVersion
 } from "@pinggy/pinggy";
 ```
 
@@ -270,7 +271,7 @@ interface TunnelConfigurationV1 {
   originalRequestUrl?: boolean; // Provide full request URL to backend
   allowPreflight?: boolean; // Allow CORS preflight requests
   reverseProxy?: boolean; // Disable reverse proxy behavior
-  haProxy?: "v1" | "v2"; // Enable HAProxy PROXY protocol header ("v1" or "v2")
+  haProxy?: HaProxyVersion; // Enable HAProxy PROXY protocol header
   force?: boolean; // Force specific tunnel settings or bypass certain restrictions.
   autoReconnect?: boolean; // Auto-reconnect configuration for the tunnel.
   reconnectInterval?:number; // Time interval (in seconds) between reconnection attempts.(default: 5)
@@ -299,6 +300,11 @@ const enum TunnelType {
   TlsTcp = "tlstcp",
 }
 
+const enum HaProxyVersion {
+  V1 = "v1",
+  V2 = "v2",
+}
+
 interface Optional {
   sniServerName?: string; // SNI server name for SSL/TLS.
   ssl?: boolean; //  Whether to use SSL for tunnel setup. (default: false)
@@ -321,7 +327,7 @@ interface Optional {
 - `originalRequestUrl`: Pass the full request URL to your backend.
 - `allowPreflight`: Allow CORS preflight (OPTIONS) requests.
 - `reverseProxy`: Disable reverse proxy features if not needed.
-- `haProxy`: Enable the HAProxy PROXY protocol header so your local server can recover the original client address. Set to `"v1"` or `"v2"` to choose the PROXY protocol version.
+- `haProxy`: Enable the HAProxy PROXY protocol header so your local server can recover the original client address. Set to `HaProxyVersion.V1` or `HaProxyVersion.V2` to choose the PROXY protocol version.
 - `force`: Force specific tunnel settings or bypass certain server-side restrictions.
 - `autoReconnect`: Automatically try to reconnect the tunnel if the connection drops. Set to `true` to enable automatic reconnection.
 - `reconnectInterval`: Time in seconds between automatic reconnection attempts (default: 5). Increase to reduce retry frequency.

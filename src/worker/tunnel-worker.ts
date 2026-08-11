@@ -8,7 +8,7 @@ import {
   PinggyError,
   initExceptionHandling,
 } from "../bindings/exception.js";
-import { BasicAuthItem, HeaderModification, TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
+import { BasicAuthItem, HaProxyVersion, HeaderModification, TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
 import { loadAddon } from "../utils/loadAddon.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -368,7 +368,7 @@ class TunnelWorker {
     options.autoReconnect = autoReconnect ?? false;
     options.webDebugger = webDebugger;
     options.optional!.ssl = ssl ?? false;
-    options.haProxy = (haProxy as "v1" | "v2") || undefined;
+    options.haProxy = (haProxy as HaProxyVersion) || undefined;
 
     // Handle header modification
     options.headerModification = Array.isArray(headerModificationRaw)
