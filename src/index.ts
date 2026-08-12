@@ -34,7 +34,7 @@ export { pinggy, Pinggy, TunnelInstance, Config, Tunnel };
  * @see {@link HeaderModification}
  */
 export type { TunnelConfigurationV1, HeaderModification, ForwardingEntry, BasicAuthItem, Optional, RemoteManagementConfig } from "./tunnelConfiguration.js";
-export { TunnelType } from "./tunnelConfiguration.js"
+export { TunnelType, HaProxyVersion } from "./tunnelConfiguration.js"
 export type { TunnelStatus, PinggyNative, TunnelUsageType } from "./types.js";
 export { TunnelState, tunnelStateToString, tunnelStateToStatus } from "./types.js";
 export { LogLevel } from "./utils/logger.js"

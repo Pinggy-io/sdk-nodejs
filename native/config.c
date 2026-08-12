@@ -1883,6 +1883,40 @@ napi_value ConfigSetWebdebugger(napi_env env, napi_callback_info info)
     return result;
 }
 
+// Wrapper for pinggy_config_set_haproxy. Sets the HAProxy PROXY protocol version ("v1" or "v2", empty to disable).
+napi_value ConfigSetHaproxy(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
+
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 2, "Expected two arguments (config, version)");
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
+
+    size_t version_len;
+    status = napi_get_value_string_utf8(env, args[1], NULL, 0, &version_len);
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid version argument");
+
+    pinggy_char_p_t version = malloc(version_len + 1);
+    NAPI_CHECK_CONDITION_THROW(env, version != NULL, "Memory allocation failed");
+
+    status = napi_get_value_string_utf8(env, args[1], version, version_len + 1, &version_len);
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to get version string", free(version));
+
+    pinggy_config_set_haproxy(config, version);
+    free(version);
+
+    napi_value result;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
 // Wrapper for pinggy_config_get_webdebugger. Checks whether the web debugger is enabled in the tunnel config.
 napi_value ConfigGetWebdebugger(napi_env env, napi_callback_info info)
 {
@@ -1940,6 +1974,48 @@ napi_value ConfigGetWebdebuggerAddr(napi_env env, napi_callback_info info)
     return result;
 }
 
+// Wrapper for pinggy_config_get_haproxy. Retrieves the HAProxy PROXY protocol version from the tunnel config.
+napi_value ConfigGetHaproxy(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1];
+    napi_status status;
+
+    status = napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    NAPI_CHECK_STATUS_THROW(env, status, "Failed to parse arguments");
+
+    NAPI_CHECK_CONDITION_THROW(env, argc >= 1, "Expected one argument (config)");
+
+    pinggy_ref_t config;
+    status = napi_get_value_uint32(env, args[0], &config);
+    NAPI_CHECK_STATUS_THROW(env, status, "Invalid config argument");
+
+    pinggy_capa_t required_len = 0;
+    pinggy_const_int_t rc = pinggy_config_get_haproxy_len(config, 0, NULL, &required_len);
+    NAPI_CHECK_CONDITION_THROW(env, rc >= 0, "Failed to determine haproxy version length");
+
+    napi_value result;
+    if (required_len == 0)
+    {
+        // HAProxy is not configured; report it as an empty string
+        status = napi_create_string_utf8(env, "", 0, &result);
+        NAPI_CHECK_STATUS_THROW(env, status, "Failed to create JS string from haproxy version");
+        return result;
+    }
+
+    pinggy_char_p_t haproxy_version = malloc(required_len + 1);
+    NAPI_CHECK_CONDITION_THROW(env, haproxy_version != NULL, "Memory allocation failed");
+
+    pinggy_const_int_t copied = pinggy_config_get_haproxy(config, required_len + 1, haproxy_version);
+    NAPI_CHECK_CONDITION_THROW_AND_CLEANUP(env, copied >= 0, "Failed to get haproxy version", free(haproxy_version));
+
+    status = napi_create_string_utf8(env, haproxy_version, copied, &result);
+    NAPI_CHECK_STATUS_THROW_CLEANUP(env, status, "Failed to create JS string from haproxy version", free(haproxy_version));
+
+    free(haproxy_version);
+    return result;
+}
+
 // Initialize the module and export the function
 napi_value Init1(napi_env env, napi_value exports)
 {
@@ -1973,7 +2049,8 @@ napi_value Init1(napi_env env, napi_value exports)
         set_forwardings,
         set_reset_forwardings,
         set_webdebugger_addr_fn,
-        set_webdebugger_fn;
+        set_webdebugger_fn,
+        set_haproxy_fn;
 
     napi_value get_server_address_fn,
         get_sni_server_name_fn,
@@ -1999,7 +2076,8 @@ napi_value Init1(napi_env env, napi_value exports)
         get_pinggy_version_fn,
         get_forwarding_fn,
         get_webdebugger_fn,
-        get_webdebugger_addr_fn;
+        get_webdebugger_addr_fn,
+        get_haproxy_fn;
 
     napi_create_function(env, NULL, 0, SetLogPath, NULL, &set_log_path_fn);
     // napi_create_function(napi_env env,
@@ -2186,6 +2264,12 @@ napi_value Init1(napi_env env, napi_value exports)
 
     napi_create_function(env, NULL, 0, ConfigGetReconnectInterval, NULL, &get_reconnect_interval_fn);
     napi_set_named_property(env, exports, "configGetReconnectInterval", get_reconnect_interval_fn);
+
+    napi_create_function(env, NULL, 0, ConfigSetHaproxy, NULL, &set_haproxy_fn);
+    napi_set_named_property(env, exports, "configSetHaproxy", set_haproxy_fn);
+
+    napi_create_function(env, NULL, 0, ConfigGetHaproxy, NULL, &get_haproxy_fn);
+    napi_set_named_property(env, exports, "configGetHaproxy", get_haproxy_fn);
 
     return exports;
 }

@@ -8,7 +8,7 @@ import {
   PinggyError,
   initExceptionHandling,
 } from "../bindings/exception.js";
-import { BasicAuthItem, HeaderModification, TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
+import { BasicAuthItem, HaProxyVersion, HeaderModification, TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
 import { loadAddon } from "../utils/loadAddon.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -325,6 +325,7 @@ class TunnelWorker {
       forwardingJSON,
       ssl,
       argString,
+      haProxy,
     ] = await Promise.all([
       this.config.getServerAddress(),
       this.config.getToken(),
@@ -346,6 +347,7 @@ class TunnelWorker {
       this.config.getForwarding(),
       this.config.getTunnelSsl(),
       this.config.getArgument(),
+      this.config.getHaProxy(),
     ]);
 
     // Assign simple values
@@ -366,6 +368,7 @@ class TunnelWorker {
     options.autoReconnect = autoReconnect ?? false;
     options.webDebugger = webDebugger;
     options.optional!.ssl = ssl ?? false;
+    options.haProxy = (haProxy as HaProxyVersion) || undefined;
 
     // Handle header modification
     options.headerModification = Array.isArray(headerModificationRaw)

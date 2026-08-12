@@ -1,6 +1,6 @@
 import { Logger } from "../utils/logger.js";
 import { PinggyNative, Config as IConfig } from "../types.js";
-import { TunnelConfiguration, TunnelConfigurationV1 } from "../tunnelConfiguration.js";
+import { TunnelConfiguration, TunnelConfigurationV1, HaProxyVersion } from "../tunnelConfiguration.js";
 import { PinggyError } from "./exception.js";
 
 /**
@@ -115,6 +115,16 @@ export class Config implements IConfig {
         "Web Debugger configuration",
         options.webDebugger ? `Web Debugger address set to: ${options.webDebugger}` : undefined
       )
+
+      this.safeSet(
+        () => {
+          if (options.haProxy) {
+            this.addon.configSetHaproxy(configRef, options.haProxy);
+          }
+        },
+        "HAProxy configuration",
+        options.haProxy ? `HAProxy PROXY protocol version set to: ${options.haProxy}` : undefined
+      );
 
       this.safeSet(
         () => {
@@ -692,6 +702,21 @@ export class Config implements IConfig {
       return this.configRef ? this.addon.configGetWebdebuggerAddr(this.configRef) : null;
     } catch (e) {
       Logger.error("Error getting Web Debugger Address configuration:", e as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the current HAProxy PROXY protocol version.
+   * @returns {HaProxyVersion | null} The HAProxy version, or null if not configured.
+   */
+  public getHaProxy(): HaProxyVersion | null {
+    try {
+      return this.configRef
+        ? (this.addon.configGetHaproxy(this.configRef) as HaProxyVersion) || null
+        : null;
+    } catch (e) {
+      Logger.error("Error getting HAProxy configuration:", e as Error);
       return null;
     }
   }

@@ -1,4 +1,4 @@
-import { TunnelConfiguration, TunnelConfigurationV1 } from "./tunnelConfiguration.js"
+import { TunnelConfiguration, TunnelConfigurationV1, HaProxyVersion } from "./tunnelConfiguration.js"
 import { TunnelWorkerManager } from "./worker/tunnel-worker-manager.js";
 import { Logger, LogLevel } from "./utils/logger.js"
 import { Tunnel } from "./bindings/tunnel.js";
@@ -461,6 +461,18 @@ export class TunnelInstance {
    */
   public async getForce(): Promise<boolean | null> {
     return await this.activeConfig.getForce() ?? null;
+  }
+
+  /**
+   * Gets the current HAProxy PROXY protocol version for the tunnel.
+   *
+   * Delegates to {@link Config#getHaProxy}.
+   *
+   * @group Configuration
+   * @returns {Promise<HaProxyVersion | null>} The HAProxy version, or null if not configured.
+   */
+  public async getHaProxy(): Promise<HaProxyVersion | null> {
+    return await this.activeConfig.getHaProxy() ?? null;
   }
 
   /**

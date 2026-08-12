@@ -127,6 +127,17 @@ export const enum TunnelType {
   TlsTcp = "tlstcp",
 }
 
+/**
+ * PROXY protocol version used when HAProxy support is enabled on a tunnel.
+ *
+ * @group Types
+ * @public
+ */
+export const enum HaProxyVersion {
+  V1 = "v1",
+  V2 = "v2",
+}
+
 /** Basic authentication item with username and password.
  *
  * @group Types
@@ -240,6 +251,13 @@ export type TunnelConfigurationV1 = {
    */
   reverseProxy?: boolean;
   /**
+   * Enable the HAProxy PROXY protocol header on the tunnel, so the local
+   * server can recover the original client address.
+   * @see {@link HaProxyVersion}
+   * @example HaProxyVersion.V1
+   */
+  haProxy?: HaProxyVersion;
+  /**
    * Advanced SSL and additional configuration options.
    * @see {@link Optional}
    */
@@ -283,6 +301,7 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
   public originalRequestUrl?: boolean;
   public allowPreflight?: boolean;
   public reverseProxy?: boolean;
+  public haProxy?: HaProxyVersion;
   public optional?: Optional;
   public force?: boolean;
   public autoReconnect?: boolean;
@@ -316,6 +335,7 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
     this.originalRequestUrl = options.originalRequestUrl;
     this.allowPreflight = options.allowPreflight;
     this.reverseProxy = options.reverseProxy;
+    this.haProxy = options.haProxy;
     this.optional = options.optional;
     this.force = options.force;
     this.autoReconnect = options.autoReconnect;
@@ -517,6 +537,16 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
       ) {
         errors.push("Max reconnect attempts must be greater than 0");
       }
+    }
+
+    // Validate HAProxy PROXY protocol version
+    if (
+      this.haProxy !== undefined &&
+      !([HaProxyVersion.V1, HaProxyVersion.V2] as string[]).includes(this.haProxy)
+    ) {
+      errors.push(
+        `Invalid haProxy version: ${this.haProxy}. Must be "v1" or "v2"`,
+      );
     }
 
     // Validate server address
