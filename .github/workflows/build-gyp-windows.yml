@@ -8,12 +8,13 @@ on:
 
 jobs:
   build:
-    name: Build ${{ matrix.os }} ${{ matrix.arch }} (Node ${{ matrix.node-version }})
-    runs-on: ${{ matrix.os }}
+    name: Build Windows ${{ matrix.arch }} (Node ${{ matrix.node-version }})
+    # Node 18/19/21 need node-gyp <= 11, which can't detect the VS2026 that
+    # ships on windows-latest — run those on windows-2022 (VS2022) instead.
+    runs-on: ${{ contains(fromJSON('[18, 19, 21]'), matrix.node-version) && 'windows-2022' || 'windows-latest' }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
         arch: [x64] # You can add more like arm64 if needed
         node-version: [18, 19, 20, 21, 22, 23, 24]
 
@@ -31,7 +32,15 @@ jobs:
           npm ci --ignore-scripts
 
       - name: Install node-gyp globally
-        run: npm install -g node-gyp
+        shell: bash
+        # Latest node-gyp crashes on Node 18/19/21 (its undici needs newer
+        # runtime APIs), so pin the last node-gyp major that supports each.
+        run: |
+          case "$(node -p "process.versions.node.split('.')[0]")" in
+            19) npm install -g node-gyp@10 ;;
+            18|21) npm install -g node-gyp@11 ;;
+            *) npm install -g node-gyp ;;
+          esac
 
       - name: Build native addon and copy to lib
         run: |
