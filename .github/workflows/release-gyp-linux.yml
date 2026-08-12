@@ -34,7 +34,15 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Install node-gyp globally
-        run: npm install -g node-gyp
+        shell: bash
+        # Latest node-gyp crashes on Node 18/19/21 (its undici needs newer
+        # runtime APIs), so pin the last node-gyp major that supports each.
+        run: |
+          case "$(node -p "process.versions.node.split('.')[0]")" in
+            19) npm install -g node-gyp@10 ;;
+            18|21) npm install -g node-gyp@11 ;;
+            *) npm install -g node-gyp ;;
+          esac
 
       - name: Build native addon and copy to lib
         run: |
