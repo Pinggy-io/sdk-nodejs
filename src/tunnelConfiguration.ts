@@ -253,6 +253,10 @@ export type TunnelConfigurationV1 = {
   /**
    * Enable the HAProxy PROXY protocol header on the tunnel, so the local
    * server can recover the original client address.
+   *
+   * Only supported on TCP tunnels: the first {@link ForwardingEntry} must use
+   * `TunnelType.Tcp`, otherwise validation fails. Additional forwarding
+   * entries may use any type.
    * @see {@link HaProxyVersion}
    * @example HaProxyVersion.V1
    */
@@ -540,13 +544,37 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
     }
 
     // Validate HAProxy PROXY protocol version
-    if (
-      this.haProxy !== undefined &&
-      !([HaProxyVersion.V1, HaProxyVersion.V2] as string[]).includes(this.haProxy)
-    ) {
-      errors.push(
-        `Invalid haProxy version: ${this.haProxy}. Must be "v1" or "v2"`,
-      );
+    if (this.haProxy !== undefined) {
+      if (
+        !([HaProxyVersion.V1, HaProxyVersion.V2] as string[]).includes(
+          this.haProxy,
+        )
+      ) {
+        errors.push(
+          `Invalid haProxy version: ${this.haProxy}. Must be "v1" or "v2"`,
+        );
+      }
+
+      // The PROXY protocol header is only supported on TCP tunnels, so the
+      // first forwarding rule must be of type "tcp". Additional forwarding
+      // rules may use any type.
+      const forwardingKind = this.getForwardingKind();
+      if (forwardingKind === "array") {
+        const entries = this.forwarding as ForwardingEntry[];
+        if (entries.length === 0) {
+          errors.push(
+            'haProxy can only be used with "tcp" tunnels, but no forwarding rule was provided',
+          );
+        } else if (entries[0].type !== TunnelType.Tcp) {
+          errors.push(
+            `haProxy can only be used with "tcp" tunnels, but the first forwarding rule has type: ${entries[0].type ?? "undefined"}`,
+          );
+        }
+      } else {
+        errors.push(
+          'haProxy can only be used with "tcp" tunnels; specify forwarding as an array whose first entry has type "tcp" (e.g. [{ address: "localhost:7878", type: "tcp" }])',
+        );
+      }
     }
 
     // Validate server address
