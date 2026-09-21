@@ -281,6 +281,8 @@ export type TunnelConfigurationV1 = {
    */
   reconnectInterval?: number;
   /** Maximum number of reconnection attempts before giving up.
+   * 0 means unlimited: keep retrying every `reconnectInterval` seconds for
+   * as long as the outage lasts (this mirrors libpinggy's own semantics).
    * @default 20
    */
   maxReconnectAttempts?: number;
@@ -535,11 +537,12 @@ export class TunnelConfiguration implements TunnelConfigurationV1 {
       if (this.reconnectInterval !== undefined && this.reconnectInterval <= 0) {
         errors.push("Reconnect interval must be greater than 0");
       }
+      // 0 is a valid value: libpinggy treats it as "no limit".
       if (
         this.maxReconnectAttempts !== undefined &&
-        this.maxReconnectAttempts <= 0
+        this.maxReconnectAttempts < 0
       ) {
-        errors.push("Max reconnect attempts must be greater than 0");
+        errors.push("Max reconnect attempts must be 0 (unlimited) or greater");
       }
     }
 
