@@ -28,6 +28,9 @@ export class TunnelWorkerManager {
     private readyPromise: Promise<void>;
     private callbackHandler?: (event: CallbackType, data: any) => void;
     public workerErrorCallback?: Function;
+    private exited = false;
+    // Set by terminate(), so the exit that follows is not reported as a crash.
+    private terminating = false;
 
     public static async create(pinggyOptions: TunnelConfiguration, logConfig?: TunnelWorkerLogConfig): Promise<TunnelWorkerManager> {
         const manager = new TunnelWorkerManager(pinggyOptions, logConfig);
@@ -75,6 +78,10 @@ export class TunnelWorkerManager {
 
     public async call(target: "config" | "tunnel", method: string, type?: workerMessageType, ...args: any[]) {
         await this.ensureReady();
+        if (this.exited) {
+            // A message to a thread that is gone is never answered.
+            throw new Error("Tunnel worker has exited");
+        }
 
         const id = await getRandomId();
         let msgType: workerMessageType = workerMessageType.Call
@@ -110,16 +117,16 @@ export class TunnelWorkerManager {
     }
 
     public async terminate(): Promise<number | void> {
+        if (this.exited) {
+            return undefined;
+        }
+        this.terminating = true;
         try {
             return await this.worker.terminate();
         } catch (e) {
             Logger.error(`Error terminating TunnelWorker:${e}`);
             return undefined;
         }
-    }
-
-    public unrefWorker(): void {
-        this.worker.unref();
     }
 
     private registerWorkerListeners(): void {
@@ -154,7 +161,15 @@ export class TunnelWorkerManager {
         });
 
         this.worker.on("exit", (code) => {
-            if (this.workerErrorCallback) {
+            this.exited = true;
+            // Calls still waiting for an answer would otherwise never settle.
+            const exitError = new Error(`Tunnel worker exited with code ${code}`);
+            for (const pending of this.pendingCalls.values()) {
+                pending.reject(exitError);
+            }
+            this.pendingCalls.clear();
+
+            if (this.workerErrorCallback && !this.terminating) {
                 const error = new Error(`Tunnel Worker exited with error code ${code}`)
                 this.workerErrorCallback(error);
             }

@@ -109,6 +109,10 @@ export class Tunnel implements ITunnel {
     null;
   private onPollingErrorCallback: ((error: Error) => void) | null = null;
   private onCleanupCompleteCallback: (() => void) | null = null;
+  // Resolves when the poll loop exits. libpinggy finishes closing a stopped
+  // tunnel inside that loop. Null while the loop has never started.
+  private pollExited: Promise<void> | null = null;
+  private resolvePollExited: (() => void) | null = null;
 
   /**
    * Creates a new Tunnel instance and initializes it with the provided config reference.
@@ -490,6 +494,10 @@ export class Tunnel implements ITunnel {
   }
 
   private pollStart(): void {
+    this.pollExited = new Promise((resolve) => {
+      this.resolvePollExited = resolve;
+    });
+
     const handlePollError = (e: unknown): void => {
       this.status = TunnelStatus.CLOSED;
       
@@ -516,16 +524,25 @@ export class Tunnel implements ITunnel {
       };
     };
 
+    // Every way out of the loop goes through here.
+    const exitPoll = (e: unknown): void => {
+      try {
+        handlePollError(e);
+      } finally {
+        this.resolvePollExited?.();
+      }
+    };
+
     const poll = (): void => {
       try {
-        
+
         if (!this.addon.tunnelResumeWithTimeout(this.tunnelRef, 100)) {
-          handlePollError(new Error("Tunnel error detected during polling."));
+          exitPoll(new Error("Tunnel error detected during polling."));
           return;
         }
         this.functionQueue.dequeueAndRun();
       } catch (e) {
-        handlePollError(e);
+        exitPoll(e);
         return;
       }
       setImmediate(poll);
@@ -635,6 +652,23 @@ export class Tunnel implements ITunnel {
       },
       defaultValue: false,
     });
+  }
+
+  /**
+   * Stops the tunnel and resolves once libpinggy has finished closing it.
+   * {@link Tunnel#tunnelStop} only asks libpinggy to stop; the session is
+   * closed and the sockets are released on the next poll, after which the
+   * poll loop exits. Resolves right away when the poll loop is not running
+   * (the tunnel never started, or it has already ended).
+   * @returns {Promise<boolean>} The result of {@link Tunnel#tunnelStop}.
+   * @throws {PinggyError|Error} If stopping the tunnel fails.
+   */
+  public async tunnelStopAndWait(): Promise<boolean> {
+    const stopped = this.tunnelStop();
+    if (this.pollExited) {
+      await this.pollExited;
+    }
+    return stopped;
   }
 
   /**
