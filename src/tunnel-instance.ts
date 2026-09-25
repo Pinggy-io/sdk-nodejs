@@ -107,8 +107,6 @@ export class TunnelInstance {
     if (!cb) return;
 
     (cb as any)(data);
-
-    Logger.info(`Handled worker callback: ${event}`);
   }
 
 
@@ -186,13 +184,17 @@ export class TunnelInstance {
    * @throws {Error} If the tunnel is not initialized.
    */
   public async stop(): Promise<void> {
-
-    await this.activeTunnel.tunnelStop();
-
-    // Calling unref() on a worker allows the thread to exit if this is the only active handle in the event system
-    this.workerManager.unrefWorker();
-    this.tunnel = null;
-    this.config = null;
+    try {
+      // Returns once libpinggy has finished closing the tunnel, which happens
+      // on the worker's next poll; ending the thread before that would leave
+      // the server connection open. See Tunnel#tunnelStopAndWait.
+      await this.activeTunnel.tunnelStopAndWait();
+    } finally {
+      this.tunnel = null;
+      this.config = null;
+      // End the worker thread
+      await this.workerManager.terminate();
+    }
   }
 
   /**
